@@ -242,28 +242,12 @@ The starter's `/act` implementation is an example model adapter, not a score
 baseline. Consult [`contestants/`](../contestants/) for practice, submission,
 and event guidance.
 
-## Track declaration
-
-`POST /api/submissions` takes an optional `track`: `"model_training"` (the main track: a model your
-team trained) or `"open"`. Omitted or blank means `"open"` (tracks are not announced yet). The
-optional `method_note` says what was trained and on which data: required and 1 to 500 characters for
-`model_training`, optional (at most 500) for `open`. An unknown track, a missing note on
-`model_training` or a note over 500 characters is a `422` with a field finding (`track_invalid`,
-`method_note_required`, `method_note_too_long`, `method_note_invalid`). The
-submission view and list return `track` and `method_note` (`null` on submissions from before
-tracks). Organizers can reclassify a submission's track; its score is kept.
-
 ## Leaderboard ranks
 
-`GET /api/leaderboard` returns `[{"rank", "score", "tracks", "main_rank", "main_score"}]` and
-`GET /api/rank` returns `{"rank", "score", "position", "main_rank", "main_score"}` for the caller's
-team (`null`s when unranked; `position` is the 0-based index of the team's own row in
-`/api/leaderboard`).
-
-- `rank` and `score` are the overall board: every submission counts, whatever its track.
-- `tracks` lists the tracks of the team's submissions that count (`["model_training", "open"]`
-  order). `main_rank` and `main_score` are the main-track ranking, the same ranking computed
-  from each team's best `model_training` submission only; `null` for a team without one.
+`GET /api/leaderboard` returns `[{"rank", "score"}]` and `GET /api/rank` returns
+`{"rank", "score", "position"}` for the caller's team (`null`s when unranked; `position` is the
+0-based index of the team's own row in `/api/leaderboard`). There is one track: any approach may
+drive the arm. All teams share one ranking.
 
 - Each team's best scored full evaluation counts; a later, lower score never replaces it.
 - Totals are points (scorer `engine-v2`, no upper bound), rounded half up to 2 decimals, the precision

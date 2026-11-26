@@ -23,7 +23,8 @@ Judging runs your code in the published policy image on an NVIDIA H100 (amd64).
 | Policy input | Instruction, goal image, three 640×360 RGB cameras (`wrist`, `left`, `right`), joint state |
 | Policy output | Joint deltas plus a gripper target, one action or a chunk of up to 16 |
 | Score | Finish, then precision, then speed: completed = 70 + precision × (5 + speed bonus), not completed under 15 ([scoring](RULES.md#scoring)) |
-| Tracks | Main track **Model Training** (a trained model drives the arm; top 3 go to the real-arm final) and side track **Open** (any solution; the judged winner gets an unranked real-arm demo). Declaring a track is optional for now; undeclared counts as Open |
-| Submissions | One accepted per team per hour; your best score counts |
+| Approach | One track, any approach: any model that works from the cameras can drive the arm. Training or fine-tuning one is encouraged ([approach](RULES.md#approach)) |
+| Submissions | One accepted per team per hour; your best score counts on one leaderboard |
+| Real-arm final | Top 3 teams by simulation score at the cutoff run their best submission on the real arm ([final](RULES.md#real-arm-final)) |
 
 Every number is in the [limits table](RULES.md#limits). Cutoff and results times are in the dashboard.

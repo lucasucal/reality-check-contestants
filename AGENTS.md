@@ -2,7 +2,7 @@
 
 You are helping a team build a policy for Reality Check, a robotics hackathon. The policy drives a
 simulated UR12e arm with a Robotiq 2F-140 gripper through fastener tasks. It is scored automatically in
-simulation, and the best main-track teams run it on the real arm. This file sits at the root of the
+simulation, and the top 3 teams run it on the real arm. This file sits at the root of the
 participant bundle (`reality-check-practice/`). Paths below are relative to it.
 
 ## Read in this order
@@ -10,7 +10,7 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
 | File | What it tells you |
 |---|---|
 | `contestants/README.md` | The event at a glance |
-| `contestants/RULES.md` | Tracks, scoring, tasks, limits |
+| `contestants/RULES.md` | Approach, scoring, tasks, limits |
 | `docs/api.md` | The policy HTTP contract: observations, actions, timing |
 | `contestants/SUBMIT.md` | How to package code and weights so the judged run loads them |
 | `starter/README.md` | The template the team's policy repository starts from |
@@ -26,8 +26,9 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
   It is mounted read-only at `/weights` (`RC_WEIGHTS_DIR`). Never put weights in GitHub.
 - **Team:** exactly 4 people including the lead, formed in EngineExchange; the team can submit once
   all 4 are approved and checked in. A submission counts for the team the submitter is on at that moment.
-- **Track:** optional for now (undeclared counts as Open): Model Training (a trained model drives the
-  arm; add a short method note) or Open (any approach).
+- **Approach:** one track, any approach. Any model that works from the cameras can drive the arm (a
+  VLA, a world or action model, a visuomotor policy); training or fine-tuning one is encouraged. No
+  track declaration and no method note.
 - **Cadence:** one accepted submission per team per hour; the best score counts. The 4 hidden tasks
   (of 6) carry 75% of the total.
 

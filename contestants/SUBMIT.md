@@ -13,9 +13,8 @@ NVIDIA H100 (amd64). Limits: [limits table](RULES.md#limits).
    catches most failures before they cost a cooldown.
 5. Push to public GitHub. In EngineExchange create or join a team (exactly 4 people including the lead;
    all 4 approved and checked in before it can submit), open **Policy runs** and submit: repo URL and
-   branch, tag or commit SHA; model link and optional revision.
-   Track is optional and defaults to Open (`model_training` needs a method note of what you trained and
-   on which data).
+   branch, tag or commit SHA; model link and optional revision. There is no track to declare and no
+   method note.
 6. If the dashboard shows `preparing`, wait: the cooldown starts only when the model is downloaded and
    verified.
 

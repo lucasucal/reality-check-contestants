@@ -9,33 +9,17 @@ The organizers' decisions on eligibility and conduct are final.
 | Size | **Exactly 4 people, including the lead**, formed in EngineExchange. No 5th member, no smaller teams |
 | Submitting | A team can submit once all 4 members are approved and checked in at the venue |
 | Changes | Until submissions close you can create, join or leave a team; the lead can invite or remove members |
-| Roster lock | Teams lock at the submission cutoff (Sunday 12:30) |
+| Roster lock | Teams lock at the submission cutoff (Sunday 12:30, London time) |
 | Which team | A submission counts for the team you are on when you press submit; accepted runs stay with the team that submitted them |
 | Shared | Scores, the hourly cooldown and the failure budget belong to the team |
 
-## Tracks
+## Approach
 
-Every submission has a track; an undeclared track counts as Open. Main-track submissions also count on the overall board.
-
-| | Main track: **Model Training** | Side track: **Open** |
-|---|---|---|
-| Eligible | The arm is driven by a model your team trained or fine-tuned (VLA, VLM, learned visuomotor policy) that generalises across scenes. Hand-written control, even with learned perception, is Open | Any solution |
-| Method note | **Required** (1–500 characters): what you trained and on which data | Optional (up to 500 characters) |
-| Ranked by | Simulation score of your best Model Training submission | Judges, with the rubric below |
-| Prize path | Top 3 go to the [real-arm final](#real-arm-final) | One winner, who gets an unranked demo on the real arm |
-
-Organizers may move a submission to the other track; its score is kept. The overall board ranks every
-submission whatever its track. Main-track finalists publish their training code, and organizers may
-re-run a submission (for example with altered weights) to verify that its trained model drives the arm.
-
-Open rubric (each criterion 1–5; ties go to Results, then Creativity):
-
-| Criterion | Weight | What earns a 5 |
-|---|---|---|
-| Results | 35% | Top-tier sim score, robust across scenes and disturbances |
-| Creativity | 30% | A genuinely new approach or a surprising, well-motivated use of the tools |
-| Technical depth | 20% | Deep, well-measured work; ablations or analysis that teach something |
-| Real-world readiness | 15% | Tolerant of calibration error, camera drift and part variation |
+One track, any approach. Any model can drive the arm: a VLA, a world or action model, a visuomotor
+policy, anything that works from the cameras. We encourage training or fine-tuning a model; Black Forest
+Labs' FLUX models and LeRobot models (such as SmolVLA) are good places to start. There is no track to
+declare and no method note. One leaderboard ranks every team by its best scored submission; the top 3
+go to the [real-arm final](#real-arm-final).
 
 ## Data, parts and models
 
@@ -135,7 +119,7 @@ total = (p1 + p2 + 1.5 × (h1 + h2 + h3 + h4)) / 8.
 
 ## Leaderboard
 
-- Your team's best score counts; a later, lower score never replaces it.
+- One leaderboard. Your team's best score counts; a later, lower score never replaces it.
 - Scores are rounded half up to two decimals (83.785 → 83.79) and ranked at that precision. Equal
   scores share a rank (1, 1, 3).
 - After a run you see each public task's score, each hidden task's score under its anonymous id, the
@@ -176,13 +160,13 @@ Your public results break clamps down by limit and joint ("wrist_1 limit 312 of 
 
 | Step | Detail |
 |---|---|
-| Who | Top 3 main-track teams by simulation rank at the cutoff, after eligibility checks |
-| What runs | Your best main-track submission, unchanged |
+| Who | Top 3 teams by simulation score at the cutoff, after eligibility checks |
+| What runs | Your best submission, unchanged. Organizers may re-run it to verify it |
 | Runs | Once per public task, same `/act` contract; the goal image is a photo of the finished real scene |
 | Ranking | Mean real-arm score; simulation score breaks ties |
-| Open winner | One unranked demo run |
 
-Real parts can differ in mass and look from the simulated ones.
+The real parts are 3D-printed copies of the package parts and can differ in mass and look from the
+simulated ones.
 
 ## Limits
 
