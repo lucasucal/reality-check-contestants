@@ -23,8 +23,8 @@ FORMAT_NOTES = {
     ".keras": "Keras files load with keras (installed; KERAS_BACKEND defaults to jax, torch also works), but TensorFlow is not installed, so TF-only layers or models saved with the TensorFlow backend can fail. Safetensors is safer.",
 }
 SAVED_MODEL_NOTE = "TensorFlow SavedModel needs TensorFlow, which is not in the image; convert the model to safetensors or JAX/orbax."
-ADAPTER_NOTE = ("adapter_config.json names the base model {base!r}, which is not in this snapshot and not on the curated "
-                "base-model list. There is no network at judging, so from_pretrained({base!r}) cannot download it. Merge the "
+ADAPTER_NOTE = ("adapter_config.json names the base model {base!r}, which is not in this snapshot. "
+                "There are no organizer-provided base models and no network at judging, so from_pretrained({base!r}) cannot download it. Merge the "
                 "adapter into the base and upload the merged model, or include the base model in this repository and load it "
                 "by path (then ignore this note).")
 QUANT_UNSUPPORTED = {
@@ -42,20 +42,14 @@ def _read_json(path: Path):
         return None
 
 
-def _curated_bases(release: Optional[Release]) -> set:
-    cache = (release.raw.get("base_cache") if release else None) or {}
-    entries = cache.get("entries") if isinstance(cache, dict) else None
-    return {e.get("repo_id") for e in entries or [] if isinstance(e, dict) and isinstance(e.get("repo_id"), str)}
-
-
-def _config_findings(root: Path, rel: str, path: Path, curated: set, result: CheckResult) -> None:
+def _config_findings(root: Path, rel: str, path: Path, result: CheckResult) -> None:
     name = path.name
     data = _read_json(path)
     if not isinstance(data, dict):
         return
     if name == "adapter_config.json":
         base = data.get("base_model_name_or_path")
-        if isinstance(base, str) and base and base not in curated and not os.path.isabs(base) \
+        if isinstance(base, str) and base and not os.path.isabs(base) \
                 and not base.startswith(".") and not (root / base).exists():
             result.findings.append(make("snapshot_format", rel, detail=ADAPTER_NOTE.format(base=base)))
     elif name == "config.json":
@@ -74,7 +68,6 @@ def check_snapshot(snapshot_dir: Path, *, release: Optional[Release] = None) -> 
     root = Path(snapshot_dir)
     result = CheckResult()
     count = 0
-    curated = _curated_bases(release)
     formats: dict = {}  # extension or name -> [rel]
     configs = 0
     for current, dirs, files in os.walk(root):
@@ -123,7 +116,7 @@ def check_snapshot(snapshot_dir: Path, *, release: Optional[Release] = None) -> 
                 formats.setdefault(name, []).append(rel)
             elif name in ("adapter_config.json", "config.json") and configs < MAX_CONFIGS:
                 configs += 1
-                _config_findings(root, rel, path, curated, result)
+                _config_findings(root, rel, path, result)
     for key, rels in formats.items():
         note = SAVED_MODEL_NOTE if key == "saved_model.pb" else FORMAT_NOTES[key]
         more = f" ({len(rels) - 1} more file(s) with the same format)" if len(rels) > 1 else ""

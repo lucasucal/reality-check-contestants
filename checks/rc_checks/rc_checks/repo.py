@@ -450,16 +450,14 @@ def check_repo(repo_dir: Path, *, release: Optional[Release] = None, limits: Lim
 def _hint_checks(repo_dir: Path, py_files: list, manifest: Optional[dict], entry_file: Optional[str],
                  release: Release, result: CheckResult) -> None:
     """Warn-only hints (hints.py) over the files the import audit reads, minus copies the preparation strips."""
-    from .snapshot import _curated_bases
     files = [rel for rel in py_files[:imports.MAX_FILES]
              if (rel == entry_file or imports.audited(rel)) and stripped_by_preparation(rel) is None]
     value = (manifest or {}).get("entry_point")
     program_form = isinstance(value, str) and classify_entry_point(value)[0] in ("module", "file")
-    curated = _curated_bases(release)
-    found = hints.scan(repo_dir, files, entry_file, program_form, curated, imports.MAX_SOURCE_BYTES)
+    found = hints.scan(repo_dir, files, entry_file, program_form, imports.MAX_SOURCE_BYTES)
     if found["hub"]:
         result.findings.append(make("hub_id_offline", found["hub"][0][1].rsplit(":", 1)[0],
-                                    ids=hints._listed(found["hub"]), list_note=hints.hub_list_note(curated)))
+                                    ids=hints._listed(found["hub"])))
     if found["flash"]:
         result.findings.append(make("flash_attention_requested", found["flash"][0][1].rsplit(":", 1)[0],
                                     uses=hints._listed(found["flash"])))

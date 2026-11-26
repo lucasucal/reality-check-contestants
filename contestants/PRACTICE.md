@@ -61,7 +61,7 @@ From the root of the unpacked participant bundle:
 
 | Option | Effect |
 |---|---|
-| `--model URL` | Downloads the snapshot you will submit and mounts it at `/weights` |
+| `--model URL` | Downloads the pinned snapshot from Hugging Face and mounts it read-only at `/weights` with the repo's folder layout, as every judged run does |
 | `--weights-dir DIR` | Uses local weights instead |
 | `--seeds 0-3` | Public seeds to play (four different starts) |
 | `--tasks bolt_to_tray` | Plays only these public tasks (comma-separated) |
@@ -93,19 +93,19 @@ fine at several seconds per call in practice can run out of the 90 s budget in j
 
 ## Train or export inside the image
 
-The image runs as uid 10001, offline, with its Hugging Face cache on read-only `/hf-base`. To download,
-train or export with it on your own machine:
+The image runs as uid 10001 and offline. To download, train or export with it on your own machine,
+turn the offline switches off and give it a writable Hugging Face cache:
 
 ```sh
 docker run --rm --gpus all --user $(id -u):$(id -g) --shm-size=8g \
-  -e HF_HUB_OFFLINE=0 -e TRANSFORMERS_OFFLINE=0 -e HF_HUB_CACHE=/scratch/hf \
+  -e HF_HUB_OFFLINE=0 -e TRANSFORMERS_OFFLINE=0 \
   -v $PWD/hf-cache:/scratch/hf -v $PWD/out:/out <image> python ...
 ```
 
 `<image>` is `ghcr.io/lucasucal/rc-policy@` plus `image.manifest_digest` from `runtime/release.json`.
-`--shm-size` keeps DataLoader workers alive ([KSI-028](KNOWN-ISSUES.md)); `HF_HUB_CACHE` avoids
-`PermissionError` ([KSI-029](KNOWN-ISSUES.md)). Leave these settings out of your policy: judging is
-offline.
+The image keeps its Hugging Face cache in `/scratch/hf`; the `-v $PWD/hf-cache:/scratch/hf` mount
+keeps downloads between runs. `--shm-size` keeps DataLoader workers alive (Docker's default `/dev/shm` is 64 MB; or pass
+`num_workers=0`). Leave these settings out of your policy: judging is offline.
 
 ## Without the image
 

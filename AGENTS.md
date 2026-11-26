@@ -15,7 +15,7 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
 | `contestants/SUBMIT.md` | How to package code and weights so the judged run loads them |
 | `starter/README.md` | The template the team's policy repository starts from |
 | `contestants/PRACTICE.md` | Running the policy locally in the judged image on the public tasks |
-| `contestants/KNOWN-ISSUES.md` | Known failures and their fixes |
+| `contestants/KNOWN-ISSUES.md` | What's in the image: packages and versions, what is missing, the runtime rules |
 
 ## What a submission is
 
@@ -23,7 +23,9 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
   entry point: a `Policy` class (`"policy.example:ExamplePolicy"`) or a program serving HTTP on
   `0.0.0.0:8080`.
 - **Weights:** one public, ungated Hugging Face model repository containing everything the policy loads.
-  It is mounted read-only at `/weights` (`RC_WEIGHTS_DIR`). Never put weights in GitHub.
+  It is mounted read-only at `/weights` (`RC_WEIGHTS_DIR`) with the repo's folder layout. The submit pins
+  a commit; every judged run downloads that commit fresh, so the repo must stay public and the commit
+  intact until results are final. Never put weights in GitHub.
 - **Team:** exactly 4 people including the lead, formed in EngineExchange; the team can submit once
   all 4 are approved and checked in. A submission counts for the team the submitter is on at that moment.
 - **Approach:** one track, any approach. Any model that works from the cameras can drive the arm (a
@@ -36,7 +38,9 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
 
 - Python only, using the packages in the published image plus the repository's own code. Nothing is
   installed at judging time.
-- Offline: no network. Load everything from `/weights` (or the curated base cache, if published).
+- Offline: no network. Load everything from `/weights`; organizers provide no base models. A policy that
+  uses several models (a base plus an adapter, a detector plus a VLA) puts them all in its one model
+  repository, in subfolders, and loads them by path (`contestants/SUBMIT.md`, "Several models in one repo").
 - `/scratch` is the only writable path.
 - Every `/act` response echoes `episode_id` and `step`, and returns `joint_delta` (6 values plus a
   gripper target in [0, 1]) or an `action_chunk` of up to 16 actions. Out-of-range values are clamped.

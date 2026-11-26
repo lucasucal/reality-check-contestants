@@ -186,19 +186,14 @@ class LocalDocker:
         self.name = f"rc-practice-policy-{prep.git.sha[:8]}"
         self.driver = driver = self.deps.make_driver() if self.deps.make_driver else DockerDriver(limits.docker_bin)
         settings = launcher.PolicySettings.from_config(limits, gpus=args.gpus, memory=args.memory)
-        base_cache = args.base_cache_dir or limits.base_cache_dir
-        if base_cache:
-            say(f"curated base cache: {base_cache} (version {launch.read_base_cache_version(base_cache)})")
-        else:
-            say("no curated base cache (--base-cache-dir / RC_BASE_CACHE_DIR): policies loading a curated base by hub id will fail offline here")
         where = f"{_platform.machine()} host, {launcher.gpu_note(settings)}, image {image.platform}"
         if args.print_argv:
             say("docker run -d " + " ".join(launcher.policy_launch_args(
                 driver, name=self.name, image_ref=image.run_ref, submission_dir=str(prep.tree),
-                weights_dir=str(prep.weights), base_cache_dir=base_cache, settings=settings)))
+                weights_dir=str(prep.weights), settings=settings)))
         launcher.ensure_image(driver, image, pull=not args.no_pull)
         ip = launcher.start_policy(driver, name=self.name, image_ref=image.run_ref, submission_dir=str(prep.tree),
-                                   weights_dir=str(prep.weights), base_cache_dir=base_cache, settings=settings)
+                                   weights_dir=str(prep.weights), settings=settings)
         self.memory_limit = settings.memory
         if not self.deps.make_driver:  # a real Docker host: measure (never limit) the container's memory
             self.sampler = resources.MemorySampler(self.name, gpu=bool(launch.gpu_args(settings.gpus, settings.extra_args)),
@@ -343,7 +338,6 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--policy-ready-timeout", type=float, default=1800.0, help="policy load/readiness wait")
     r.add_argument("--gpus", default=None, help="docker GPU spec: all (default from runner config), none, or a device list")
     r.add_argument("--memory", default=None, help="policy memory limit (default: the runner's published limit)")
-    r.add_argument("--base-cache-dir", default="", help="curated base cache to mount at /hf-base (default $RC_BASE_CACHE_DIR)")
     r.add_argument("--no-pull", action="store_true", help="never pull the image")
     r.add_argument("--print-argv", action="store_true", help="print the exact docker run arguments")
     return p

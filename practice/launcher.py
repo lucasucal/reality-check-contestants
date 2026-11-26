@@ -2,7 +2,7 @@
 
 The policy container is started through `DockerDriver.run_policy_pinned`, the same method the
 judged worker calls, so the argv (mounts, read-only /submission and /weights, offline env,
-hardening, curated cache mount) is the judged argv by construction. Only the inputs differ
+hardening) is the judged argv by construction. Only the inputs differ
 (paths, container name, GPU choice) and they are printed.
 """
 from __future__ import annotations
@@ -84,25 +84,25 @@ def image_ref_from_release(release: Any, platform: Optional[str] = None, source:
 
 
 def policy_launch_args(driver: DockerDriver, *, name: str, image_ref: str, submission_dir: str, weights_dir: str,
-                       base_cache_dir: str, settings: PolicySettings, submission_id: int = PRACTICE_SUBMISSION_ID) -> list:
+                       settings: PolicySettings, submission_id: int = PRACTICE_SUBMISSION_ID) -> list:
     """The exact `docker run` arguments (after `docker run -d`) for these inputs: the same function
     the driver uses, so tests and the CLI's --print-argv show what will run."""
     return launch.policy_run_args(
         name=name, labels=driver._labels(submission_id), image_ref=image_ref, submission_dir=submission_dir,
-        weights_dir=weights_dir, base_cache_dir=base_cache_dir, memory=settings.memory, cpus=settings.cpus,
+        weights_dir=weights_dir, memory=settings.memory, cpus=settings.cpus,
         pids_limit=settings.pids_limit, user=settings.user, shm_size=settings.shm_size,
         log_max_size=settings.log_max_size, log_max_files=settings.log_max_files, scratch_size=settings.scratch_size,
         gpus=settings.gpus, extra_args=settings.extra_args)
 
 
 def start_policy(driver: DockerDriver, *, name: str, image_ref: str, submission_dir: str, weights_dir: str,
-                 base_cache_dir: str, settings: PolicySettings, submission_id: int = PRACTICE_SUBMISSION_ID) -> str:
+                 settings: PolicySettings, submission_id: int = PRACTICE_SUBMISSION_ID) -> str:
     """Start the policy container via the judged code path; returns its internal-network IP."""
     driver.remove(name)
     try:
         driver.run_policy_pinned(
             name=name, image_ref=image_ref, submission_id=submission_id, submission_dir=submission_dir,
-            weights_dir=weights_dir, base_cache_dir=base_cache_dir, memory=settings.memory, cpus=settings.cpus,
+            weights_dir=weights_dir, memory=settings.memory, cpus=settings.cpus,
             pids_limit=settings.pids_limit, user=settings.user, shm_size=settings.shm_size,
             log_max_size=settings.log_max_size, log_max_files=settings.log_max_files,
             scratch_size=settings.scratch_size, gpus=settings.gpus, extra_args=settings.extra_args)

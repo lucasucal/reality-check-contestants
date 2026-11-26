@@ -21,7 +21,6 @@ class Release:
     reserved_modules: frozenset
     stdlib_module_names: frozenset
     numeric_formats: tuple
-    base_cache_version: Optional[str]
     docs_url: str
 
 
@@ -70,10 +69,7 @@ def parse_release(raw: object) -> Release:
             raise ReleaseError("numeric_formats dtype_codes must be a list of strings")
     stdlib = raw.get("stdlib_module_names")
     stdlib_names = frozenset(_str_list(raw, "stdlib_module_names")) if stdlib else _interpreter_stdlib_names()
-    base_cache = raw.get("base_cache") or {}
-    if not isinstance(base_cache, dict):
-        raise ReleaseError("release.json base_cache must be an object")
-    cache_version = base_cache.get("version")
+    # "base_cache" (the curated base cache, removed in v11) may still appear in a pre-v11 release.json; ignored.
     docs_url = raw.get("docs_url", "/docs")
     if not isinstance(docs_url, str):
         raise ReleaseError("release.json docs_url must be a string")
@@ -84,7 +80,6 @@ def parse_release(raw: object) -> Release:
         reserved_modules=frozenset(_str_list(raw, "reserved_modules")),
         stdlib_module_names=stdlib_names,
         numeric_formats=tuple(formats),
-        base_cache_version=cache_version if isinstance(cache_version, str) else None,
         docs_url=docs_url.rstrip("/"),
     )
 

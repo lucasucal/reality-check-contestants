@@ -5,13 +5,16 @@ description = "Reality Check runner: runs a policy against the engine's tasks"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "httpx==0.28.1",
+    # The runner downloads each run's pinned weights snapshot from Hugging Face itself (rc_runner/weights_fetch.py).
+    # hf_xet comes with it on amd64/arm64 (Xet-backed repositories).
+    "huggingface_hub==1.33.0",
     "rc_checks",
 ]
 
 [dependency-groups]
 dev = ["pytest>=9.0"]
-# Team practice only (`uv sync --group practice`): the practice tool downloads the pinned Hugging Face snapshot.
-# Not a default group, so the judged runner environment is unchanged.
+# Team practice (`uv sync --group practice`). huggingface_hub is now a runtime dependency; the group stays so the
+# documented command keeps working.
 practice = ["huggingface_hub>=0.34,<2"]
 
 [tool.uv]

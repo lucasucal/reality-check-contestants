@@ -211,7 +211,7 @@ class DockerDriver:
         return result.stdout.strip()
 
     def run_policy_pinned(self, *, name: str, image_ref: str, submission_id: int, submission_dir: str,
-                          weights_dir: str, base_cache_dir: str, memory: str, cpus: str, pids_limit: int,
+                          weights_dir: str, memory: str, cpus: str, pids_limit: int,
                           user: str, shm_size: str, log_max_size: str, log_max_files: int, scratch_size: str,
                           gpus: str, extra_args: Sequence[str],
                           cancel: Callable[[], bool] | None = None) -> str:
@@ -220,7 +220,7 @@ class DockerDriver:
         try:
             argv = launch.policy_run_args(
                 name=name, labels=self._labels(submission_id), image_ref=image_ref,
-                submission_dir=submission_dir, weights_dir=weights_dir, base_cache_dir=base_cache_dir,
+                submission_dir=submission_dir, weights_dir=weights_dir,
                 memory=memory, cpus=cpus, pids_limit=pids_limit, user=user, shm_size=shm_size,
                 log_max_size=log_max_size, log_max_files=log_max_files, scratch_size=scratch_size,
                 gpus=gpus, extra_args=extra_args)

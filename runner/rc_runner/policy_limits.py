@@ -30,7 +30,7 @@ def str_env(name: str, default: str) -> str:
 
 
 class PolicyLimits:
-    """Docker binary, policy container limits and the curated base cache mount."""
+    """Docker binary and policy container limits."""
 
     def __init__(self) -> None:
         self.docker_bin: str = str_env("RC_DOCKER_BIN", "docker")
@@ -39,7 +39,6 @@ class PolicyLimits:
         self.policy_cpus: str = str_env("RC_POLICY_CPUS", "8")
         self.policy_pids_limit: int = int_env("RC_POLICY_PIDS_LIMIT", 1024)
         self.policy_docker_args: str = os.environ.get("RC_POLICY_DOCKER_ARGS", "")
-        self.base_cache_dir: str = os.environ.get("RC_BASE_CACHE_DIR", "")  # mounted ro at /hf-base when set
         self.policy_scratch_size: str = str_env("RC_POLICY_SCRATCH_SIZE", "8g")
         self.policy_shm_size: str = str_env("RC_POLICY_SHM_SIZE", "1g")
         self.policy_log_max_size: str = str_env("RC_POLICY_LOG_MAX_SIZE", "50m")

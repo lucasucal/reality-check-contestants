@@ -232,8 +232,8 @@ uses the control steps used to finish (+10 points every time you halve your time
 from the full 1,200 steps), not the `/act` request budget (see RULES "Scoring"). One
 accepted submission per team per hour is enforced across all team members.
 The submission cutoff and expected-results time are organizer settings.
-A submission started before the cutoff counts even if its model finishes
-downloading afterward, and judged work may finish after the cutoff. The
+A submission accepted before the cutoff counts, and judged work (including
+the model download) may finish after the cutoff. The
 two-hour completion window is a planning target, not a guarantee.
 
 Known issues in the judged environment are in
@@ -258,20 +258,21 @@ drive the arm. All teams share one ranking.
   scored run takes its place. That submission's `GET /api/submissions/{id}` then carries
   `leaderboard_exclusion: {"category", "label", "text"}`.
 
-## Preparation
+## Model checks at submit and at run time
 
-- One active (`preparing`) preparation per team, shared by every member. A second
-  `POST /api/submissions` returns `429` with `code: "preparation_active"` and the active
-  `preparation_id`. It is not charged and does not count toward the 8/h validation limit.
-- At most 2 preparations download at once across all teams. The others stay `preparing`
-  with `stage: "queued_download"`, `status_text: "waiting for a download slot"` and a 1-based
-  `queue_position` (first come, first served).
-- The 30 minute `expires_at` and the download budget start when a slot is granted. Until
-  then `expires_at` is the 60 minute wait cap. A preparation that never gets a slot ends
-  `expired` with `preparation_wait_expired` ("submit again"); not charged.
-- Low organizer storage fails a preparation with `weights_storage_unavailable` (503,
-  retryable, not charged).
-- Weights already cached skip preparation entirely (`201`).
+- `POST /api/submissions` checks the model by Hugging Face metadata only (public, ungated, a model
+  repo, revision resolved to a 40-character commit, file list with sizes, the 100 GiB cap, rejected
+  file names) and returns `201` at once. Nothing is downloaded; the hourly cooldown starts on acceptance.
+  A refused model is rejected before acceptance and does not start the cooldown; a Hugging Face
+  outage during the check returns `503` with `retryable: true`.
+- Each judged run downloads the pinned commit fresh (no cache between runs), verifies every file
+  against the list recorded at submit, runs the content checks, mounts the files read-only at
+  `/weights` and deletes them after the run. The download is reused by the run's six policy starts
+  and counts toward the 90-minute run deadline, not the 30-minute load limit.
+- Run-time model failures: `weights_unavailable` (repo deleted, private or gated, or pinned commit
+  gone; charged), `weights_unsafe_entries`, `weights_check_failed`, `weights_snapshot_too_large`
+  (charged), `weights_verify_failed` and `weights_provider_unavailable` (not charged; the run is
+  retried after a provider failure). `failure.stage` is `prepare`.
 
 ## Submission status for teams
 

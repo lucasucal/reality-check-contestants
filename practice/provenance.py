@@ -163,7 +163,7 @@ def snapshot_warnings(snapshot_dir: Path) -> list:
     if has_config and not (names & {"tokenizer.json", "tokenizer_config.json", "preprocessor_config.json",
                                    "processor_config.json", "policy_preprocessor.json"}):
         out.append("config.json is present but no tokenizer or processor files were found; if your policy builds a processor "
-                   "from the hub id, it must come from the curated base cache (offline), or be added to your snapshot.")
+                   "from the hub id, it cannot load offline: add those files to your snapshot.")
     return out
 
 

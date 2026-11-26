@@ -4,7 +4,7 @@ Three patterns found by contestant simulations (CS-B-6, 7, 8), read from the AST
 audit reads (runtime code plus the entry file); team code is never imported or run:
 
 * a Hugging Face hub id string passed to from_pretrained / hf_hub_download / snapshot_download, which cannot
-  resolve offline unless the model is on the curated base list (mounted at /hf-base);
+  resolve offline (everything must load from /weights);
 * attn_implementation "flash_attention_2" (flash-attn is not in the image);
 * a program-form entry file binding its server to 127.0.0.1 / localhost (never reachable by the runner).
 """
@@ -68,7 +68,7 @@ def _looks_like_local(repo_dir: Path, rel: str, value: str) -> bool:
     return (Path(repo_dir) / value).exists() or (here / value).exists()
 
 
-def hub_ids(repo_dir: Path, tree: ast.Module, rel: str, curated: set) -> list:
+def hub_ids(repo_dir: Path, tree: ast.Module, rel: str) -> list:
     """[(hub_id, "rel:line")] for literal hub ids passed to the hub loaders."""
     consts = _module_constants(tree)
     found = []
@@ -79,7 +79,7 @@ def hub_ids(repo_dir: Path, tree: ast.Module, rel: str, curated: set) -> list:
         value = _str(arg)
         if value is None and isinstance(arg, ast.Name):
             value = consts.get(arg.id)
-        if value is None or value in curated or _looks_like_local(repo_dir, rel, value):
+        if value is None or _looks_like_local(repo_dir, rel, value):
             continue
         found.append((value, f"{rel}:{node.lineno}"))
     return found
@@ -115,8 +115,7 @@ def _listed(items: Iterable[tuple]) -> str:
     return ", ".join(shown)
 
 
-def scan(repo_dir: Path, files: list, entry_file: Optional[str], program_form: bool, curated: set,
-         max_bytes: int) -> dict:
+def scan(repo_dir: Path, files: list, entry_file: Optional[str], program_form: bool, max_bytes: int) -> dict:
     """{"hub": [(id, where)], "flash": [(str, where)], "loopback": [(host, line)]} over `files`."""
     hub, flash, loop = [], [], []
     seen_ids = set()
@@ -124,7 +123,7 @@ def scan(repo_dir: Path, files: list, entry_file: Optional[str], program_form: b
         tree = _parse(repo_dir, rel, max_bytes)
         if tree is None:
             continue
-        for value, where in hub_ids(repo_dir, tree, rel, curated):
+        for value, where in hub_ids(repo_dir, tree, rel):
             if value not in seen_ids:
                 seen_ids.add(value)
                 hub.append((value, where))
@@ -133,10 +132,3 @@ def scan(repo_dir: Path, files: list, entry_file: Optional[str], program_form: b
             loop = loopback_binds(tree)
     return {"hub": hub, "flash": flash, "loopback": loop}
 
-
-def hub_list_note(curated: set) -> str:
-    if curated:
-        return ("only the organizer-curated base models resolve by hub id (mounted read-only at /hf-base), and these "
-                "ids are not on that list.")
-    return ("only the organizer-curated base models resolve by hub id (mounted read-only at /hf-base), and that list "
-            "is not published yet, so plan for your load to read only /weights or /hf-base.")

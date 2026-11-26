@@ -60,6 +60,13 @@ so the same bolt weighs from about 15 g to 0.8 kg and looks different. The print
 three vertical holes (one per bolt, chamfered) and three hex pockets (one per nut). Dimensions are in
 `engine/rc_engine/assets/`.
 
+**Parts and assets.** The fasteners and the three rooms come from
+[SimReady Hardware](https://huggingface.co/datasets/projectsim/simready-hardware) by Project Sim
+(Kaedim), revision `827f45cdffe63ae699351fdba58c50de73e4d40a`, CC-BY-4.0. The simulator's converted
+copies are in `engine/rc_engine/assets/fasteners/` and `engine/rc_engine/assets/rooms/`; each folder's
+`VENDORED.md` lists the source packages, dimensions and masses. The fixture is original
+(`engine/rc_engine/assets/fixture/`).
+
 ### Instructions
 
 Every step carries one phrasing from the task's pool, chosen per episode, and a goal image of that
@@ -179,16 +186,14 @@ organizers publish the final values on the dashboard; until then, plan around th
 | `/act` budget | **90 s cumulative** per repetition, transport included (runner and simulator time excluded); each call capped by what remains; connect ≤ 5 s; no retries |
 | Startup plus warmup | 30 min per policy start (3 untimed warmup `/act` calls). The policy restarts before each task |
 | Program-form server | Listening within 10 min of start |
-| Total judged run | 90 min |
+| Total judged run | 90 min, model download included |
 | `/act` response | 2 MiB; 1–16 actions |
 | GPU | NVIDIA H100 (80 GB), amd64 |
 | Memory | One combined CPU + GPU limit; over it ends the run (`policy_memory_exceeded`, limit and peak shown). The value is being finalised; it will be on the dashboard |
 | CPUs, processes | 8 CPUs, 1024 processes |
 | Writable space | `/scratch` 8 GB tmpfs (the only writable path); `/dev/shm` 1 GB |
 | Repository | 200 MB total, 2000 files, 20 MB per file |
-| Model snapshot | 100 GiB; 30 min download budget |
-| Concurrent preparations | **1 per team**; **2 downloads at once** across all teams; a wait over **60 minutes** expires uncharged |
-| `preparing` expiry | **30 minutes** from when a download slot is granted |
+| Model snapshot | **100 GiB**. Downloaded fresh at the start of every judged run; the download counts toward the 90-min run, not the 30-min startup |
 | Cooldown | 1 accepted submission per team per hour |
 | Failure budget | 8 team-caused failures per rolling hour |
 | Published policy log | First 50 and last 150 lines (≤ 32 KiB) per policy start; ≤ 8 starts and 128 KiB per submission |

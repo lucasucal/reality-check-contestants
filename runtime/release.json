@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "release_id": "rc-policy-v10",
-  "created_at": "2026-11-24T18:13:44Z",
+  "release_id": "rc-policy-v11",
+  "created_at": "2026-11-26T20:28:39Z",
   "image": {
     "repository": "ghcr.io/lucasucal/rc-policy",
-    "tag": "v10",
-    "manifest_digest": "sha256:19e4140d1a132807ac2eb8140a3d4eba4fa130cd10aa8cfcbc6f827a96ffa588",
+    "tag": "v11",
+    "manifest_digest": "sha256:e8ea98c1e0f7843bc8c39d8a443a63267035da4e69eafea198e9f9e77dcf6c42",
     "platform_digests": {
-      "linux/arm64": "sha256:18ec36a2a248d9732824ba965a3339377cc6b9fdf579aad6bbfeaa7a7d8f8037",
-      "linux/amd64": "sha256:3c0eeb270fce3535799b6677ad2066434212476109efd2e415d86a8b33e93db8"
+      "linux/arm64": "sha256:a2d240be3460bfd3272bd0a16a72e9982ef478d003d93a0001253bd44b9f70fa",
+      "linux/amd64": "sha256:4e479dc8a0ab8f4d434ac66d63075e8c7bacbee5979b4af4f80b0fb7ed756c27"
     },
     "config_digests": {
-      "linux/arm64": "sha256:489dc7a22ee40c8d4cb3245cd466608f78c8e3ba4067075b880270d31e642101",
-      "linux/amd64": "sha256:c81e89ef126d60d6760759625cfaaa071acf7ae88cba0132376f23f9af8432a7"
+      "linux/arm64": "sha256:ce698a56f2209171dd796119659de462d66d3630476b63b955a5778e29ccb61b",
+      "linux/amd64": "sha256:384d58aec18ab67e38b1f54c4f41391ecdbc22dd5eaad157bf9bf69889ee08e8"
     }
   },
   "python": {
@@ -4632,6 +4632,5 @@
       "notes": "GB10: torch 2.14.1 refuses the call: 'MXFP4 scaling only supported in CUDA for B200/B300' (float4_e2m1fn_x2 with float8_e8m0fnu 1x32 scales). MXFP8 (1x32 e8m0 scales) ran in torch._scaled_mm, output shape only. H100 has no FP4."
     }
   ],
-  "base_cache": null,
   "docs_url": ""
 }

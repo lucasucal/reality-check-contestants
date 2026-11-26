@@ -20,9 +20,11 @@ POLICY_PORT = 8080  # the runtime image always serves here; Config.policy_port i
 SUBMISSION_UID_GID = "10001:10001"
 
 # Runner-owned environment, in the order of the reference argv (6.1).
+# HF_HUB_CACHE is set explicitly (it is HF_HOME/hub anyway on v11+) so a pre-v11 image, whose ENV still
+# points it at the removed read-only /hf-base, behaves the same. Offline, nothing is written there.
 TMP_TMPFS_SIZE = "1g"
 POLICY_ENV: tuple[tuple[str, str], ...] = (
-    ("HOME", "/scratch/home"), ("HF_HOME", "/scratch/hf"), ("HF_HUB_CACHE", "/hf-base"),
+    ("HOME", "/scratch/home"), ("HF_HOME", "/scratch/hf"), ("HF_HUB_CACHE", "/scratch/hf/hub"),
     ("TORCH_HOME", "/opt/rc/torch"),
     ("XDG_CACHE_HOME", "/scratch/xdg"), ("TRITON_CACHE_DIR", "/scratch/triton"),
     ("TORCHINDUCTOR_CACHE_DIR", "/scratch/inductor"),
@@ -120,7 +122,7 @@ def scratch_mount(size: str) -> str:
 
 
 def policy_run_args(*, name: str, labels: Sequence[str], image_ref: str, submission_dir: str, weights_dir: str,
-                    base_cache_dir: str, memory: str, cpus: str, pids_limit: int, user: str, shm_size: str,
+                    memory: str, cpus: str, pids_limit: int, user: str, shm_size: str,
                     log_max_size: str, log_max_files: int, scratch_size: str, gpus: str,
                     extra_args: Sequence[str], network: str = POLICY_NETWORK) -> list[str]:
     """The reference argv of section 6.1 (everything after `docker run -d`)."""
@@ -143,24 +145,12 @@ def policy_run_args(*, name: str, labels: Sequence[str], image_ref: str, submiss
             "--tmpfs", f"/tmp:rw,nosuid,nodev,exec,size={TMP_TMPFS_SIZE},mode=1777",
             "--mount", f"type=bind,src={submission_dir},dst=/submission,readonly",
             "--mount", f"type=bind,src={weights_dir},dst=/weights,readonly"]
-    if base_cache_dir:
-        argv += ["--mount", f"type=bind,src={base_cache_dir},dst=/hf-base,readonly"]
     argv += gpu_args(gpus, extra)
     for key, val in POLICY_ENV:
         argv += ["-e", f"{key}={val}"]
     argv += extra
     argv.append(image_ref)
     return argv
-
-
-def read_base_cache_version(base_cache_dir: str) -> str | None:
-    """First line of <dir>/CACHE_VERSION, or None when unreadable/empty."""
-    try:
-        text = (Path(base_cache_dir) / "CACHE_VERSION").read_text(encoding="utf-8")
-    except OSError:
-        return None
-    first = text.strip().splitlines()[0].strip() if text.strip() else ""
-    return first or None
 
 
 def swap_status(proc_swaps: str = "/proc/swaps") -> dict:

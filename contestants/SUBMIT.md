@@ -15,8 +15,8 @@ NVIDIA H100 (amd64). Limits: [limits table](RULES.md#limits).
    all 4 approved and checked in before it can submit), open **Policy runs** and submit: repo URL and
    branch, tag or commit SHA; model link and optional revision. There is no track to declare and no
    method note.
-6. If the dashboard shows `preparing`, wait: the cooldown starts only when the model is downloaded and
-   verified.
+6. The submission is accepted as soon as the repo and model checks pass (seconds; the model is not
+   downloaded at submit). The hourly cooldown starts then.
 
 A public repo exposes every branch and commit pushed to it. To publish only the submitted commit, push
 it to a fresh repo (`git push <fresh-remote> HEAD:main`).
@@ -73,7 +73,7 @@ If it's Python and runs in the image, it works. Anything else is on you.
 
 ### flash-attention to PyTorch SDPA
 
-flash-attn is not in the image ([KSI-027](KNOWN-ISSUES.md)). SDPA computes the same attention and
+flash-attn is not in the image ([KSI-003](KNOWN-ISSUES.md)). SDPA computes the same attention and
 checkpoints load unchanged:
 
 - `attn_implementation="flash_attention_2"` → `"sdpa"` (also in `config.json`).
@@ -83,18 +83,26 @@ checkpoints load unchanged:
 
 ### Your model
 
+At submit the model is checked by metadata only: public, ungated, a model repo, revision pinned to a
+commit, file names and sizes. Nothing is downloaded and the submission is accepted at once. Every judged
+run then downloads the pinned commit fresh from Hugging Face, checks each file against the list recorded
+at submit, runs the content checks, mounts the files read-only at `/weights` and deletes them after the
+run. Nothing is cached between runs.
+
 | Rule | Detail |
 |---|---|
-| One repo | One **public, ungated** Hugging Face model repo holds **everything your policy loads**: weights, config, tokenizer and processor files |
-| Pinned | Resolved to a commit at submit time and pinned. Optional revision: a full 40-character SHA, a branch or a tag. Omitted = current head |
-| Mounted | Read-only at `/weights` (`RC_WEIGHTS_DIR`). Load by path |
+| One repo | One **public, ungated** Hugging Face model repo holds **everything your policy loads**: weights, config, tokenizer and processor files, and any other model it uses. Organizers provide no base models |
+| Formats | safetensors recommended; `.pt`/`.pth`/`.bin`/`.ckpt` work (`torch.load` defaults to `weights_only=True`). Rejected by file name at submit: archives (`.zip`, `.tar`, `.gz`, `.7z`, ...), TensorRT engines (`.engine`, `.plan`, `.trt`), compiled GPU code (`.ptx`, `.cubin`, `.fatbin`) and native binaries (`.so`, `.dll`, ...). Upload the files themselves, not an archive of them |
+| Layout | `/weights` is the repo root, folders kept: repo `config.json` → `/weights/config.json`, repo `policy/model.safetensors` → `/weights/policy/model.safetensors` |
+| Read-only, by path | `/weights` (`RC_WEIGHTS_DIR`) is read-only; write only to `/scratch`. Load with `from_pretrained("/weights/...")` or an explicit file path |
 | Offline | `HF_HUB_OFFLINE=1`. A hub id loaded by name fails (`OSError`). Disable pretrained downloads in configs (for example `pretrained_backbone_weights=None`) |
-| LoRA | Upload the **merged** model (QLoRA: merge onto a BF16 base), or base plus adapter in the same repo. An adapter pointing at another repo does not resolve |
-| Several models | Subfolders of the one repo: `/weights/detector/`, `/weights/vla/` |
+| Several models | A base model plus an adapter, a detector plus a VLA, someone else's pretrained model: download them and upload them into your one repo, each in its own subfolder ([example](#several-models-in-one-repo)) |
+| LoRA | Upload the **merged** model (QLoRA: merge onto a BF16 base), or the base and the adapter as two subfolders. An adapter pointing at another repo does not resolve |
+| Licences | Re-upload only models whose licence lets you redistribute them in a public, ungated repo, and keep their licence and attribution files. Check gated models (Llama, Gemma, PaliGemma) first |
 | Not in GitHub | Weights never go in the code repo (20 MB per-file cap) |
-| Size | 100 GiB snapshot, 30 min download. Over it: publish a clean inference branch and submit it as the revision |
-| Formats | safetensors recommended; `.pt`/`.bin`/`.ckpt` work. Archives, TensorRT engines and compiled GPU code are rejected |
-| Base models | Only when organizers publish a curated base cache (`/hf-base`, listed in `runtime/release.json`). **None is published yet**: until then upload everything |
+| Revision | Optional: a full 40-character commit SHA, a tag or a branch. A tag or branch is resolved at submit and pinned to that commit; later pushes do not change the submission. Omitted = current head |
+| Keep it available | Every judged run downloads the pinned commit again. Until results are final keep the repo public and ungated, and do not delete it or rewrite the pinned commit (force-push, squash, history reset). Otherwise the run fails with `weights_unavailable`, charged |
+| Size | 100 GiB per snapshot. The download is part of each judged run: it counts toward the 90-min run deadline, not the 30-min startup limit, and a larger snapshot takes longer. Over the cap, or to save time: publish an inference branch with only the files your policy loads and submit it as the revision |
 
 Upload (a write token from huggingface.co/settings/tokens; the repo is created public):
 
@@ -104,14 +112,54 @@ hf auth login
 hf upload <org>/<model> OUT_DIR .
 ```
 
+Test exactly what will be mounted, at the revision you will submit:
+
+```sh
+hf download <org>/<model> --revision <rev> --local-dir /tmp/snapshot
+python3 scripts/selftest.py --weights /tmp/snapshot     # in your policy repo; must end with ALL PASS
+runner/.venv/bin/python -m practice run --repo /path/to/policy \
+  --model https://huggingface.co/<org>/<model> --revision <rev>   # from the bundle root
+```
+
+Practice downloads the snapshot from Hugging Face and mounts it at `/weights` the way a judged run does
+([PRACTICE.md](PRACTICE.md)).
+
+#### Several models in one repo
+
+For example, a policy that loads `lerobot/smolvla_base` and your own checkpoint:
+
+```sh
+hf download lerobot/smolvla_base --local-dir OUT/smolvla_base   # Apache-2.0: redistributable
+cp -r path/to/your/checkpoint OUT/policy
+hf upload <org>/<model> OUT .
+```
+
+```python
+import os
+from pathlib import Path
+
+WEIGHTS = Path(os.environ.get("RC_WEIGHTS_DIR") or "/weights")
+
+def load(self):
+    base = WEIGHTS / "smolvla_base"    # was hub id "lerobot/smolvla_base"
+    policy = WEIGHTS / "policy"
+    ...
+```
+
+Configs inside a model can name further hub ids (SmolVLA's `vlm_model_name` is
+`HuggingFaceTB/SmolVLM2-500M-Video-Instruct`; PEFT's `adapter_config.json` has
+`base_model_name_or_path`). Download those too and point the field at the `/weights/...` path. The
+submit checks warn about hub ids your code loads by name.
+
 **Load time counts six times.** The policy restarts before each task (6 starts per judged run, all
-inside the 90-min run), so keep load plus warmup well under the 30-min startup limit.
+inside the 90-min run), so keep load plus warmup well under the 30-min startup limit. The model is
+downloaded once per run, before the first start, and reused by every restart.
 
 To export inside the image on your own machine, see [PRACTICE.md](PRACTICE.md#train-or-export-inside-the-image).
 
-**Preparing.** A model not yet cached is downloaded and verified before the cooldown starts; one
-preparation per team at a time. Hugging Face outages cost nothing; a missing, private, gated, empty,
-oversized or unsafe model counts as a team-caused failure.
+**When the model fails.** A missing, private, gated, empty or oversized model, an unknown revision or a
+rejected file name is refused at submit: no cooldown, but it counts as a team-caused failure. Problems
+found when a run downloads and checks the model are in the [failure table](#what-you-see-before-during-and-after-the-hidden-tasks).
 
 ### Provenance on every submission
 
@@ -125,7 +173,7 @@ that ran. Practice prints the same three values.
 - A failed run spends the cooldown unless its code is uncharged (table below). The failure says whether
   it was charged.
 - The cutoff is judged by when you press submit; accepted work may finish after it.
-- Status: `preparing` → received → validating → queued → starting → running → scored or failed.
+- Status: received → validating → queued → starting → running → scored or failed.
 
 ### What you see before, during and after the hidden tasks
 
@@ -149,12 +197,18 @@ the run continues. Going over the memory limit fails the run.
 | `policy_protocol_violation` | yes | Wrong contract on `/readyz`, or a warmup response over 2 MiB |
 | `motion_limit_violation` | yes | Legacy; malformed actions are now held steps |
 | `run_deadline_exceeded` | yes | The whole run went over 90 minutes |
-| `weights_download_failed`, `weights_download_timeout` | yes | The pinned weights could not be fetched |
+| `weights_unavailable` | yes | At run time the model repo was deleted, made private or gated, or the pinned commit no longer exists |
+| `weights_unsafe_entries`, `weights_check_failed` | yes | The downloaded model failed the content checks (unsafe entries, rejected formats) |
+| `weights_snapshot_too_large` | yes | The downloaded model is over 100 GiB (Hugging Face did not report every file size at submit) |
 | `infra_error` | no | Evaluation service error |
 | `stopped` | no | An organizer stopped the run |
-| `image_missing`, `image_mismatch`, `context_verify_failed`, `weights_verify_failed`, `base_cache_mismatch` | no | Image, code or weights could not be verified |
-| `weights_provider_unavailable` | no | Hugging Face outage |
+| `image_missing`, `image_mismatch`, `context_verify_failed` | no | Image or code could not be verified |
+| `weights_verify_failed` | no | The downloaded files do not match the list recorded at submit |
+| `weights_provider_unavailable` | no | Hugging Face outage, rate limit or timeout during the run's download; the run is retried |
 | `evidence_recording_failed` | no | The result could not be recorded |
+
+`weights_download_failed`, `weights_download_timeout` and the `preparation_*` codes appear only on older
+submissions.
 
 ## Wire contract
 

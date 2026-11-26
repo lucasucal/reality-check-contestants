@@ -10,7 +10,7 @@ Judging runs your code in the published policy image on an NVIDIA H100 (amd64).
 2. Copy the starter template ([`starter/`](../starter)) and run `python3 scripts/selftest.py`.
 3. Practice on the public tasks in the judged image: [PRACTICE.md](PRACTICE.md).
 4. Package code and weights and submit: [SUBMIT.md](SUBMIT.md).
-5. Hit an error? Check [KNOWN-ISSUES.md](KNOWN-ISSUES.md).
+5. Hit an error? Check [what's in the image](KNOWN-ISSUES.md).
 
 ## The event at a glance
 
@@ -24,7 +24,7 @@ Judging runs your code in the published policy image on an NVIDIA H100 (amd64).
 | Policy output | Joint deltas plus a gripper target, one action or a chunk of up to 16 |
 | Score | Finish, then precision, then speed: completed = 70 + precision × (5 + speed bonus), not completed under 15 ([scoring](RULES.md#scoring)) |
 | Approach | One track, any approach: any model that works from the cameras can drive the arm. Training or fine-tuning one is encouraged ([approach](RULES.md#approach)) |
-| Submissions | One accepted per team per hour; your best score counts on one leaderboard |
+| Submissions | Accepted as soon as the repo and model checks pass; one per team per hour; your best score counts on one leaderboard |
 | Real-arm final | Top 3 teams by simulation score at the cutoff run their best submission on the real arm ([final](RULES.md#real-arm-final)) |
 
 Every number is in the [limits table](RULES.md#limits). Cutoff and results times are in the dashboard.
