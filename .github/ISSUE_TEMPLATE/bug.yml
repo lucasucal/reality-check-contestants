@@ -1,0 +1,42 @@
+name: Bug
+description: The starter, the practice tool, the simulator or a judged run does something wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Check [KNOWN-ISSUES.md](https://github.com/lucasucal/reality-check-contestants/blob/main/contestants/KNOWN-ISSUES.md) first. Never paste tokens or credentials.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Starter / self-test, Practice tool, Simulator, Judged submission, Dashboard, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Commands you ran, from the root of this repository or your policy repository.
+      render: sh
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Error message, failure code or KSI ID, and the relevant log lines.
+      render: text
+  - type: input
+    id: submission
+    attributes:
+      label: Submission (judged runs only)
+      description: Team name and the submission's time or ID from the dashboard.
+  - type: input
+    id: version
+    attributes:
+      label: Pack version
+      description: The commit in PUBLISHED_FROM, or this repository's commit you are on.
