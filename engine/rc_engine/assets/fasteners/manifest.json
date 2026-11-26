@@ -1,0 +1,842 @@
+{
+  "units": "metres",
+  "source": {
+    "dataset": "https://huggingface.co/datasets/projectsim/simready-hardware",
+    "revision": "827f45cdffe63ae699351fdba58c50de73e4d40a",
+    "license": "CC-BY-4.0",
+    "converter": "engine/scripts/convert_simready.py"
+  },
+  "note": "Meshes are visual only (cosmetic threads, decimated). Colliders are the primitives below. Mass = volume_m3 x the material density; inertia = inertia_per_density x density (body frame, about the centre of mass `com`).",
+  "materials": {
+    "nylon": {
+      "density": 1140.0,
+      "grade": "PA66 unfilled",
+      "word": "nylon",
+      "rgba": [
+        0.93,
+        0.925,
+        0.9,
+        1.0
+      ],
+      "specular": 0.18,
+      "shininess": 0.36,
+      "source_look": {
+        "base_color_linear": [
+          0.848088,
+          0.837793,
+          0.787412
+        ],
+        "metallic": 0.0,
+        "roughness": 0.4000000059604645
+      },
+      "sliding_friction": 0.28,
+      "static_friction": 0.35
+    },
+    "stainless_steel": {
+      "density": 7900.0,
+      "grade": "304",
+      "word": "stainless steel",
+      "rgba": [
+        0.56,
+        0.58,
+        0.6,
+        1.0
+      ],
+      "specular": 0.65,
+      "shininess": 0.49,
+      "source_look": {
+        "base_color_linear": [
+          0.273838,
+          0.2957,
+          0.318547
+        ],
+        "metallic": 1.0,
+        "roughness": 0.30000001192092896
+      },
+      "sliding_friction": 0.45,
+      "static_friction": 0.6
+    },
+    "brass": {
+      "density": 8500.0,
+      "grade": "C36000",
+      "word": "brass",
+      "rgba": [
+        0.887,
+        0.789,
+        0.434,
+        1.0
+      ],
+      "specular": 0.68,
+      "shininess": 0.578,
+      "source_look": {
+        "base_color_linear": [
+          0.761932,
+          0.58535,
+          0.157956
+        ],
+        "metallic": 1.0,
+        "roughness": 0.23999999463558197
+      },
+      "sliding_friction": 0.4,
+      "static_friction": 0.5
+    },
+    "aluminum": {
+      "density": 2700.0,
+      "grade": "6061-T6",
+      "word": "aluminium",
+      "rgba": [
+        0.913,
+        0.922,
+        0.924,
+        1.0
+      ],
+      "specular": 0.66,
+      "shininess": 0.518,
+      "source_look": {
+        "base_color_linear": [
+          0.813383,
+          0.831651,
+          0.835743
+        ],
+        "metallic": 1.0,
+        "roughness": 0.2800000011920929
+      },
+      "sliding_friction": 0.35,
+      "static_friction": 0.45
+    }
+  },
+  "parts": [
+    {
+      "file": "bolt_m16x50.obj",
+      "kind": "bolt",
+      "diameter": 0.016,
+      "length": 0.05,
+      "head_height": 0.01,
+      "across_flats": 0.024,
+      "size": "M16",
+      "standard": "ISO 4017",
+      "source": "bolt_iso4017_m16x2_l50",
+      "triangles": 5998,
+      "source_triangles": 17142,
+      "volume_m3": 1.3506720370144269e-05,
+      "com": [
+        0.006103485,
+        -3.493e-06,
+        2.608e-06
+      ],
+      "inertia_per_density": [
+        6.285229401045136e-10,
+        4.933629546120034e-09,
+        4.9335453209871665e-09,
+        1.1371260256709323e-12,
+        3.7531671958355005e-13,
+        4.2159683657872534e-14
+      ],
+      "mass_kg": {
+        "nylon": 0.015398,
+        "stainless_steel": 0.106703,
+        "brass": 0.114807,
+        "aluminum": 0.036468
+      },
+      "bounds_error_mm": 0.0,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "head",
+          "radius": 0.012,
+          "half_height": 0.005,
+          "pos": [
+            0.025,
+            0,
+            0
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "name": "shank",
+          "radius": 0.008,
+          "half_height": 0.025,
+          "pos": [
+            -0.005,
+            0,
+            0
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "file": "bolt_m24x70.obj",
+      "kind": "bolt",
+      "diameter": 0.024,
+      "length": 0.07,
+      "head_height": 0.015,
+      "across_flats": 0.036000000000000004,
+      "size": "M24",
+      "standard": "ISO 4017",
+      "source": "bolt_iso4017_m24x3_l70",
+      "triangles": 6000,
+      "source_triangles": 17684,
+      "volume_m3": 4.370114477095258e-05,
+      "com": [
+        0.008941535,
+        -6.183e-06,
+        -1.32e-07
+      ],
+      "inertia_per_density": [
+        4.6685790351632e-09,
+        3.2111422952632675e-08,
+        3.21106784666407e-08,
+        6.055376005841237e-12,
+        -6.25260691716151e-12,
+        4.653249483663424e-13
+      ],
+      "mass_kg": {
+        "nylon": 0.049819,
+        "stainless_steel": 0.345239,
+        "brass": 0.37146,
+        "aluminum": 0.117993
+      },
+      "bounds_error_mm": 0.0,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "head",
+          "radius": 0.018,
+          "half_height": 0.0075,
+          "pos": [
+            0.035,
+            0,
+            0
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "name": "shank",
+          "radius": 0.012,
+          "half_height": 0.035,
+          "pos": [
+            -0.0075,
+            0,
+            0
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "file": "bolt_m30x100.obj",
+      "kind": "bolt",
+      "diameter": 0.03,
+      "length": 0.1,
+      "head_height": 0.0187,
+      "across_flats": 0.046,
+      "size": "M30",
+      "standard": "ISO 4017",
+      "source": "bolt_iso4017_m30x3p5_l100",
+      "triangles": 6000,
+      "source_triangles": 24524,
+      "volume_m3": 9.490373532744971e-05,
+      "com": [
+        0.012174539,
+        -8.25e-06,
+        4.86e-07
+      ],
+      "inertia_per_density": [
+        1.5917381128352698e-08,
+        1.3582174154305794e-07,
+        1.358202134401142e-07,
+        5.819399283689973e-12,
+        -1.5333330069616438e-11,
+        8.287473508253084e-13
+      ],
+      "mass_kg": {
+        "nylon": 0.10819,
+        "stainless_steel": 0.74974,
+        "brass": 0.806682,
+        "aluminum": 0.25624
+      },
+      "bounds_error_mm": 0.0,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "head",
+          "radius": 0.023,
+          "half_height": 0.00935,
+          "pos": [
+            0.05,
+            0,
+            0
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "name": "shank",
+          "radius": 0.015,
+          "half_height": 0.05,
+          "pos": [
+            -0.00935,
+            0,
+            0
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "file": "nut_m24.obj",
+      "kind": "nut",
+      "across_flats": 0.036000000000000004,
+      "thickness": 0.021500000000000002,
+      "hole": 0.024,
+      "size": "M24",
+      "standard": "ISO 4032",
+      "source": "nut_iso4032_m24x3",
+      "triangles": 4000,
+      "source_triangles": 11054,
+      "volume_m3": 1.5643124184423482e-05,
+      "com": [
+        4.52e-06,
+        -7.802e-06,
+        -7e-09
+      ],
+      "inertia_per_density": [
+        2.484393143554473e-09,
+        2.484397836888259e-09,
+        3.7847846427754985e-09,
+        -8.012368924769906e-15,
+        -2.594948171706723e-12,
+        -1.4984255866840976e-12
+      ],
+      "mass_kg": {
+        "nylon": 0.017833,
+        "stainless_steel": 0.123581,
+        "brass": 0.132967,
+        "aluminum": 0.042236
+      },
+      "bounds_error_mm": 0.001,
+      "collision_mesh": "nut_m24_hull.obj",
+      "hull_vertices": 60,
+      "hull_volume_vs_source_hull": 0.9994,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.018,
+          "half_height": 0.01075,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "nut_m30.obj",
+      "kind": "nut",
+      "across_flats": 0.046,
+      "thickness": 0.0256,
+      "hole": 0.03,
+      "size": "M30",
+      "standard": "ISO 4032",
+      "source": "nut_iso4032_m30x3p5",
+      "triangles": 4000,
+      "source_triangles": 11744,
+      "volume_m3": 3.0943432321609676e-05,
+      "com": [
+        7.48e-07,
+        -4.72e-07,
+        -1.7e-08
+      ],
+      "inertia_per_density": [
+        7.720637627680359e-09,
+        7.720197408696905e-09,
+        1.2119744953193416e-08,
+        -4.79123003275609e-13,
+        -4.598196562161273e-12,
+        -6.969066218499173e-12
+      ],
+      "mass_kg": {
+        "nylon": 0.035276,
+        "stainless_steel": 0.244453,
+        "brass": 0.263019,
+        "aluminum": 0.083547
+      },
+      "bounds_error_mm": 0.005,
+      "collision_mesh": "nut_m30_hull.obj",
+      "hull_vertices": 60,
+      "hull_volume_vs_source_hull": 0.9993,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.023,
+          "half_height": 0.0128,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "nut_m36.obj",
+      "kind": "nut",
+      "across_flats": 0.055,
+      "thickness": 0.031,
+      "hole": 0.036000000000000004,
+      "size": "M36",
+      "standard": "ISO 4032",
+      "source": "nut_iso4032_m36x4",
+      "triangles": 3998,
+      "source_triangles": 12720,
+      "volume_m3": 5.319270146594983e-05,
+      "com": [
+        -1.6492e-05,
+        -1.6471e-05,
+        -2.7e-08
+      ],
+      "inertia_per_density": [
+        1.91337217443917e-08,
+        1.91336707794371e-08,
+        2.9893165183825054e-08,
+        -6.100331398659169e-13,
+        3.1434782505276145e-12,
+        -3.1385141795886933e-12
+      ],
+      "mass_kg": {
+        "nylon": 0.06064,
+        "stainless_steel": 0.420222,
+        "brass": 0.452138,
+        "aluminum": 0.14362
+      },
+      "bounds_error_mm": 0.007,
+      "collision_mesh": "nut_m36_hull.obj",
+      "hull_vertices": 60,
+      "hull_volume_vs_source_hull": 0.9992,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.0275,
+          "half_height": 0.0155,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "washer_m33.obj",
+      "kind": "washer",
+      "inner_diameter": 0.034,
+      "outer_diameter": 0.06,
+      "thickness": 0.005,
+      "size": "M33",
+      "standard": "DIN 125-A",
+      "source": "washer_din125a_m33",
+      "triangles": 1008,
+      "source_triangles": 1008,
+      "volume_m3": 9.593588329578878e-06,
+      "com": [
+        -0.0,
+        0.0,
+        0.0
+      ],
+      "inertia_per_density": [
+        2.8704991330160635e-09,
+        2.8704991655465466e-09,
+        5.701025013856032e-09,
+        0.0,
+        0.0,
+        6.462313104443292e-26
+      ],
+      "mass_kg": {
+        "nylon": 0.010937,
+        "stainless_steel": 0.075789,
+        "brass": 0.081546,
+        "aluminum": 0.025903
+      },
+      "bounds_error_mm": 0.009,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.03,
+          "half_height": 0.0025,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "nut_m12.obj",
+      "kind": "nut",
+      "across_flats": 0.018000000000000002,
+      "thickness": 0.0108,
+      "hole": 0.012,
+      "size": "M12",
+      "standard": "ISO 4032",
+      "source": "nut_iso4032_m12x1p75",
+      "triangles": 2500,
+      "source_triangles": 7994,
+      "volume_m3": 1.989409780364766e-06,
+      "com": [
+        2.567e-06,
+        -4.339e-06,
+        -1.2e-08
+      ],
+      "inertia_per_density": [
+        7.87246833392882e-11,
+        7.872618727257271e-11,
+        1.1951967389358226e-10,
+        -1.382846229166956e-15,
+        -1.100550584284015e-13,
+        -6.577402387490713e-14
+      ],
+      "mass_kg": {
+        "nylon": 0.002268,
+        "stainless_steel": 0.015716,
+        "brass": 0.01691,
+        "aluminum": 0.005371
+      },
+      "bounds_error_mm": 0.001,
+      "collision_mesh": "nut_m12_hull.obj",
+      "hull_vertices": 60,
+      "hull_volume_vs_source_hull": 0.9988,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.009,
+          "half_height": 0.0054,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "nut_m16.obj",
+      "kind": "nut",
+      "across_flats": 0.024,
+      "thickness": 0.0148,
+      "hole": 0.016,
+      "size": "M16",
+      "standard": "ISO 4032",
+      "source": "nut_iso4032_m16x2",
+      "triangles": 2498,
+      "source_triangles": 11128,
+      "volume_m3": 4.786632351201268e-06,
+      "com": [
+        -3.188e-06,
+        1.038e-06,
+        0.0
+      ],
+      "inertia_per_density": [
+        3.4326528268942816e-10,
+        3.4321158036384853e-10,
+        5.147495952256598e-10,
+        -1.946149136902223e-14,
+        -1.3118386122691286e-13,
+        -4.0340585050370854e-13
+      ],
+      "mass_kg": {
+        "nylon": 0.005457,
+        "stainless_steel": 0.037814,
+        "brass": 0.040686,
+        "aluminum": 0.012924
+      },
+      "bounds_error_mm": 0.292,
+      "collision_mesh": "nut_m16_hull.obj",
+      "hull_vertices": 60,
+      "hull_volume_vs_source_hull": 0.9993,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.012,
+          "half_height": 0.0074,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "nut_m20.obj",
+      "kind": "nut",
+      "across_flats": 0.03,
+      "thickness": 0.018000000000000002,
+      "hole": 0.02,
+      "size": "M20",
+      "standard": "ISO 4032",
+      "source": "nut_iso4032_m20x2p5",
+      "triangles": 2500,
+      "source_triangles": 11272,
+      "volume_m3": 9.09465618040512e-06,
+      "com": [
+        3.5e-06,
+        -4.825e-06,
+        -4e-09
+      ],
+      "inertia_per_density": [
+        1.00528514238975e-09,
+        1.0053002535491157e-09,
+        1.5281066674648695e-09,
+        -2.2351018610838343e-14,
+        -1.015938299969183e-12,
+        -7.378721223325927e-13
+      ],
+      "mass_kg": {
+        "nylon": 0.010368,
+        "stainless_steel": 0.071848,
+        "brass": 0.077305,
+        "aluminum": 0.024556
+      },
+      "bounds_error_mm": 0.408,
+      "collision_mesh": "nut_m20_hull.obj",
+      "hull_vertices": 60,
+      "hull_volume_vs_source_hull": 0.9994,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.015,
+          "half_height": 0.009,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "washer_m12.obj",
+      "kind": "washer",
+      "inner_diameter": 0.013000000000000001,
+      "outer_diameter": 0.024,
+      "thickness": 0.0025,
+      "size": "M12",
+      "standard": "ISO 7089",
+      "source": "washer_iso7089_m12",
+      "triangles": 1008,
+      "source_triangles": 1008,
+      "volume_m3": 7.988114701933952e-07,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "inertia_per_density": [
+        3.7595294504324564e-11,
+        3.759529498543323e-11,
+        7.435849420830635e-11,
+        0.0,
+        0.0,
+        7.090207325884517e-28
+      ],
+      "mass_kg": {
+        "nylon": 0.000911,
+        "stainless_steel": 0.006311,
+        "brass": 0.00679,
+        "aluminum": 0.002157
+      },
+      "bounds_error_mm": 0.004,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.012,
+          "half_height": 0.00125,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "washer_m16.obj",
+      "kind": "washer",
+      "inner_diameter": 0.017,
+      "outer_diameter": 0.03,
+      "thickness": 0.003,
+      "size": "M16",
+      "standard": "ISO 7089",
+      "source": "washer_iso7089_m16",
+      "triangles": 1008,
+      "source_triangles": 1008,
+      "volume_m3": 1.4390382494368315e-06,
+      "com": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "inertia_per_density": [
+        1.0797349708693165e-10,
+        1.0797349830682471e-10,
+        2.1378843801960116e-10,
+        -1.827632907285363e-26,
+        -1.568331191968241e-27,
+        -4.354894760861216e-27
+      ],
+      "mass_kg": {
+        "nylon": 0.001641,
+        "stainless_steel": 0.011368,
+        "brass": 0.012232,
+        "aluminum": 0.003885
+      },
+      "bounds_error_mm": 0.005,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.015,
+          "half_height": 0.0015,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "file": "washer_m20.obj",
+      "kind": "washer",
+      "inner_diameter": 0.021,
+      "outer_diameter": 0.037,
+      "thickness": 0.003,
+      "size": "M20",
+      "standard": "ISO 7089",
+      "source": "washer_iso7089_m20",
+      "triangles": 1008,
+      "source_triangles": 1008,
+      "volume_m3": 2.1856423919119326e-06,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "inertia_per_density": [
+        2.487875779546652e-10,
+        2.487875759808628e-10,
+        4.942966903476599e-10,
+        4.382721708522434e-34,
+        2.12210462754869e-27,
+        1.2850187494572358e-27
+      ],
+      "mass_kg": {
+        "nylon": 0.002492,
+        "stainless_steel": 0.017267,
+        "brass": 0.018578,
+        "aluminum": 0.005901
+      },
+      "bounds_error_mm": 0.006,
+      "colliders": [
+        {
+          "shape": "cylinder",
+          "name": "body",
+          "radius": 0.0185,
+          "half_height": 0.0015,
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    }
+  ]
+}

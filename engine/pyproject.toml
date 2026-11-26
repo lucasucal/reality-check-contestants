@@ -1,0 +1,38 @@
+[project]
+name = "rc-engine"
+version = "0.1.0"
+description = "Reality Check simulation engine: deterministic reset/step HTTP service"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "mujoco==4.0.1",
+    "numpy==2.4.6",
+    "pillow==13.0.0",
+]
+
+[dependency-groups]
+demo = [
+    "imageio-ffmpeg>=0.8.1",
+]
+dev = ["pytest>=9.0"]
+fasteners = [{include-group = "fixture"}]  # scripts/gen_print_fasteners.py
+# scripts/convert_simready.py: the SimReady Hardware download (huggingface-hub) and its USD -> OBJ conversion.
+simready = [
+    "fast-simplification==0.2.0",
+    "huggingface-hub==2.4.0",
+    "scipy==1.15.3",
+    "trimesh==5.2.2",
+    "usd-core==26.11",
+]
+fixture = [
+    "manifold3d==3.5.5",
+    "trimesh==5.2.2",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["slow: oracle solvability over all eval seeds (deselected by default; run with -m slow)"]
+addopts = "-m \"not slow\""

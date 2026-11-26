@@ -1,0 +1,432 @@
+{
+ "room": "office",
+ "source": "https://huggingface.co/datasets/projectsim/simready-hardware/blob/827f45cdffe63ae699351fdba58c50de73e4d40a/scenes/carpeted_office_furnished/CarpetedOfficeFurnished.usdc",
+ "placement": {
+  "yaw_deg": 90.0,
+  "base": [
+   -1.3,
+   -0.4
+  ],
+  "floor_z": -0.75,
+  "moves": {}
+ },
+ "clear_radius": 1.65,
+ "clear_top": 1.85,
+ "lighting": {
+  "dome": 2400.0,
+  "ceiling": 0.0,
+  "fill": {
+   "power": 99213.1,
+   "rgb": [
+    1.0,
+    0.978,
+    0.945
+   ],
+   "dir": [
+    -0.0,
+    1.0,
+    0.0
+   ]
+  }
+ },
+ "triangles": 49998,
+ "source_triangles": 155476,
+ "materials": [
+  {
+   "name": "backing",
+   "mesh": "backing.obj",
+   "triangles": 12,
+   "source_triangles": 12,
+   "rgba": [
+    0.2717,
+    0.2528,
+    0.2375,
+    1.0
+   ],
+   "specular": 0.007,
+   "shininess": 0.07,
+   "vertices": 24
+  },
+  {
+   "name": "chair_look_1d4372",
+   "mesh": "chair_look_1d4372.obj",
+   "triangles": 1500,
+   "source_triangles": 2684,
+   "rgba": [
+    0.05,
+    0.05,
+    0.05,
+    1.0
+   ],
+   "specular": 0.038,
+   "shininess": 0.38,
+   "vertices": 1145
+  },
+  {
+   "name": "chair_look_88f5a3",
+   "mesh": "chair_look_88f5a3.obj",
+   "triangles": 2474,
+   "source_triangles": 8896,
+   "rgba": [
+    0.77,
+    0.78,
+    0.78,
+    1.0
+   ],
+   "specular": 0.36,
+   "shininess": 0.72,
+   "vertices": 3120
+  },
+  {
+   "name": "chair_look_96e332",
+   "mesh": "chair_look_96e332.obj",
+   "triangles": 1500,
+   "source_triangles": 4760,
+   "rgba": [
+    0.045,
+    0.045,
+    0.05,
+    1.0
+   ],
+   "specular": 0.008,
+   "shininess": 0.08,
+   "vertices": 1794
+  },
+  {
+   "name": "chair_material_001",
+   "mesh": "chair_material_001.obj",
+   "triangles": 5938,
+   "source_triangles": 21344,
+   "texture": "chair_material_001.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.06,
+   "shininess": 0.603,
+   "vertices": 4777
+  },
+  {
+   "name": "clearglass",
+   "mesh": "clearglass.obj",
+   "triangles": 96,
+   "source_triangles": 96,
+   "rgba": [
+    0.8808,
+    0.9212,
+    0.9261,
+    0.12
+   ],
+   "specular": 0.096,
+   "shininess": 0.9,
+   "vertices": 192
+  },
+  {
+   "name": "covebase",
+   "mesh": "covebase.obj",
+   "triangles": 120,
+   "source_triangles": 120,
+   "rgba": [
+    0.2828,
+    0.2717,
+    0.2601,
+    1.0
+   ],
+   "specular": 0.052,
+   "shininess": 0.52,
+   "vertices": 160
+  },
+  {
+   "name": "desk_material_001",
+   "mesh": "desk_material_001.obj",
+   "triangles": 8040,
+   "source_triangles": 28900,
+   "texture": "desk_material_001.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.071,
+   "shininess": 0.709,
+   "vertices": 7003
+  },
+  {
+   "name": "doorenamel",
+   "mesh": "doorenamel.obj",
+   "triangles": 12,
+   "source_triangles": 12,
+   "rgba": [
+    0.5064,
+    0.542,
+    0.5321,
+    1.0
+   ],
+   "specular": 0.057,
+   "shininess": 0.57,
+   "vertices": 24
+  },
+  {
+   "name": "edgehighlight",
+   "mesh": "edgehighlight.obj",
+   "triangles": 60,
+   "source_triangles": 60,
+   "rgba": [
+    0.3591,
+    0.3687,
+    0.3796,
+    1.0
+   ],
+   "specular": 0.253,
+   "shininess": 0.68,
+   "vertices": 120
+  },
+  {
+   "name": "epdm",
+   "mesh": "epdm.obj",
+   "triangles": 396,
+   "source_triangles": 396,
+   "rgba": [
+    0.1428,
+    0.1517,
+    0.1559,
+    1.0
+   ],
+   "specular": 0.021,
+   "shininess": 0.21,
+   "vertices": 664
+  },
+  {
+   "name": "frameenamel",
+   "mesh": "frameenamel.obj",
+   "triangles": 96,
+   "source_triangles": 96,
+   "rgba": [
+    0.5838,
+    0.6097,
+    0.6012,
+    1.0
+   ],
+   "specular": 0.063,
+   "shininess": 0.63,
+   "vertices": 192
+  },
+  {
+   "name": "graphite",
+   "mesh": "graphite.obj",
+   "triangles": 276,
+   "source_triangles": 276,
+   "rgba": [
+    0.2348,
+    0.2528,
+    0.2717,
+    1.0
+   ],
+   "specular": 0.219,
+   "shininess": 0.63,
+   "vertices": 552
+  },
+  {
+   "name": "kickplatesteel",
+   "mesh": "kickplatesteel.obj",
+   "triangles": 12,
+   "source_triangles": 12,
+   "rgba": [
+    0.6944,
+    0.7084,
+    0.7152,
+    1.0
+   ],
+   "specular": 0.246,
+   "shininess": 0.57,
+   "vertices": 24
+  },
+  {
+   "name": "looppile",
+   "mesh": "looppile.obj",
+   "triangles": 286,
+   "source_triangles": 286,
+   "texture": "looppile.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.017,
+   "shininess": 0.174,
+   "vertices": 572
+  },
+  {
+   "name": "outletcover",
+   "mesh": "outletcover.obj",
+   "triangles": 590,
+   "source_triangles": 590,
+   "rgba": [
+    0.865,
+    0.8613,
+    0.839,
+    1.0
+   ],
+   "specular": 0.062,
+   "shininess": 0.62,
+   "vertices": 1080
+  },
+  {
+   "name": "outletinsert",
+   "mesh": "outletinsert.obj",
+   "triangles": 1350,
+   "source_triangles": 1350,
+   "rgba": [
+    0.7797,
+    0.7797,
+    0.758,
+    1.0
+   ],
+   "specular": 0.054,
+   "shininess": 0.54,
+   "vertices": 1710
+  },
+  {
+   "name": "outletscrew",
+   "mesh": "outletscrew.obj",
+   "triangles": 460,
+   "source_triangles": 460,
+   "rgba": [
+    0.7548,
+    0.7548,
+    0.7287,
+    1.0
+   ],
+   "specular": 0.211,
+   "shininess": 0.66,
+   "vertices": 480
+  },
+  {
+   "name": "paint",
+   "mesh": "paint.obj",
+   "triangles": 120,
+   "source_triangles": 120,
+   "texture": "paint.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.019,
+   "shininess": 0.19,
+   "vertices": 192
+  },
+  {
+   "name": "satinsteel",
+   "mesh": "satinsteel.obj",
+   "triangles": 1500,
+   "source_triangles": 4144,
+   "rgba": [
+    0.7736,
+    0.7918,
+    0.7977,
+    1.0
+   ],
+   "specular": 0.315,
+   "shininess": 0.71,
+   "vertices": 1461
+  },
+  {
+   "name": "socketinterior",
+   "mesh": "socketinterior.obj",
+   "triangles": 1500,
+   "source_triangles": 1820,
+   "rgba": [
+    0.1428,
+    0.1284,
+    0.1232,
+    1.0
+   ],
+   "specular": 0.019,
+   "shininess": 0.19,
+   "vertices": 1648
+  },
+  {
+   "name": "vase_material_001",
+   "mesh": "vase_material_001.obj",
+   "triangles": 20820,
+   "source_triangles": 74826,
+   "texture": "vase_material_001.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.065,
+   "shininess": 0.643,
+   "vertices": 25806
+  },
+  {
+   "name": "vase_vase_visual_000",
+   "mesh": "vase_vase_visual_000.obj",
+   "triangles": 1500,
+   "source_triangles": 2876,
+   "rgba": [
+    0.9212,
+    0.9731,
+    0.9912,
+    0.12
+   ],
+   "specular": 0.095,
+   "shininess": 0.9,
+   "vertices": 1084
+  },
+  {
+   "name": "vase_vase_visual_001",
+   "mesh": "vase_vase_visual_001.obj",
+   "triangles": 1340,
+   "source_triangles": 1340,
+   "rgba": [
+    0.9212,
+    0.9731,
+    0.9912,
+    0.12
+   ],
+   "specular": 0.098,
+   "shininess": 0.9,
+   "vertices": 672
+  }
+ ],
+ "sha256": {
+  "backing.obj": "1ba74779722d49364cfa80ffbc7bde363145021056a5708b2d040bb2f35672ae",
+  "chair_look_1d4372.obj": "168676c407cc9a108883a3203e6b3e913866a0aaec3e133f7d192bcab24de12e",
+  "chair_look_88f5a3.obj": "79f36a4e230064d882adf04ac04c0dfcb0dfc7c88932ad88dc4fe6e26e9be653",
+  "chair_look_96e332.obj": "c1b959758cf64d663be7ba3ed01c3422572169ad5b7af1593a0bb20b47faec53",
+  "chair_material_001.obj": "0849255b8fe826c2d36a11a643dd20525e4bbb6720dbdb517a84050818a3c283",
+  "chair_material_001.png": "a128d4d8a951f3ddf1dfdc6891809c855651e084d69cfc3fe42bec701422e1c9",
+  "clearglass.obj": "a6d98b17e9a3605e15bc7d043f168fc1db662ee186f30f2a9db3d1eb608eecd8",
+  "covebase.obj": "80e7842039f64110f641ddb74f000828001d885eac428924490a91917400fdbf",
+  "desk_material_001.obj": "059e974b2bacc13ecef1b870d197b1d2c3caa76a4e4064b140ed3d35af408e19",
+  "desk_material_001.png": "2ce1284609eaf111bc89ce48e38fdd1c9f928fbacf3cce8ce6c96d537a7edac0",
+  "doorenamel.obj": "df1ece0793918b504bf23326e049d64fe4291c44a22779f1208c2aae3e813317",
+  "edgehighlight.obj": "8cbeff9f887103e7041ce708fc526ea05d7896aaf548bcb1dbb1f78a65026ef4",
+  "epdm.obj": "442a694aacc6240b2bee7009b1793661d106409f801849b3bcc8c4e31c8a8b83",
+  "frameenamel.obj": "f45f0c8fc578f6c9df403f9554e5820434696cdf78aa99b5ff09ba186eed8aa3",
+  "graphite.obj": "b429082eafc88fbe4f3cb868ed9b849f83a99d4e326654f6f82accee106b52fb",
+  "kickplatesteel.obj": "36f502b60827147646cf1edb8ad192a994852a16feb52eea387709550e1778f0",
+  "looppile.obj": "ab42c4ad31125b3cdeb1bca2db437ec98ea38c336d3495662c6ed669a96adfe2",
+  "looppile.png": "6565959fe4b39fd0bbd54b0863347fd39b04e306b0b5339a957181a9a74abcfb",
+  "outletcover.obj": "010f34a5931c27be2ba5b264286119077d4cec01ebbab790ccf3be835eb68ce5",
+  "outletinsert.obj": "2831a036ae657579956e472b63f32276c6dc4ce13701cb8bb62c5d4d44ab7faa",
+  "outletscrew.obj": "754bd76824c6d4835782c30275fb0c5abd3745c5192be0e6414d513166796d9f",
+  "paint.obj": "73f9f83e27978d4960672e25ec877832a9a52e2c7257b76f3675b574991a5b48",
+  "paint.png": "8e73672528ebc5f017fad72e3f8791126c5b3cb713be942c11e2b5ae12f8e9ee",
+  "satinsteel.obj": "b9b9251cec2eb1602bfa977985780af2619a22506c77bf3936fd6ce40acdb56a",
+  "socketinterior.obj": "10c6fad34d6b8749ecf5d167d5a2b041ebc7af396790d7e881837f4a673aa2a2",
+  "vase_material_001.obj": "c7ccd8e29ab2a6f3c95d4394a7d66bb8d5d6846ed20fa39ed4e345ca528dc533",
+  "vase_material_001.png": "93675bf08e223605bdd9861f860bd3ffbebb9f2ed1831e435e7080495a46c2a1",
+  "vase_vase_visual_000.obj": "466440cc4b88d174452691462e3ec16f77c8f6770073a109428ce8c4d0dfde30",
+  "vase_vase_visual_001.obj": "4e727521b5aee8f9518136e7ebc11b174edd61ff1ac6277b1ce7cb2f2863b265"
+ }
+}

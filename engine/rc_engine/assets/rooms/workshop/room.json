@@ -1,0 +1,258 @@
+{
+ "room": "workshop",
+ "source": "https://huggingface.co/datasets/projectsim/simready-hardware/blob/827f45cdffe63ae699351fdba58c50de73e4d40a/scenes/workshop/workshop.usda",
+ "placement": {
+  "yaw_deg": -90.0,
+  "base": [
+   2.5,
+   3.2
+  ],
+  "floor_z": -0.75,
+  "moves": {}
+ },
+ "clear_radius": 1.65,
+ "clear_top": 1.85,
+ "lighting": {
+  "dome": 2000.0,
+  "ceiling": 51668.7,
+  "fill": {
+   "power": 22644.0,
+   "rgb": [
+    1.0,
+    0.98,
+    0.95
+   ],
+   "dir": [
+    0.0,
+    1.0,
+    0.0
+   ]
+  }
+ },
+ "triangles": 49996,
+ "source_triangles": 243448,
+ "materials": [
+  {
+   "name": "dado",
+   "mesh": "dado.obj",
+   "triangles": 84,
+   "source_triangles": 84,
+   "texture": "dado.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.008,
+   "shininess": 0.081,
+   "vertices": 136
+  },
+  {
+   "name": "darksteel",
+   "mesh": "darksteel.obj",
+   "triangles": 4088,
+   "source_triangles": 20884,
+   "rgba": [
+    0.2671,
+    0.2871,
+    0.2934,
+    1.0
+   ],
+   "specular": 0.21,
+   "shininess": 0.57,
+   "vertices": 4210
+  },
+  {
+   "name": "enamel",
+   "mesh": "enamel.obj",
+   "triangles": 48,
+   "source_triangles": 48,
+   "texture": "enamel.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.074,
+   "shininess": 0.742,
+   "vertices": 80
+  },
+  {
+   "name": "frame",
+   "mesh": "frame.obj",
+   "triangles": 1500,
+   "source_triangles": 6668,
+   "rgba": [
+    0.3591,
+    0.3372,
+    0.3133,
+    1.0
+   ],
+   "specular": 0.132,
+   "shininess": 0.47,
+   "vertices": 1555
+  },
+  {
+   "name": "glass",
+   "mesh": "glass.obj",
+   "triangles": 24,
+   "source_triangles": 24,
+   "rgba": [
+    0.8597,
+    0.9013,
+    0.8962,
+    0.12
+   ],
+   "specular": 0.095,
+   "shininess": 0.9,
+   "vertices": 48
+  },
+  {
+   "name": "hardboard",
+   "mesh": "hardboard.obj",
+   "triangles": 13978,
+   "source_triangles": 71424,
+   "rgba": [
+    0.5371,
+    0.4016,
+    0.274,
+    1.0
+   ],
+   "specular": 0.014,
+   "shininess": 0.14,
+   "vertices": 14494
+  },
+  {
+   "name": "hardware",
+   "mesh": "hardware.obj",
+   "triangles": 1500,
+   "source_triangles": 4252,
+   "rgba": [
+    0.6262,
+    0.6422,
+    0.65,
+    1.0
+   ],
+   "specular": 0.295,
+   "shininess": 0.69,
+   "vertices": 1679
+  },
+  {
+   "name": "insulator",
+   "mesh": "insulator.obj",
+   "triangles": 1500,
+   "source_triangles": 3076,
+   "rgba": [
+    0.2321,
+    0.2238,
+    0.2091,
+    1.0
+   ],
+   "specular": 0.035,
+   "shininess": 0.35,
+   "vertices": 1052
+  },
+  {
+   "name": "joint",
+   "mesh": "joint.obj",
+   "triangles": 24,
+   "source_triangles": 24,
+   "rgba": [
+    0.5169,
+    0.4956,
+    0.4614,
+    1.0
+   ],
+   "specular": 0.012,
+   "shininess": 0.12,
+   "vertices": 48
+  },
+  {
+   "name": "plaster",
+   "mesh": "plaster.obj",
+   "triangles": 108,
+   "source_triangles": 108,
+   "texture": "plaster.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.008,
+   "shininess": 0.081,
+   "vertices": 176
+  },
+  {
+   "name": "slab",
+   "mesh": "slab.obj",
+   "triangles": 440,
+   "source_triangles": 440,
+   "texture": "slab.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.054,
+   "shininess": 0.541,
+   "vertices": 356
+  },
+  {
+   "name": "stool_material_001",
+   "mesh": "stool_material_001.obj",
+   "triangles": 10978,
+   "source_triangles": 56088,
+   "texture": "stool_material_001.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.21,
+   "shininess": 0.576,
+   "vertices": 14153
+  },
+  {
+   "name": "workbench_material_001",
+   "mesh": "workbench_material_001.obj",
+   "triangles": 15724,
+   "source_triangles": 80328,
+   "texture": "workbench_material_001.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.147,
+   "shininess": 0.557,
+   "vertices": 20399
+  }
+ ],
+ "sha256": {
+  "dado.obj": "b2c36d46166942fa8428ef127eca76f48a6be92d5db827261753da0d14c25479",
+  "dado.png": "55bde665599e57cff7f6ad2ae3127ecfb579b68555de6a286f8509bd41ae3384",
+  "darksteel.obj": "758c7cd6b21c54156bac8a1903fc16ceeafc2ce20409d4bbdd6faf8629e255ad",
+  "enamel.obj": "b02c301c297d4d48bd9b7fcd5e153df413b486736ffd26c7324eae64e4303272",
+  "enamel.png": "7227313f157830ef15c933e8186cb55487b5cd5bdae64914413272c730d785ec",
+  "frame.obj": "176f628c731b9662bb7c7b996513f108076c5b4ced8497ab29ee9cf8872c3521",
+  "glass.obj": "fa64c423d2cfe44366eded7e46ca1bf804c510825ea7a760828dff877771527b",
+  "hardboard.obj": "f6588377e9b0adfeaec8f25e756a9731a688f7c1c8b20c1672f802c20686f709",
+  "hardware.obj": "e6c8d05920aba84d20858bb18a9e08ba06236365cc0b8cbf3c617bc8dfaa3044",
+  "insulator.obj": "00be1af5bb14751c1686a8127fc6e618c839a5bef5683e1451af2928f3f0405b",
+  "joint.obj": "36b55b0bc3bf08bcd30aafb5f7f46f6a7d3a5276ba0eeaedee248c6154c863da",
+  "plaster.obj": "b950861f067225b706ca07da9e9c41900adc349910e1b447fdcd282d56125cd2",
+  "plaster.png": "8e087c1f6524da1a7967e5a08473ef51698331223178b6e32925601b61e3063f",
+  "slab.obj": "f2d68e0cb17dfeb09947579fd1094d01da6c388acff88d9145bada11c05ddae4",
+  "slab.png": "bd233f6064044847e98ec6f4f89869b4cb0bef905a3cdbae13a568a1de539ee5",
+  "stool_material_001.obj": "5f91d2b1409b559e30a3db3d81a185dcff0d368da4a73278a61244144b3bb58b",
+  "stool_material_001.png": "eca6e11a9b75b0fb7189294674fa7f702f623b660ee2baa962b8855fcb7413f2",
+  "workbench_material_001.obj": "4d076d4410c5289d76a13943045d9b920233bac642b6fe202aa1b14360a1b472",
+  "workbench_material_001.png": "76f81643b84efa767c2aea03d9ccfa0c52c7ec208a90d71b5950e7b9abc4d492"
+ }
+}

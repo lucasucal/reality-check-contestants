@@ -1,0 +1,4 @@
+{
+  "contract": "v0",
+  "entry_point": "serve.py"
+}

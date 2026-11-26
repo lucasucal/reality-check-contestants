@@ -1,0 +1,127 @@
+{
+ "prop": "toolbox",
+ "source": "https://huggingface.co/datasets/projectsim/simready-hardware/blob/827f45cdffe63ae699351fdba58c50de73e4d40a/props/toolbox_yellow/toolbox_yellow.usd",
+ "placement": {
+  "xy": [
+   -0.04,
+   -0.33
+  ],
+  "yaw_deg": 180.0
+ },
+ "colliders": [
+  {
+   "name": "case",
+   "pos": [
+    -0.04,
+    -0.3328,
+    0.0178
+   ],
+   "size": [
+    0.1593,
+    0.0996,
+    0.0178
+   ],
+   "yaw_deg": 180.0
+  },
+  {
+   "name": "lid",
+   "pos": [
+    -0.04,
+    -0.4669,
+    0.1243
+   ],
+   "size": [
+    0.159,
+    0.0407,
+    0.0948
+   ],
+   "yaw_deg": 180.0
+  }
+ ],
+ "triangles": 23997,
+ "source_triangles": 84162,
+ "materials": [
+  {
+   "name": "lid_visual_003",
+   "mesh": "lid_visual_003.obj",
+   "triangles": 3488,
+   "source_triangles": 12236,
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    0.4
+   ],
+   "specular": 0.092,
+   "shininess": 0.9,
+   "vertices": 2947
+  },
+  {
+   "name": "look_88f5a3",
+   "mesh": "look_88f5a3.obj",
+   "triangles": 4684,
+   "source_triangles": 16426,
+   "rgba": [
+    0.77,
+    0.78,
+    0.78,
+    1.0
+   ],
+   "specular": 0.36,
+   "shininess": 0.72,
+   "vertices": 5671
+  },
+  {
+   "name": "look_96e332",
+   "mesh": "look_96e332.obj",
+   "triangles": 3054,
+   "source_triangles": 10714,
+   "rgba": [
+    0.045,
+    0.045,
+    0.05,
+    1.0
+   ],
+   "specular": 0.008,
+   "shininess": 0.08,
+   "vertices": 2203
+  },
+  {
+   "name": "look_9d0b5e",
+   "mesh": "look_9d0b5e.obj",
+   "triangles": 7655,
+   "source_triangles": 26842,
+   "rgba": [
+    1.0,
+    0.81,
+    0.015,
+    1.0
+   ],
+   "specular": 0.038,
+   "shininess": 0.38,
+   "vertices": 6684
+  },
+  {
+   "name": "look_e46bcb",
+   "mesh": "look_e46bcb.obj",
+   "triangles": 5116,
+   "source_triangles": 17944,
+   "rgba": [
+    0.055,
+    0.055,
+    0.055,
+    1.0
+   ],
+   "specular": 0.038,
+   "shininess": 0.38,
+   "vertices": 4903
+  }
+ ],
+ "sha256": {
+  "lid_visual_003.obj": "ebe2b39fa7ad1cce5c5151facf69dc5c022da87d5b8059e1b4e36ee260a9306b",
+  "look_88f5a3.obj": "160f3e50eff8517d110919b11adcddca9f1e79b62e8d239aab4fcc73f6fedfb9",
+  "look_96e332.obj": "14ef3effb7afdb5bb1cad2b130b8bf02ad44032bb32bef861e2ff8681488247c",
+  "look_9d0b5e.obj": "e19762808c60a0da037cc71f4c2f0262c195ea9b48467556cc9adac2ef763a99",
+  "look_e46bcb.obj": "037d81fc26bfa92e6b8dabd73a2aa9f31fd8a5d8060214b88beafececd34f9b6"
+ }
+}

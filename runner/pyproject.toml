@@ -1,0 +1,25 @@
+[project]
+name = "rc_runner"
+version = "0.1.0"
+description = "Reality Check runner: runs a policy against the engine's tasks"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "httpx==0.28.1",
+    "rc_checks",
+]
+
+[dependency-groups]
+dev = ["pytest>=9.0"]
+# Team practice only (`uv sync --group practice`): the practice tool downloads the pinned Hugging Face snapshot.
+# Not a default group, so the judged runner environment is unchanged.
+practice = ["huggingface_hub>=0.34,<2"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+rc_checks = { path = "../checks/rc_checks", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

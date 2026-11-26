@@ -1,0 +1,4637 @@
+{
+  "schema_version": 1,
+  "release_id": "rc-policy-v10",
+  "created_at": "2026-11-24T18:13:44Z",
+  "image": {
+    "repository": "ghcr.io/lucasucal/rc-policy",
+    "tag": "v10",
+    "manifest_digest": "sha256:19e4140d1a132807ac2eb8140a3d4eba4fa130cd10aa8cfcbc6f827a96ffa588",
+    "platform_digests": {
+      "linux/arm64": "sha256:18ec36a2a248d9732824ba965a3339377cc6b9fdf579aad6bbfeaa7a7d8f8037",
+      "linux/amd64": "sha256:3c0eeb270fce3535799b6677ad2066434212476109efd2e415d86a8b33e93db8"
+    },
+    "config_digests": {
+      "linux/arm64": "sha256:489dc7a22ee40c8d4cb3245cd466608f78c8e3ba4067075b880270d31e642101",
+      "linux/amd64": "sha256:c81e89ef126d60d6760759625cfaaa071acf7ae88cba0132376f23f9af8432a7"
+    }
+  },
+  "python": {
+    "version": "3.12.3",
+    "implementation": "cpython"
+  },
+  "stdlib_module_names": [
+    "__future__",
+    "_abc",
+    "_aix_support",
+    "_ast",
+    "_asyncio",
+    "_bisect",
+    "_blake2",
+    "_bz2",
+    "_codecs",
+    "_codecs_cn",
+    "_codecs_hk",
+    "_codecs_iso2022",
+    "_codecs_jp",
+    "_codecs_kr",
+    "_codecs_tw",
+    "_collections",
+    "_collections_abc",
+    "_compat_pickle",
+    "_compression",
+    "_contextvars",
+    "_crypt",
+    "_csv",
+    "_ctypes",
+    "_curses",
+    "_curses_panel",
+    "_datetime",
+    "_dbm",
+    "_decimal",
+    "_elementtree",
+    "_frozen_importlib",
+    "_frozen_importlib_external",
+    "_functools",
+    "_gdbm",
+    "_hashlib",
+    "_heapq",
+    "_imp",
+    "_io",
+    "_json",
+    "_locale",
+    "_lsprof",
+    "_lzma",
+    "_markupbase",
+    "_md5",
+    "_msi",
+    "_multibytecodec",
+    "_multiprocessing",
+    "_opcode",
+    "_operator",
+    "_osx_support",
+    "_overlapped",
+    "_pickle",
+    "_posixshmem",
+    "_posixsubprocess",
+    "_py_abc",
+    "_pydatetime",
+    "_pydecimal",
+    "_pyio",
+    "_pylong",
+    "_queue",
+    "_random",
+    "_scproxy",
+    "_sha1",
+    "_sha2",
+    "_sha3",
+    "_signal",
+    "_sitebuiltins",
+    "_socket",
+    "_sqlite3",
+    "_sre",
+    "_ssl",
+    "_stat",
+    "_statistics",
+    "_string",
+    "_strptime",
+    "_struct",
+    "_symtable",
+    "_thread",
+    "_threading_local",
+    "_tkinter",
+    "_tokenize",
+    "_tracemalloc",
+    "_typing",
+    "_uuid",
+    "_warnings",
+    "_weakref",
+    "_weakrefset",
+    "_winapi",
+    "_zoneinfo",
+    "abc",
+    "aifc",
+    "antigravity",
+    "argparse",
+    "array",
+    "ast",
+    "asyncio",
+    "atexit",
+    "audioop",
+    "base64",
+    "bdb",
+    "binascii",
+    "bisect",
+    "builtins",
+    "bz2",
+    "cProfile",
+    "calendar",
+    "cgi",
+    "cgitb",
+    "chunk",
+    "cmath",
+    "cmd",
+    "code",
+    "codecs",
+    "codeop",
+    "collections",
+    "colorsys",
+    "compileall",
+    "concurrent",
+    "configparser",
+    "contextlib",
+    "contextvars",
+    "copy",
+    "copyreg",
+    "crypt",
+    "csv",
+    "ctypes",
+    "curses",
+    "dataclasses",
+    "datetime",
+    "dbm",
+    "decimal",
+    "difflib",
+    "dis",
+    "doctest",
+    "email",
+    "encodings",
+    "ensurepip",
+    "enum",
+    "errno",
+    "faulthandler",
+    "fcntl",
+    "filecmp",
+    "fileinput",
+    "fnmatch",
+    "fractions",
+    "ftplib",
+    "functools",
+    "gc",
+    "genericpath",
+    "getopt",
+    "getpass",
+    "gettext",
+    "glob",
+    "graphlib",
+    "grp",
+    "gzip",
+    "hashlib",
+    "heapq",
+    "hmac",
+    "html",
+    "http",
+    "idlelib",
+    "imaplib",
+    "imghdr",
+    "importlib",
+    "inspect",
+    "io",
+    "ipaddress",
+    "itertools",
+    "json",
+    "keyword",
+    "lib2to3",
+    "linecache",
+    "locale",
+    "logging",
+    "lzma",
+    "mailbox",
+    "mailcap",
+    "marshal",
+    "math",
+    "mimetypes",
+    "mmap",
+    "modulefinder",
+    "msilib",
+    "msvcrt",
+    "multiprocessing",
+    "netrc",
+    "nis",
+    "nntplib",
+    "nt",
+    "ntpath",
+    "nturl2path",
+    "numbers",
+    "opcode",
+    "operator",
+    "optparse",
+    "os",
+    "ossaudiodev",
+    "pathlib",
+    "pdb",
+    "pickle",
+    "pickletools",
+    "pipes",
+    "pkgutil",
+    "platform",
+    "plistlib",
+    "poplib",
+    "posix",
+    "posixpath",
+    "pprint",
+    "profile",
+    "pstats",
+    "pty",
+    "pwd",
+    "py_compile",
+    "pyclbr",
+    "pydoc",
+    "pydoc_data",
+    "pyexpat",
+    "queue",
+    "quopri",
+    "random",
+    "re",
+    "readline",
+    "reprlib",
+    "resource",
+    "rlcompleter",
+    "runpy",
+    "sched",
+    "secrets",
+    "select",
+    "selectors",
+    "shelve",
+    "shlex",
+    "shutil",
+    "signal",
+    "site",
+    "smtplib",
+    "sndhdr",
+    "socket",
+    "socketserver",
+    "spwd",
+    "sqlite3",
+    "sre_compile",
+    "sre_constants",
+    "sre_parse",
+    "ssl",
+    "stat",
+    "statistics",
+    "string",
+    "stringprep",
+    "struct",
+    "subprocess",
+    "sunau",
+    "symtable",
+    "sys",
+    "sysconfig",
+    "syslog",
+    "tabnanny",
+    "tarfile",
+    "telnetlib",
+    "tempfile",
+    "termios",
+    "textwrap",
+    "this",
+    "threading",
+    "time",
+    "timeit",
+    "tkinter",
+    "token",
+    "tokenize",
+    "tomllib",
+    "trace",
+    "traceback",
+    "tracemalloc",
+    "tty",
+    "turtle",
+    "turtledemo",
+    "types",
+    "typing",
+    "unicodedata",
+    "unittest",
+    "urllib",
+    "uu",
+    "uuid",
+    "venv",
+    "warnings",
+    "wave",
+    "weakref",
+    "webbrowser",
+    "winreg",
+    "winsound",
+    "wsgiref",
+    "xdrlib",
+    "xml",
+    "xmlrpc",
+    "zipapp",
+    "zipfile",
+    "zipimport",
+    "zlib",
+    "zoneinfo"
+  ],
+  "reserved_modules": [
+    "OpenGL",
+    "PIL",
+    "_cffi_backend",
+    "_distutils_hack",
+    "_multiprocess",
+    "_plotly_utils",
+    "_polars_runtime_32",
+    "_tree",
+    "_xxhash",
+    "_yaml",
+    "absl",
+    "accelerate",
+    "aiofiles",
+    "aiohappyeyeballs",
+    "aiohttp",
+    "aiosignal",
+    "albucore",
+    "albumentations",
+    "annotated_doc",
+    "annotated_types",
+    "ansitable",
+    "antlr4",
+    "anyio",
+    "attr",
+    "attrs",
+    "av",
+    "bitsandbytes",
+    "blinker",
+    "braceexpand",
+    "casadi",
+    "certifi",
+    "cffi",
+    "charset_normalizer",
+    "chex",
+    "click",
+    "cloudpickle",
+    "cmake",
+    "cmeel",
+    "cmeel_pth",
+    "collada",
+    "colored",
+    "colorlog",
+    "comm",
+    "configargparse",
+    "contourpy",
+    "cryptography",
+    "cuda",
+    "cupy",
+    "cupy_backends",
+    "cupyx",
+    "cv2",
+    "cycler",
+    "daqp",
+    "dash",
+    "datasets",
+    "dateutil",
+    "decorator",
+    "defusedxml",
+    "deprecate",
+    "diffusers",
+    "dill",
+    "dm_control",
+    "dm_env",
+    "docstring_parser",
+    "donfig",
+    "dotenv",
+    "draccus",
+    "drake",
+    "dummy",
+    "einops",
+    "equinox",
+    "etils",
+    "examples",
+    "farama_notifications",
+    "fastapi",
+    "fastjsonschema",
+    "filelock",
+    "flask",
+    "flatbuffers",
+    "flax",
+    "flaxlib_src",
+    "fontTools",
+    "frozenlist",
+    "fsspec",
+    "ftfy",
+    "functorch",
+    "gcsfs",
+    "glfw",
+    "google",
+    "google_auth_oauthlib",
+    "google_crc32c",
+    "grpc",
+    "grpc_status",
+    "gymnasium",
+    "gymnasium_robotics",
+    "h11",
+    "h5py",
+    "hf_xet",
+    "httpcore",
+    "httptools",
+    "httpx",
+    "huggingface_hub",
+    "humanize",
+    "hydra",
+    "idna",
+    "ikpy",
+    "imageio",
+    "importlib_metadata",
+    "ischedule",
+    "isympy",
+    "itsdangerous",
+    "janus",
+    "jax",
+    "jax_cuda13_plugin",
+    "jax_plugins",
+    "jaxlib",
+    "jaxtyping",
+    "jinja2",
+    "joblib",
+    "jsonlines",
+    "jsonschema",
+    "jsonschema_specifications",
+    "jupyter",
+    "jupyter_core",
+    "keras",
+    "kiwisolver",
+    "kornia",
+    "kornia_rs",
+    "labmaze",
+    "lazy_importer",
+    "lazy_loader",
+    "lerobot",
+    "liger_kernel",
+    "llvmlite",
+    "lxml",
+    "lz4",
+    "manifold3d",
+    "mapbox_earcut",
+    "markdown",
+    "markdown_it",
+    "markupsafe",
+    "matplotlib",
+    "mdurl",
+    "mergedeep",
+    "mink",
+    "ml_collections",
+    "ml_dtypes",
+    "modern_robotics",
+    "mpl_toolkits",
+    "mpmath",
+    "msgpack",
+    "msgpack_numpy",
+    "msgspec",
+    "mujoco",
+    "mujoco_studio_wasm",
+    "multidict",
+    "multiprocess",
+    "mypy_extensions",
+    "namex",
+    "narwhals",
+    "nbformat",
+    "nest_asyncio",
+    "networkx",
+    "nodeenv",
+    "num2words",
+    "numba",
+    "numcodecs",
+    "numpy",
+    "nvidia",
+    "oauthlib",
+    "omegaconf",
+    "onnxruntime",
+    "open3d",
+    "open_clip",
+    "open_clip_train",
+    "opencv_contrib_python_headless",
+    "opentelemetry",
+    "opt_einsum",
+    "optax",
+    "optree",
+    "orbax",
+    "orjson",
+    "packaging",
+    "pandas",
+    "peft",
+    "pettingzoo",
+    "pip",
+    "platformdirs",
+    "plotly",
+    "plyfile",
+    "polars",
+    "prometheus_client",
+    "propcache",
+    "proto",
+    "psutil",
+    "pyarrow",
+    "pyasn1",
+    "pyasn1_modules",
+    "pycocotools",
+    "pycparser",
+    "pydantic",
+    "pydantic_core",
+    "pydevd_plugins",
+    "pydot",
+    "pydrake",
+    "pygments",
+    "pylab",
+    "pynvml",
+    "pyparsing",
+    "pyquaternion",
+    "pytransform3d",
+    "pytz",
+    "qpsolvers",
+    "quaternion",
+    "rc_runtime",
+    "rc_sdk",
+    "referencing",
+    "regex",
+    "requests",
+    "requests_oauthlib",
+    "retrying",
+    "rich",
+    "roma",
+    "rpds",
+    "rtree",
+    "safetensors",
+    "scipy",
+    "sentence_transformers",
+    "sentencepiece",
+    "setuptools",
+    "shapely",
+    "shellingham",
+    "simplejson",
+    "simsimd",
+    "six",
+    "skimage",
+    "sklearn",
+    "skspatial",
+    "spatialmath",
+    "starlette",
+    "stringzilla",
+    "supervision",
+    "svg",
+    "sympy",
+    "tensorboard",
+    "tensorboard_data_server",
+    "tensorstore",
+    "termcolor",
+    "tests",
+    "thop",
+    "threadpoolctl",
+    "tifffile",
+    "tiktoken",
+    "tiktoken_ext",
+    "timm",
+    "tlz",
+    "tokenizers",
+    "toml",
+    "toolz",
+    "torch",
+    "torch_geometric",
+    "torchaudio",
+    "torchcodec",
+    "torchgen",
+    "torchvision",
+    "tqdm",
+    "traitlets",
+    "transformers",
+    "transforms3d",
+    "tree",
+    "treescope",
+    "trimesh",
+    "triton",
+    "typeguard",
+    "typer",
+    "typing_extensions",
+    "typing_inspect",
+    "typing_inspection",
+    "tyro",
+    "tzdata",
+    "ultralytics",
+    "ultralytics_platform",
+    "urllib3",
+    "uvicorn",
+    "uvloop",
+    "vhacdx",
+    "viser",
+    "wadler_lindig",
+    "watchfiles",
+    "wcwidth",
+    "webdataset",
+    "websockets",
+    "werkzeug",
+    "wrapt",
+    "xxhash",
+    "yaml",
+    "yarl",
+    "yourdfpy",
+    "zarr",
+    "zipp",
+    "zmq",
+    "zstandard"
+  ],
+  "packages": [
+    {
+      "name": "absl-py",
+      "version": "2.5.1",
+      "platforms": {
+        "linux/amd64": "2.5.1",
+        "linux/arm64": "2.5.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "accelerate",
+      "version": "1.16.0",
+      "platforms": {
+        "linux/amd64": "1.16.0",
+        "linux/arm64": "1.16.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "aiofiles",
+      "version": "25.1.0",
+      "platforms": {
+        "linux/amd64": "25.1.0",
+        "linux/arm64": "25.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "aiohappyeyeballs",
+      "version": "2.7.1",
+      "platforms": {
+        "linux/amd64": "2.7.1",
+        "linux/arm64": "2.7.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "aiohttp",
+      "version": "3.14.5",
+      "platforms": {
+        "linux/amd64": "3.14.5",
+        "linux/arm64": "3.14.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "aiosignal",
+      "version": "1.4.0",
+      "platforms": {
+        "linux/amd64": "1.4.0",
+        "linux/arm64": "1.4.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "albucore",
+      "version": "0.0.24",
+      "platforms": {
+        "linux/amd64": "0.0.24",
+        "linux/arm64": "0.0.24"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "albumentations",
+      "version": "2.0.8",
+      "platforms": {
+        "linux/amd64": "2.0.8",
+        "linux/arm64": "2.0.8"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.7",
+      "platforms": {
+        "linux/amd64": "0.0.7",
+        "linux/arm64": "0.0.7"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "platforms": {
+        "linux/amd64": "0.8.0",
+        "linux/arm64": "0.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ansitable",
+      "version": "1.2.0",
+      "platforms": {
+        "linux/amd64": "1.2.0",
+        "linux/arm64": "1.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "antlr4-python3-runtime",
+      "version": "4.9.3",
+      "platforms": {
+        "linux/amd64": "4.9.3",
+        "linux/arm64": "4.9.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "anyio",
+      "version": "4.16.0",
+      "platforms": {
+        "linux/amd64": "4.16.0",
+        "linux/arm64": "4.16.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "platforms": {
+        "linux/amd64": "26.1.0",
+        "linux/arm64": "26.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "av",
+      "version": "15.1.0",
+      "platforms": {
+        "linux/amd64": "15.1.0",
+        "linux/arm64": "15.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "bitsandbytes",
+      "version": "0.50.2",
+      "platforms": {
+        "linux/amd64": "0.50.2",
+        "linux/arm64": "0.50.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "blinker",
+      "version": "1.9.0",
+      "platforms": {
+        "linux/amd64": "1.9.0",
+        "linux/arm64": "1.9.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "braceexpand",
+      "version": "0.1.7",
+      "platforms": {
+        "linux/amd64": "0.1.7",
+        "linux/arm64": "0.1.7"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "casadi",
+      "version": "3.8.2",
+      "platforms": {
+        "linux/amd64": "3.8.2",
+        "linux/arm64": "3.8.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "certifi",
+      "version": "2026.11.20",
+      "platforms": {
+        "linux/amd64": "2026.11.20",
+        "linux/arm64": "2026.11.20"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "platforms": {
+        "linux/amd64": "2.1.1",
+        "linux/arm64": "2.1.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.2",
+      "platforms": {
+        "linux/amd64": "3.5.2",
+        "linux/arm64": "3.5.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "chex",
+      "version": "0.1.92",
+      "platforms": {
+        "linux/amd64": "0.1.92",
+        "linux/arm64": "0.1.92"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "click",
+      "version": "8.5.1",
+      "platforms": {
+        "linux/amd64": "8.5.1",
+        "linux/arm64": "8.5.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cloudpickle",
+      "version": "3.1.3",
+      "platforms": {
+        "linux/amd64": "3.1.3",
+        "linux/arm64": "3.1.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmake",
+      "version": "4.1.3",
+      "platforms": {
+        "linux/amd64": "4.1.3",
+        "linux/arm64": "4.1.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel",
+      "version": "0.62.0",
+      "platforms": {
+        "linux/amd64": "0.62.0",
+        "linux/arm64": "0.62.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-assimp",
+      "version": "6.0.5",
+      "platforms": {
+        "linux/amd64": "6.0.5",
+        "linux/arm64": "6.0.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-boost",
+      "version": "1.90.0",
+      "platforms": {
+        "linux/amd64": "1.90.0",
+        "linux/arm64": "1.90.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-console-bridge",
+      "version": "1.0.2.3",
+      "platforms": {
+        "linux/amd64": "1.0.2.3",
+        "linux/arm64": "1.0.2.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-octomap",
+      "version": "1.10.0",
+      "platforms": {
+        "linux/amd64": "1.10.0",
+        "linux/arm64": "1.10.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-qhull",
+      "version": "8.0.2.1",
+      "platforms": {
+        "linux/amd64": "8.0.2.1",
+        "linux/arm64": "8.0.2.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-tinyxml2",
+      "version": "11.0.0",
+      "platforms": {
+        "linux/amd64": "11.0.0",
+        "linux/arm64": "11.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-urdfdom",
+      "version": "6.0.0",
+      "platforms": {
+        "linux/amd64": "6.0.0",
+        "linux/arm64": "6.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cmeel-zlib",
+      "version": "1.3.2",
+      "platforms": {
+        "linux/amd64": "1.3.2",
+        "linux/arm64": "1.3.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "coal",
+      "version": "3.0.3",
+      "platforms": {
+        "linux/amd64": "3.0.3",
+        "linux/arm64": "3.0.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "colored",
+      "version": "2.3.2",
+      "platforms": {
+        "linux/amd64": "2.3.2",
+        "linux/arm64": "2.3.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "colorlog",
+      "version": "6.12.0",
+      "platforms": {
+        "linux/amd64": "6.12.0",
+        "linux/arm64": "6.12.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "comm",
+      "version": "0.2.3",
+      "platforms": {
+        "linux/amd64": "0.2.3",
+        "linux/arm64": "0.2.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "configargparse",
+      "version": "1.10.2",
+      "platforms": {
+        "linux/amd64": "1.10.2",
+        "linux/arm64": "1.10.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "contourpy",
+      "version": "1.4.0",
+      "platforms": {
+        "linux/amd64": "1.4.0",
+        "linux/arm64": "1.4.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.2",
+      "platforms": {
+        "linux/amd64": "50.0.2",
+        "linux/arm64": "50.0.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cuda-bindings",
+      "version": "13.5.0",
+      "platforms": {
+        "linux/amd64": "13.5.0",
+        "linux/arm64": "13.5.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cuda-pathfinder",
+      "version": "1.9.1",
+      "platforms": {
+        "linux/amd64": "1.9.1",
+        "linux/arm64": "1.9.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cuda-toolkit",
+      "version": "13.0.3.0",
+      "platforms": {
+        "linux/amd64": "13.0.3.0",
+        "linux/arm64": "13.0.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cupy-cuda13x",
+      "version": "14.2.0",
+      "platforms": {
+        "linux/amd64": "14.2.0",
+        "linux/arm64": "14.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "cycler",
+      "version": "0.12.1",
+      "platforms": {
+        "linux/amd64": "0.12.1",
+        "linux/arm64": "0.12.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "daqp",
+      "version": "0.11.2",
+      "platforms": {
+        "linux/amd64": "0.11.2",
+        "linux/arm64": "0.11.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "dash",
+      "version": "4.5.1",
+      "platforms": {
+        "linux/amd64": "4.5.1",
+        "linux/arm64": "4.5.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "datasets",
+      "version": "5.2.0",
+      "platforms": {
+        "linux/amd64": "5.2.0",
+        "linux/arm64": "5.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "decorator",
+      "version": "5.3.2",
+      "platforms": {
+        "linux/amd64": "5.3.2",
+        "linux/arm64": "5.3.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "defusedxml",
+      "version": "0.7.1",
+      "platforms": {
+        "linux/amd64": "0.7.1",
+        "linux/arm64": "0.7.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "diffusers",
+      "version": "0.39.0",
+      "platforms": {
+        "linux/amd64": "0.39.0",
+        "linux/arm64": "0.39.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "dill",
+      "version": "0.4.1",
+      "platforms": {
+        "linux/amd64": "0.4.1",
+        "linux/arm64": "0.4.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "dm-control",
+      "version": "1.0.52",
+      "platforms": {
+        "linux/amd64": "1.0.52",
+        "linux/arm64": "1.0.52"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "dm-env",
+      "version": "1.6",
+      "platforms": {
+        "linux/amd64": "1.6",
+        "linux/arm64": "1.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "dm-tree",
+      "version": "0.1.10",
+      "platforms": {
+        "linux/amd64": "0.1.10",
+        "linux/arm64": "0.1.10"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "docstring-parser",
+      "version": "0.18.0",
+      "platforms": {
+        "linux/amd64": "0.18.0",
+        "linux/arm64": "0.18.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "donfig",
+      "version": "0.8.1.post1",
+      "platforms": {
+        "linux/amd64": "0.8.1.post1",
+        "linux/arm64": "0.8.1.post1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "draccus",
+      "version": "0.11.6",
+      "platforms": {
+        "linux/amd64": "0.11.6",
+        "linux/arm64": "0.11.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "drake",
+      "version": "1.58.0",
+      "platforms": {
+        "linux/amd64": "1.58.0",
+        "linux/arm64": "1.58.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "eigenpy",
+      "version": "3.13.0",
+      "platforms": {
+        "linux/amd64": "3.13.0",
+        "linux/arm64": "3.13.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "einops",
+      "version": "0.8.2",
+      "platforms": {
+        "linux/amd64": "0.8.2",
+        "linux/arm64": "0.8.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "equinox",
+      "version": "0.13.8",
+      "platforms": {
+        "linux/amd64": "0.13.8",
+        "linux/arm64": "0.13.8"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "etils",
+      "version": "1.15.0",
+      "platforms": {
+        "linux/amd64": "1.15.0",
+        "linux/arm64": "1.15.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "farama-notifications",
+      "version": "0.0.6",
+      "platforms": {
+        "linux/amd64": "0.0.6",
+        "linux/arm64": "0.0.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "fastapi",
+      "version": "0.165.0",
+      "platforms": {
+        "linux/amd64": "0.165.0",
+        "linux/arm64": "0.165.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "fastjsonschema",
+      "version": "2.22.3",
+      "platforms": {
+        "linux/amd64": "2.22.3",
+        "linux/arm64": "2.22.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "filelock",
+      "version": "4.2.12",
+      "platforms": {
+        "linux/amd64": "4.2.12",
+        "linux/arm64": "4.2.12"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "flask",
+      "version": "3.1.3",
+      "platforms": {
+        "linux/amd64": "3.1.3",
+        "linux/arm64": "3.1.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "flatbuffers",
+      "version": "25.12.19",
+      "platforms": {
+        "linux/amd64": "25.12.19",
+        "linux/arm64": "25.12.19"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "flax",
+      "version": "0.12.12",
+      "platforms": {
+        "linux/amd64": "0.12.12",
+        "linux/arm64": "0.12.12"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "fonttools",
+      "version": "4.68.0",
+      "platforms": {
+        "linux/amd64": "4.68.0",
+        "linux/arm64": "4.68.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "frozenlist",
+      "version": "1.8.0",
+      "platforms": {
+        "linux/amd64": "1.8.0",
+        "linux/arm64": "1.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.9.0",
+      "platforms": {
+        "linux/amd64": "2026.9.0",
+        "linux/arm64": "2026.9.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ftfy",
+      "version": "6.3.1",
+      "platforms": {
+        "linux/amd64": "6.3.1",
+        "linux/arm64": "6.3.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "gcsfs",
+      "version": "2026.10.1",
+      "platforms": {
+        "linux/amd64": "2026.10.1",
+        "linux/arm64": "2026.10.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "glfw",
+      "version": "2.11.0",
+      "platforms": {
+        "linux/amd64": "2.11.0",
+        "linux/arm64": "2.11.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-api-core",
+      "version": "2.44.0",
+      "platforms": {
+        "linux/amd64": "2.44.0",
+        "linux/arm64": "2.44.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-auth",
+      "version": "2.63.0",
+      "platforms": {
+        "linux/amd64": "2.63.0",
+        "linux/arm64": "2.63.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-auth-oauthlib",
+      "version": "1.5.0",
+      "platforms": {
+        "linux/amd64": "1.5.0",
+        "linux/arm64": "1.5.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-cloud-core",
+      "version": "2.8.0",
+      "platforms": {
+        "linux/amd64": "2.8.0",
+        "linux/arm64": "2.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-cloud-storage",
+      "version": "3.17.1",
+      "platforms": {
+        "linux/amd64": "3.17.1",
+        "linux/arm64": "3.17.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-cloud-storage-control",
+      "version": "1.17.0",
+      "platforms": {
+        "linux/amd64": "1.17.0",
+        "linux/arm64": "1.17.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-crc32c",
+      "version": "1.9.0",
+      "platforms": {
+        "linux/amd64": "1.9.0",
+        "linux/arm64": "1.9.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "google-resumable-media",
+      "version": "2.11.0",
+      "platforms": {
+        "linux/amd64": "2.11.0",
+        "linux/arm64": "2.11.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "googleapis-common-protos",
+      "version": "1.76.0",
+      "platforms": {
+        "linux/amd64": "1.76.0",
+        "linux/arm64": "1.76.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "grpc-google-iam-v1",
+      "version": "0.14.6",
+      "platforms": {
+        "linux/amd64": "0.14.6",
+        "linux/arm64": "0.14.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "grpcio",
+      "version": "1.85.3",
+      "platforms": {
+        "linux/amd64": "1.85.3",
+        "linux/arm64": "1.85.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "grpcio-status",
+      "version": "1.85.3",
+      "platforms": {
+        "linux/amd64": "1.85.3",
+        "linux/arm64": "1.85.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "gymnasium",
+      "version": "1.4.0",
+      "platforms": {
+        "linux/amd64": "1.4.0",
+        "linux/arm64": "1.4.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "gymnasium-robotics",
+      "version": "1.4.2",
+      "platforms": {
+        "linux/amd64": "1.4.2",
+        "linux/arm64": "1.4.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "platforms": {
+        "linux/amd64": "0.16.0",
+        "linux/arm64": "0.16.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "h5py",
+      "version": "3.16.0",
+      "platforms": {
+        "linux/amd64": "3.16.0",
+        "linux/arm64": "3.16.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "hf-xet",
+      "version": "1.8.0",
+      "platforms": {
+        "linux/amd64": "1.8.0",
+        "linux/arm64": "1.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "platforms": {
+        "linux/amd64": "1.0.9",
+        "linux/arm64": "1.0.9"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "httptools",
+      "version": "0.9.0",
+      "platforms": {
+        "linux/amd64": "0.9.0",
+        "linux/arm64": "0.9.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "platforms": {
+        "linux/amd64": "0.28.1",
+        "linux/arm64": "0.28.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "huggingface-hub",
+      "version": "1.33.0",
+      "platforms": {
+        "linux/amd64": "1.33.0",
+        "linux/arm64": "1.33.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "humanize",
+      "version": "4.17.0",
+      "platforms": {
+        "linux/amd64": "4.17.0",
+        "linux/arm64": "4.17.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "hydra-core",
+      "version": "1.3.8",
+      "platforms": {
+        "linux/amd64": "1.3.8",
+        "linux/arm64": "1.3.8"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "platforms": {
+        "linux/amd64": "3.20",
+        "linux/arm64": "3.20"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ikpy",
+      "version": "4.5.0",
+      "platforms": {
+        "linux/amd64": "4.5.0",
+        "linux/arm64": "4.5.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "imageio",
+      "version": "2.38.2",
+      "platforms": {
+        "linux/amd64": "2.38.2",
+        "linux/arm64": "2.38.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "importlib-metadata",
+      "version": "10.2.0",
+      "platforms": {
+        "linux/amd64": "10.2.0",
+        "linux/arm64": "10.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ischedule",
+      "version": "1.2.7",
+      "platforms": {
+        "linux/amd64": "1.2.7",
+        "linux/arm64": "1.2.7"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "itsdangerous",
+      "version": "2.2.0",
+      "platforms": {
+        "linux/amd64": "2.2.0",
+        "linux/arm64": "2.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "janus",
+      "version": "2.1.1",
+      "platforms": {
+        "linux/amd64": "2.1.1",
+        "linux/arm64": "2.1.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jax",
+      "version": "0.12.1",
+      "platforms": {
+        "linux/amd64": "0.12.1",
+        "linux/arm64": "0.12.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jax-cuda13-pjrt",
+      "version": "0.12.1",
+      "platforms": {
+        "linux/amd64": "0.12.1",
+        "linux/arm64": "0.12.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jax-cuda13-plugin",
+      "version": "0.12.1",
+      "platforms": {
+        "linux/amd64": "0.12.1",
+        "linux/arm64": "0.12.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jaxlib",
+      "version": "0.12.1",
+      "platforms": {
+        "linux/amd64": "0.12.1",
+        "linux/arm64": "0.12.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jaxtyping",
+      "version": "0.3.11",
+      "platforms": {
+        "linux/amd64": "0.3.11",
+        "linux/arm64": "0.3.11"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "platforms": {
+        "linux/amd64": "3.1.6",
+        "linux/arm64": "3.1.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "joblib",
+      "version": "1.6.0",
+      "platforms": {
+        "linux/amd64": "1.6.0",
+        "linux/arm64": "1.6.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jsonlines",
+      "version": "4.0.0",
+      "platforms": {
+        "linux/amd64": "4.0.0",
+        "linux/arm64": "4.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0",
+      "platforms": {
+        "linux/amd64": "4.26.0",
+        "linux/arm64": "4.26.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1",
+      "platforms": {
+        "linux/amd64": "2025.9.1",
+        "linux/arm64": "2025.9.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "jupyter-core",
+      "version": "5.9.1",
+      "platforms": {
+        "linux/amd64": "5.9.1",
+        "linux/arm64": "5.9.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "keras",
+      "version": "3.15.1",
+      "platforms": {
+        "linux/amd64": "3.15.1",
+        "linux/arm64": "3.15.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "kiwisolver",
+      "version": "1.5.1",
+      "platforms": {
+        "linux/amd64": "1.5.1",
+        "linux/arm64": "1.5.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "kornia",
+      "version": "0.9.2",
+      "platforms": {
+        "linux/amd64": "0.9.2",
+        "linux/arm64": "0.9.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "kornia-rs",
+      "version": "0.2.0",
+      "platforms": {
+        "linux/amd64": "0.2.0",
+        "linux/arm64": "0.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "labmaze",
+      "version": "1.0.6",
+      "platforms": {
+        "linux/amd64": "1.0.6",
+        "linux/arm64": "1.0.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "lazy-importer",
+      "version": "0.1.0",
+      "platforms": {
+        "linux/amd64": "0.1.0",
+        "linux/arm64": "0.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "lazy-loader",
+      "version": "0.6",
+      "platforms": {
+        "linux/amd64": "0.6",
+        "linux/arm64": "0.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "lerobot",
+      "version": "0.7.0",
+      "platforms": {
+        "linux/amd64": "0.7.0",
+        "linux/arm64": "0.7.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "libcoal",
+      "version": "3.0.3",
+      "platforms": {
+        "linux/amd64": "3.0.3",
+        "linux/arm64": "3.0.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "libpinocchio",
+      "version": "4.1.0",
+      "platforms": {
+        "linux/amd64": "4.1.0",
+        "linux/arm64": "4.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "liger-kernel",
+      "version": "0.8.5",
+      "platforms": {
+        "linux/amd64": "0.8.5",
+        "linux/arm64": "0.8.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "llvmlite",
+      "version": "0.50.0",
+      "platforms": {
+        "linux/amd64": "0.50.0",
+        "linux/arm64": "0.50.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "lxml",
+      "version": "6.1.3",
+      "platforms": {
+        "linux/amd64": "6.1.3",
+        "linux/arm64": "6.1.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "lz4",
+      "version": "4.4.5",
+      "platforms": {
+        "linux/amd64": "4.4.5",
+        "linux/arm64": "4.4.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "manifold3d",
+      "version": "3.5.5",
+      "platforms": {
+        "linux/amd64": "3.5.5",
+        "linux/arm64": "3.5.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mapbox-earcut",
+      "version": "2.1.0",
+      "platforms": {
+        "linux/amd64": "2.1.0",
+        "linux/arm64": "2.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "markdown",
+      "version": "3.11.3",
+      "platforms": {
+        "linux/amd64": "3.11.3",
+        "linux/arm64": "3.11.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.3.0",
+      "platforms": {
+        "linux/amd64": "4.3.0",
+        "linux/arm64": "4.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "platforms": {
+        "linux/amd64": "3.0.4",
+        "linux/arm64": "3.0.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "matplotlib",
+      "version": "3.11.2",
+      "platforms": {
+        "linux/amd64": "3.11.2",
+        "linux/arm64": "3.11.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "platforms": {
+        "linux/amd64": "0.1.2",
+        "linux/arm64": "0.1.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mergedeep",
+      "version": "1.3.4",
+      "platforms": {
+        "linux/amd64": "1.3.4",
+        "linux/arm64": "1.3.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mink",
+      "version": "1.4.0",
+      "platforms": {
+        "linux/amd64": "1.4.0",
+        "linux/arm64": "1.4.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ml-collections",
+      "version": "1.1.0",
+      "platforms": {
+        "linux/amd64": "1.1.0",
+        "linux/arm64": "1.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ml-dtypes",
+      "version": "0.7.0",
+      "platforms": {
+        "linux/amd64": "0.7.0",
+        "linux/arm64": "0.7.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "modern-robotics",
+      "version": "1.1.1",
+      "platforms": {
+        "linux/amd64": "1.1.1",
+        "linux/arm64": "1.1.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mpmath",
+      "version": "1.3.0",
+      "platforms": {
+        "linux/amd64": "1.3.0",
+        "linux/arm64": "1.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "msgpack",
+      "version": "1.2.4",
+      "platforms": {
+        "linux/amd64": "1.2.4",
+        "linux/arm64": "1.2.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "msgpack-numpy",
+      "version": "0.4.8",
+      "platforms": {
+        "linux/amd64": "0.4.8",
+        "linux/arm64": "0.4.8"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "msgspec",
+      "version": "0.22.0",
+      "platforms": {
+        "linux/amd64": "0.22.0",
+        "linux/arm64": "0.22.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mujoco",
+      "version": "4.0.1",
+      "platforms": {
+        "linux/amd64": "4.0.1",
+        "linux/arm64": "4.0.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mujoco-core",
+      "version": "4.0.1",
+      "platforms": {
+        "linux/amd64": "4.0.1",
+        "linux/arm64": "4.0.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mujoco-studio",
+      "version": "4.0.1",
+      "platforms": {
+        "linux/amd64": "4.0.1",
+        "linux/arm64": "4.0.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mujoco-studio-wasm",
+      "version": "4.0.1",
+      "platforms": {
+        "linux/amd64": "4.0.1",
+        "linux/arm64": "4.0.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "multidict",
+      "version": "7.2.1",
+      "platforms": {
+        "linux/amd64": "7.2.1",
+        "linux/arm64": "7.2.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "multiprocess",
+      "version": "0.70.19",
+      "platforms": {
+        "linux/amd64": "0.70.19",
+        "linux/arm64": "0.70.19"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "mypy-extensions",
+      "version": "1.2.0",
+      "platforms": {
+        "linux/amd64": "1.2.0",
+        "linux/arm64": "1.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "namex",
+      "version": "0.1.0",
+      "platforms": {
+        "linux/amd64": "0.1.0",
+        "linux/arm64": "0.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "narwhals",
+      "version": "2.29.0",
+      "platforms": {
+        "linux/amd64": "2.29.0",
+        "linux/arm64": "2.29.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nbformat",
+      "version": "5.11.1",
+      "platforms": {
+        "linux/amd64": "5.11.1",
+        "linux/arm64": "5.11.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nest-asyncio",
+      "version": "1.6.0",
+      "platforms": {
+        "linux/amd64": "1.6.0",
+        "linux/arm64": "1.6.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "networkx",
+      "version": "3.7",
+      "platforms": {
+        "linux/amd64": "3.7",
+        "linux/arm64": "3.7"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nodeenv",
+      "version": "1.12.0",
+      "platforms": {
+        "linux/amd64": "1.12.0",
+        "linux/arm64": "1.12.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "num2words",
+      "version": "0.5.14",
+      "platforms": {
+        "linux/amd64": "0.5.14",
+        "linux/arm64": "0.5.14"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "numba",
+      "version": "0.68.1",
+      "platforms": {
+        "linux/amd64": "0.68.1",
+        "linux/arm64": "0.68.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "numcodecs",
+      "version": "0.17.1",
+      "platforms": {
+        "linux/amd64": "0.17.1",
+        "linux/arm64": "0.17.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "numpy",
+      "version": "2.2.6",
+      "platforms": {
+        "linux/amd64": "2.2.6",
+        "linux/arm64": "2.2.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "numpy-quaternion",
+      "version": "2024.0.13",
+      "platforms": {
+        "linux/amd64": "2024.0.13",
+        "linux/arm64": "2024.0.13"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cublas",
+      "version": "13.1.1.3",
+      "platforms": {
+        "linux/amd64": "13.1.1.3",
+        "linux/arm64": "13.1.1.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cuda-crt",
+      "version": "13.5.37",
+      "platforms": {
+        "linux/amd64": "13.5.37",
+        "linux/arm64": "13.5.37"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cuda-cupti",
+      "version": "13.0.85",
+      "platforms": {
+        "linux/amd64": "13.0.85",
+        "linux/arm64": "13.0.85"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cuda-nvcc",
+      "version": "13.5.37",
+      "platforms": {
+        "linux/amd64": "13.5.37",
+        "linux/arm64": "13.5.37"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cuda-nvrtc",
+      "version": "13.0.88",
+      "platforms": {
+        "linux/amd64": "13.0.88",
+        "linux/arm64": "13.0.88"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cuda-runtime",
+      "version": "13.0.96",
+      "platforms": {
+        "linux/amd64": "13.0.96",
+        "linux/arm64": "13.0.96"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cudnn-cu13",
+      "version": "9.24.0.43",
+      "platforms": {
+        "linux/amd64": "9.24.0.43",
+        "linux/arm64": "9.24.0.43"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cufft",
+      "version": "12.0.0.61",
+      "platforms": {
+        "linux/amd64": "12.0.0.61",
+        "linux/arm64": "12.0.0.61"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cufile",
+      "version": "1.15.1.6",
+      "platforms": {
+        "linux/amd64": "1.15.1.6",
+        "linux/arm64": "1.15.1.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-curand",
+      "version": "10.4.0.35",
+      "platforms": {
+        "linux/amd64": "10.4.0.35",
+        "linux/arm64": "10.4.0.35"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cusolver",
+      "version": "12.0.4.66",
+      "platforms": {
+        "linux/amd64": "12.0.4.66",
+        "linux/arm64": "12.0.4.66"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cusparse",
+      "version": "12.6.3.3",
+      "platforms": {
+        "linux/amd64": "12.6.3.3",
+        "linux/arm64": "12.6.3.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-cusparselt-cu13",
+      "version": "0.8.1",
+      "platforms": {
+        "linux/amd64": "0.8.1",
+        "linux/arm64": "0.8.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-ml-py",
+      "version": "13.615.71",
+      "platforms": {
+        "linux/amd64": "13.615.71",
+        "linux/arm64": "13.615.71"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-nccl-cu13",
+      "version": "2.30.7",
+      "platforms": {
+        "linux/amd64": "2.30.7",
+        "linux/arm64": "2.30.7"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-nvjitlink",
+      "version": "13.5.37",
+      "platforms": {
+        "linux/amd64": "13.5.37",
+        "linux/arm64": "13.5.37"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-nvshmem-cu13",
+      "version": "3.4.5",
+      "platforms": {
+        "linux/amd64": "3.4.5",
+        "linux/arm64": "3.4.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-nvtx",
+      "version": "13.0.85",
+      "platforms": {
+        "linux/amd64": "13.0.85",
+        "linux/arm64": "13.0.85"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "nvidia-nvvm",
+      "version": "13.0.88",
+      "platforms": {
+        "linux/amd64": "13.0.88",
+        "linux/arm64": "13.0.88"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "oauthlib",
+      "version": "4.0.1",
+      "platforms": {
+        "linux/amd64": "4.0.1",
+        "linux/arm64": "4.0.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "omegaconf",
+      "version": "2.3.1",
+      "platforms": {
+        "linux/amd64": "2.3.1",
+        "linux/arm64": "2.3.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "onnxruntime-gpu",
+      "version": "1.32.0",
+      "platforms": {
+        "linux/amd64": "1.32.0",
+        "linux/arm64": "1.32.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "open-clip-torch",
+      "version": "4.2.2",
+      "platforms": {
+        "linux/amd64": "4.2.2",
+        "linux/arm64": "4.2.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "open3d",
+      "version": "0.20.0",
+      "platforms": {
+        "linux/amd64": "0.20.0",
+        "linux/arm64": "0.20.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "opencv-contrib-python-headless",
+      "version": "4.13.0.92",
+      "platforms": {
+        "linux/amd64": "4.13.0.92",
+        "linux/arm64": "4.13.0.92"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.45.2",
+      "platforms": {
+        "linux/amd64": "1.45.2",
+        "linux/arm64": "1.45.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "opt-einsum",
+      "version": "3.4.0",
+      "platforms": {
+        "linux/amd64": "3.4.0",
+        "linux/arm64": "3.4.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "optax",
+      "version": "0.2.9",
+      "platforms": {
+        "linux/amd64": "0.2.9",
+        "linux/arm64": "0.2.9"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "optree",
+      "version": "0.20.0",
+      "platforms": {
+        "linux/amd64": "0.20.0",
+        "linux/arm64": "0.20.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "orbax-checkpoint",
+      "version": "0.12.12",
+      "platforms": {
+        "linux/amd64": "0.12.12",
+        "linux/arm64": "0.12.12"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "orjson",
+      "version": "3.13.0",
+      "platforms": {
+        "linux/amd64": "3.13.0",
+        "linux/arm64": "3.13.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "platforms": {
+        "linux/amd64": "26.3",
+        "linux/arm64": "26.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pandas",
+      "version": "2.3.3",
+      "platforms": {
+        "linux/amd64": "2.3.3",
+        "linux/arm64": "2.3.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "peft",
+      "version": "0.22.0",
+      "platforms": {
+        "linux/amd64": "0.22.0",
+        "linux/arm64": "0.22.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pettingzoo",
+      "version": "1.27.0",
+      "platforms": {
+        "linux/amd64": "1.27.0",
+        "linux/arm64": "1.27.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pillow",
+      "version": "13.0.0",
+      "platforms": {
+        "linux/amd64": "13.0.0",
+        "linux/arm64": "13.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pin",
+      "version": "4.1.0",
+      "platforms": {
+        "linux/amd64": "4.1.0",
+        "linux/arm64": "4.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pip",
+      "version": "24.0",
+      "platforms": {
+        "linux/amd64": "24.0",
+        "linux/arm64": "24.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "placo",
+      "version": "0.12.0",
+      "platforms": {
+        "linux/amd64": "0.12.0",
+        "linux/arm64": "0.12.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "platformdirs",
+      "version": "4.14.8",
+      "platforms": {
+        "linux/amd64": "4.14.8",
+        "linux/arm64": "4.14.8"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "plotly",
+      "version": "7.1.0",
+      "platforms": {
+        "linux/amd64": "7.1.0",
+        "linux/arm64": "7.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "plyfile",
+      "version": "1.1.5",
+      "platforms": {
+        "linux/amd64": "1.1.5",
+        "linux/arm64": "1.1.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "polars",
+      "version": "2.1.0",
+      "platforms": {
+        "linux/amd64": "2.1.0",
+        "linux/arm64": "2.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "polars-runtime-32",
+      "version": "2.1.0",
+      "platforms": {
+        "linux/amd64": "2.1.0",
+        "linux/arm64": "2.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "prometheus-client",
+      "version": "0.26.0",
+      "platforms": {
+        "linux/amd64": "0.26.0",
+        "linux/arm64": "0.26.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "propcache",
+      "version": "0.5.4",
+      "platforms": {
+        "linux/amd64": "0.5.4",
+        "linux/arm64": "0.5.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "proto-plus",
+      "version": "1.29.0",
+      "platforms": {
+        "linux/amd64": "1.29.0",
+        "linux/arm64": "1.29.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "protobuf",
+      "version": "7.36.2",
+      "platforms": {
+        "linux/amd64": "7.36.2",
+        "linux/arm64": "7.36.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "psutil",
+      "version": "7.2.2",
+      "platforms": {
+        "linux/amd64": "7.2.2",
+        "linux/arm64": "7.2.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyarrow",
+      "version": "26.0.1",
+      "platforms": {
+        "linux/amd64": "26.0.1",
+        "linux/arm64": "26.0.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyasn1",
+      "version": "0.6.5",
+      "platforms": {
+        "linux/amd64": "0.6.5",
+        "linux/arm64": "0.6.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyasn1-modules",
+      "version": "0.4.2",
+      "platforms": {
+        "linux/amd64": "0.4.2",
+        "linux/arm64": "0.4.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pycocotools",
+      "version": "2.0.11",
+      "platforms": {
+        "linux/amd64": "2.0.11",
+        "linux/arm64": "2.0.11"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pycollada",
+      "version": "0.9.3",
+      "platforms": {
+        "linux/amd64": "0.9.3",
+        "linux/arm64": "0.9.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pycparser",
+      "version": "3.12",
+      "platforms": {
+        "linux/amd64": "3.12",
+        "linux/arm64": "3.12"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.4",
+      "platforms": {
+        "linux/amd64": "2.14.4",
+        "linux/arm64": "2.14.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.50.5",
+      "platforms": {
+        "linux/amd64": "2.50.5",
+        "linux/arm64": "2.50.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pydeprecate",
+      "version": "0.14.0",
+      "platforms": {
+        "linux/amd64": "0.14.0",
+        "linux/arm64": "0.14.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pydot",
+      "version": "4.0.1",
+      "platforms": {
+        "linux/amd64": "4.0.1",
+        "linux/arm64": "4.0.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pygments",
+      "version": "2.21.0",
+      "platforms": {
+        "linux/amd64": "2.21.0",
+        "linux/arm64": "2.21.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyopengl",
+      "version": "3.1.10",
+      "platforms": {
+        "linux/amd64": "3.1.10",
+        "linux/arm64": "3.1.10"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyparsing",
+      "version": "3.3.3",
+      "platforms": {
+        "linux/amd64": "3.3.3",
+        "linux/arm64": "3.3.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyquaternion",
+      "version": "0.9.9",
+      "platforms": {
+        "linux/amd64": "0.9.9",
+        "linux/arm64": "0.9.9"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "python-dateutil",
+      "version": "4.0.0",
+      "platforms": {
+        "linux/amd64": "4.0.0",
+        "linux/arm64": "4.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.4",
+      "platforms": {
+        "linux/amd64": "1.2.4",
+        "linux/arm64": "1.2.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pytransform3d",
+      "version": "3.18.0",
+      "platforms": {
+        "linux/amd64": "3.18.0",
+        "linux/arm64": "3.18.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pytz",
+      "version": "2026.6",
+      "platforms": {
+        "linux/amd64": "2026.6",
+        "linux/arm64": "2026.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyyaml",
+      "version": "6.0.4",
+      "platforms": {
+        "linux/amd64": "6.0.4",
+        "linux/arm64": "6.0.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "pyzmq",
+      "version": "27.3.0",
+      "platforms": {
+        "linux/amd64": "27.3.0",
+        "linux/arm64": "27.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "qpsolvers",
+      "version": "4.13.0",
+      "platforms": {
+        "linux/amd64": "4.13.0",
+        "linux/arm64": "4.13.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "rc-runtime",
+      "version": "0.1.0",
+      "platforms": {
+        "linux/amd64": "0.1.0",
+        "linux/arm64": "0.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "rc-sdk",
+      "version": "0.1.0",
+      "platforms": {
+        "linux/amd64": "0.1.0",
+        "linux/arm64": "0.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0",
+      "platforms": {
+        "linux/amd64": "0.37.0",
+        "linux/arm64": "0.37.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "regex",
+      "version": "2026.11.19",
+      "platforms": {
+        "linux/amd64": "2026.11.19",
+        "linux/arm64": "2026.11.19"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "platforms": {
+        "linux/amd64": "2.34.2",
+        "linux/arm64": "2.34.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "requests-oauthlib",
+      "version": "2.0.0",
+      "platforms": {
+        "linux/amd64": "2.0.0",
+        "linux/arm64": "2.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "retrying",
+      "version": "1.4.2",
+      "platforms": {
+        "linux/amd64": "1.4.2",
+        "linux/arm64": "1.4.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "rhoban-cmeel-jsoncpp",
+      "version": "1.9.4.9",
+      "platforms": {
+        "linux/amd64": "1.9.4.9",
+        "linux/arm64": "1.9.4.9"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "rich",
+      "version": "15.0.0",
+      "platforms": {
+        "linux/amd64": "15.0.0",
+        "linux/arm64": "15.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "roma",
+      "version": "1.8.0",
+      "platforms": {
+        "linux/amd64": "1.8.0",
+        "linux/arm64": "1.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "rpds-py",
+      "version": "2026.9.1",
+      "platforms": {
+        "linux/amd64": "2026.9.1",
+        "linux/arm64": "2026.9.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "rtree",
+      "version": "1.4.1",
+      "platforms": {
+        "linux/amd64": "1.4.1",
+        "linux/arm64": "1.4.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "safetensors",
+      "version": "0.8.0",
+      "platforms": {
+        "linux/amd64": "0.8.0",
+        "linux/arm64": "0.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "scikit-image",
+      "version": "0.26.0",
+      "platforms": {
+        "linux/amd64": "0.26.0",
+        "linux/arm64": "0.26.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "scikit-learn",
+      "version": "1.9.1",
+      "platforms": {
+        "linux/amd64": "1.9.1",
+        "linux/arm64": "1.9.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "scikit-spatial",
+      "version": "11.0.0",
+      "platforms": {
+        "linux/amd64": "11.0.0",
+        "linux/arm64": "11.0.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "scipy",
+      "version": "1.18.1",
+      "platforms": {
+        "linux/amd64": "1.18.1",
+        "linux/arm64": "1.18.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "sentence-transformers",
+      "version": "6.3.0",
+      "platforms": {
+        "linux/amd64": "6.3.0",
+        "linux/arm64": "6.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "sentencepiece",
+      "version": "0.2.3",
+      "platforms": {
+        "linux/amd64": "0.2.3",
+        "linux/arm64": "0.2.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "setuptools",
+      "version": "84.2.1",
+      "platforms": {
+        "linux/amd64": "84.2.1",
+        "linux/arm64": "84.2.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "shapely",
+      "version": "2.2.0",
+      "platforms": {
+        "linux/amd64": "2.2.0",
+        "linux/arm64": "2.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "shellingham",
+      "version": "1.5.4",
+      "platforms": {
+        "linux/amd64": "1.5.4",
+        "linux/arm64": "1.5.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "simplejson",
+      "version": "4.3.0",
+      "platforms": {
+        "linux/amd64": "4.3.0",
+        "linux/arm64": "4.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "simsimd",
+      "version": "6.5.16",
+      "platforms": {
+        "linux/amd64": "6.5.16",
+        "linux/arm64": "6.5.16"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "platforms": {
+        "linux/amd64": "1.17.0",
+        "linux/arm64": "1.17.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "spatialmath-python",
+      "version": "1.1.19",
+      "platforms": {
+        "linux/amd64": "1.1.19",
+        "linux/arm64": "1.1.19"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "starlette",
+      "version": "1.10.0",
+      "platforms": {
+        "linux/amd64": "1.10.0",
+        "linux/arm64": "1.10.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "stringzilla",
+      "version": "5.3.2",
+      "platforms": {
+        "linux/amd64": "5.3.2",
+        "linux/arm64": "5.3.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "supervision",
+      "version": "0.32.0",
+      "platforms": {
+        "linux/amd64": "0.32.0",
+        "linux/arm64": "0.32.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "svg-path",
+      "version": "7.1",
+      "platforms": {
+        "linux/amd64": "7.1",
+        "linux/arm64": "7.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "sympy",
+      "version": "1.14.0",
+      "platforms": {
+        "linux/amd64": "1.14.0",
+        "linux/arm64": "1.14.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tensorboard",
+      "version": "2.21.0",
+      "platforms": {
+        "linux/amd64": "2.21.0",
+        "linux/arm64": "2.21.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tensorboard-data-server",
+      "version": "0.7.2",
+      "platforms": {
+        "linux/amd64": "0.7.2",
+        "linux/arm64": "0.7.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tensorstore",
+      "version": "0.1.86",
+      "platforms": {
+        "linux/amd64": "0.1.86",
+        "linux/arm64": "0.1.86"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "termcolor",
+      "version": "3.3.0",
+      "platforms": {
+        "linux/amd64": "3.3.0",
+        "linux/arm64": "3.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "threadpoolctl",
+      "version": "3.8.0",
+      "platforms": {
+        "linux/amd64": "3.8.0",
+        "linux/arm64": "3.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tifffile",
+      "version": "2026.11.16",
+      "platforms": {
+        "linux/amd64": "2026.11.16",
+        "linux/arm64": "2026.11.16"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tiktoken",
+      "version": "0.14.0",
+      "platforms": {
+        "linux/amd64": "0.14.0",
+        "linux/arm64": "0.14.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "timm",
+      "version": "1.0.31",
+      "platforms": {
+        "linux/amd64": "1.0.31",
+        "linux/arm64": "1.0.31"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tokenizers",
+      "version": "0.23.3",
+      "platforms": {
+        "linux/amd64": "0.23.3",
+        "linux/arm64": "0.23.3"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "toml",
+      "version": "0.10.2",
+      "platforms": {
+        "linux/amd64": "0.10.2",
+        "linux/arm64": "0.10.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "toolz",
+      "version": "1.2.0",
+      "platforms": {
+        "linux/amd64": "1.2.0",
+        "linux/arm64": "1.2.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "torch",
+      "version": "2.14.1",
+      "platforms": {
+        "linux/amd64": "2.14.1",
+        "linux/arm64": "2.14.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "torch-geometric",
+      "version": "2.8.1",
+      "platforms": {
+        "linux/amd64": "2.8.1",
+        "linux/arm64": "2.8.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "torchaudio",
+      "version": "2.11.1",
+      "platforms": {
+        "linux/amd64": "2.11.1",
+        "linux/arm64": "2.11.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "torchcodec",
+      "version": "0.17.0",
+      "platforms": {
+        "linux/amd64": "0.17.0",
+        "linux/arm64": "0.17.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "torchvision",
+      "version": "0.29.1",
+      "platforms": {
+        "linux/amd64": "0.29.1",
+        "linux/arm64": "0.29.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tqdm",
+      "version": "4.70.1",
+      "platforms": {
+        "linux/amd64": "4.70.1",
+        "linux/arm64": "4.70.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "traitlets",
+      "version": "5.16.1",
+      "platforms": {
+        "linux/amd64": "5.16.1",
+        "linux/arm64": "5.16.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "transformers",
+      "version": "5.22.2",
+      "platforms": {
+        "linux/amd64": "5.22.2",
+        "linux/arm64": "5.22.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "transforms3d",
+      "version": "0.4.2",
+      "platforms": {
+        "linux/amd64": "0.4.2",
+        "linux/arm64": "0.4.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "treescope",
+      "version": "0.1.11",
+      "platforms": {
+        "linux/amd64": "0.1.11",
+        "linux/arm64": "0.1.11"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "trimesh",
+      "version": "5.2.1",
+      "platforms": {
+        "linux/amd64": "5.2.1",
+        "linux/arm64": "5.2.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "triton",
+      "version": "3.8.0",
+      "platforms": {
+        "linux/amd64": "3.8.0",
+        "linux/arm64": "3.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "typeguard",
+      "version": "4.6.1",
+      "platforms": {
+        "linux/amd64": "4.6.1",
+        "linux/arm64": "4.6.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "typer",
+      "version": "0.29.2",
+      "platforms": {
+        "linux/amd64": "0.29.2",
+        "linux/arm64": "0.29.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "platforms": {
+        "linux/amd64": "4.16.0",
+        "linux/arm64": "4.16.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "typing-inspect",
+      "version": "0.9.0",
+      "platforms": {
+        "linux/amd64": "0.9.0",
+        "linux/arm64": "0.9.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.5",
+      "platforms": {
+        "linux/amd64": "0.4.5",
+        "linux/arm64": "0.4.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tyro",
+      "version": "1.0.17",
+      "platforms": {
+        "linux/amd64": "1.0.17",
+        "linux/arm64": "1.0.17"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.6",
+      "platforms": {
+        "linux/amd64": "2026.6",
+        "linux/arm64": "2026.6"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ultralytics",
+      "version": "8.4.216",
+      "platforms": {
+        "linux/amd64": "8.4.216",
+        "linux/arm64": "8.4.216"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ultralytics-platform",
+      "version": "0.1.120",
+      "platforms": {
+        "linux/amd64": "0.1.120",
+        "linux/arm64": "0.1.120"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "ultralytics-thop",
+      "version": "2.2.5",
+      "platforms": {
+        "linux/amd64": "2.2.5",
+        "linux/arm64": "2.2.5"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0",
+      "platforms": {
+        "linux/amd64": "2.8.0",
+        "linux/arm64": "2.8.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "platforms": {
+        "linux/amd64": "0.54.0",
+        "linux/arm64": "0.54.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "uvloop",
+      "version": "0.23.0",
+      "platforms": {
+        "linux/amd64": "0.23.0",
+        "linux/arm64": "0.23.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "vhacdx",
+      "version": "0.1.1",
+      "platforms": {
+        "linux/amd64": "0.1.1",
+        "linux/arm64": "0.1.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "viser",
+      "version": "0.2.23",
+      "platforms": {
+        "linux/amd64": "0.2.23",
+        "linux/arm64": "0.2.23"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "wadler-lindig",
+      "version": "0.1.8",
+      "platforms": {
+        "linux/amd64": "0.1.8",
+        "linux/arm64": "0.1.8"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "watchfiles",
+      "version": "1.3.0",
+      "platforms": {
+        "linux/amd64": "1.3.0",
+        "linux/arm64": "1.3.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "wcwidth",
+      "version": "0.9.4",
+      "platforms": {
+        "linux/amd64": "0.9.4",
+        "linux/arm64": "0.9.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "webdataset",
+      "version": "1.0.2",
+      "platforms": {
+        "linux/amd64": "1.0.2",
+        "linux/arm64": "1.0.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "websockets",
+      "version": "17.4",
+      "platforms": {
+        "linux/amd64": "17.4",
+        "linux/arm64": "17.4"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "werkzeug",
+      "version": "3.1.9",
+      "platforms": {
+        "linux/amd64": "3.1.9",
+        "linux/arm64": "3.1.9"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "wrapt",
+      "version": "2.5.2",
+      "platforms": {
+        "linux/amd64": "2.5.2",
+        "linux/arm64": "2.5.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "xxhash",
+      "version": "4.1.0",
+      "platforms": {
+        "linux/amd64": "4.1.0",
+        "linux/arm64": "4.1.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "yarl",
+      "version": "1.25.1",
+      "platforms": {
+        "linux/amd64": "1.25.1",
+        "linux/arm64": "1.25.1"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "yourdfpy",
+      "version": "0.0.60",
+      "platforms": {
+        "linux/amd64": "0.0.60",
+        "linux/arm64": "0.0.60"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "zarr",
+      "version": "3.4.2",
+      "platforms": {
+        "linux/amd64": "3.4.2",
+        "linux/arm64": "3.4.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "zipp",
+      "version": "4.1.2",
+      "platforms": {
+        "linux/amd64": "4.1.2",
+        "linux/arm64": "4.1.2"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "zstandard",
+      "version": "0.25.0",
+      "platforms": {
+        "linux/amd64": "0.25.0",
+        "linux/arm64": "0.25.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    }
+  ],
+  "numeric_formats": [
+    {
+      "format": "FP32",
+      "dtype_codes": [
+        "F32"
+      ],
+      "display": "FP32",
+      "baseline": true,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "untested",
+        "L40S": "untested",
+        "H100": "untested",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch",
+        "jax"
+      ],
+      "notes": "GB10: 1024x1024 CUDA matmul in torch and jitted JAX matmul ran (verification v1/v2)."
+    },
+    {
+      "format": "TF32 matmul",
+      "dtype_codes": [],
+      "display": "TF32 matmul",
+      "baseline": false,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "untested",
+        "L40S": "untested",
+        "H100": "untested",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch",
+        "jax"
+      ],
+      "notes": "Compute mode, not a stored dtype; never visible in safetensors headers. GB10: torch matmul with the TF32 flag ran; numerical agreement with fp32 not compared."
+    },
+    {
+      "format": "BF16",
+      "dtype_codes": [
+        "BF16"
+      ],
+      "display": "BF16",
+      "baseline": true,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "untested",
+        "L40S": "untested",
+        "H100": "untested",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch",
+        "jax"
+      ],
+      "notes": "GB10: torch and JAX bf16 matmul, bf16 SDPA, LeRobot/SmolVLA bf16 load ran."
+    },
+    {
+      "format": "FP16",
+      "dtype_codes": [
+        "F16"
+      ],
+      "display": "FP16",
+      "baseline": true,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "untested",
+        "L40S": "untested",
+        "H100": "untested",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch",
+        "jax"
+      ],
+      "notes": "GB10: torch fp16 matmul ran."
+    },
+    {
+      "format": "FP8 E4M3",
+      "dtype_codes": [
+        "F8_E4M3"
+      ],
+      "display": "FP8 E4M3",
+      "baseline": false,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "unsupported",
+        "L40S": "untested",
+        "H100": "untested",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch",
+        "torchao"
+      ],
+      "notes": "A100 has no FP8. GB10: cast and torch._scaled_mm (tensorwise, rowwise) ran; tensorwise result equal to the fp32 reference of the dequantized inputs."
+    },
+    {
+      "format": "FP8 E5M2",
+      "dtype_codes": [
+        "F8_E5M2"
+      ],
+      "display": "FP8 E5M2",
+      "baseline": false,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "unsupported",
+        "L40S": "untested",
+        "H100": "untested",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch",
+        "torchao"
+      ],
+      "notes": "A100 has no FP8. GB10: cast and torch._scaled_mm (e5m2 x e4m3, tensorwise) ran; result equal to the reference."
+    },
+    {
+      "format": "INT8",
+      "dtype_codes": [
+        "I8",
+        "U8"
+      ],
+      "display": "INT8",
+      "baseline": false,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "untested",
+        "L40S": "untested",
+        "H100": "untested",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch",
+        "bitsandbytes"
+      ],
+      "notes": "U8 is also used for packed or raw byte tensors. GB10: torch._int_mm equals the CPU integer matmul; bitsandbytes 0.50.2 Linear8bitLt and Adam8bit ran on CUDA (finite output; accuracy not measured)."
+    },
+    {
+      "format": "NVFP4",
+      "dtype_codes": [
+        "F4"
+      ],
+      "display": "NVFP4",
+      "baseline": false,
+      "spark": "operation-tested",
+      "modal": {
+        "A100": "unsupported",
+        "L40S": "unsupported",
+        "H100": "unsupported",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch"
+      ],
+      "notes": "GB10: torch.nn.functional.scaled_mm / torch._scaled_mm with packed float4_e2m1fn_x2 and swizzled 1x16 float8_e4m3fn scales (non-unit scales, 4 shapes up to 128x384x1024) matched the dequantized fp32 reference to 0 relative error. Needs the swizzled scale layout. torchao and Transformer Engine are not in the image. H100 has no FP4, so practice on H100 cannot exercise it."
+    },
+    {
+      "format": "MXFP4",
+      "dtype_codes": [],
+      "display": "MXFP4",
+      "baseline": false,
+      "spark": "unsupported",
+      "modal": {
+        "A100": "unsupported",
+        "L40S": "unsupported",
+        "H100": "unsupported",
+        "B200": "untested"
+      },
+      "libraries": [
+        "torch"
+      ],
+      "notes": "GB10: torch 2.14.1 refuses the call: 'MXFP4 scaling only supported in CUDA for B200/B300' (float4_e2m1fn_x2 with float8_e8m0fnu 1x32 scales). MXFP8 (1x32 e8m0 scales) ran in torch._scaled_mm, output shape only. H100 has no FP4."
+    }
+  ],
+  "base_cache": null,
+  "docs_url": ""
+}

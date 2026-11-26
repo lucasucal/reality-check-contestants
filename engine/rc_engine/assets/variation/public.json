@@ -1,0 +1,15 @@
+{
+  "profile": "public",
+  "light": {"azimuth_deg": 35, "elevation_deg": [55, 78], "intensity": [0.85, 1.15], "kelvin": [4800, 6800],
+            "ambient": [0.9, 1.1]},
+  "table_tint": 0.06,
+  "fixture_shade": 0.06,
+  "part_shade": 0.04,
+  "camera_jitter": {"pos_m": 0.015, "rot_deg": 1.5},
+  "sky_rotation": true,
+  "rooms": ["workshop", "office", "industrial_bay"],
+  "fixture_pose": {"xy_m": 0.04, "yaw_deg": 15},
+  "clutter": {"max": 2, "touching": false},
+  "nudge": {"window_s": [1.5, 3.5], "shift_m": [0.03, 0.06], "yaw_deg": 45},
+  "notes": "The in-distribution variation every public episode gets (engine/rc_engine/tasks/variation.py). Ranges are ±: light azimuth about the nominal, part and fixture shade as a fraction of brightness, camera jitter for the two tripod cameras only. The nudge applies only when an episode asks for it (reset option nudge). rooms: the furnished rooms around the bench, one per episode, uniform by seed (rooms.py)."
+}

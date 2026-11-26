@@ -1,0 +1,325 @@
+{
+ "room": "industrial_bay",
+ "source": "https://huggingface.co/datasets/projectsim/simready-hardware/blob/827f45cdffe63ae699351fdba58c50de73e4d40a/scenes/industrial_bay_walkaround/IndustrialBayWalkaround.usdc",
+ "placement": {
+  "yaw_deg": -90.0,
+  "base": [
+   0.0,
+   -0.2
+  ],
+  "floor_z": -0.75,
+  "moves": {
+   "/IndustrialBayWalkaround/Furniture/PerforatedTop": [
+    0.0,
+    1.1
+   ]
+  }
+ },
+ "clear_radius": 1.65,
+ "clear_top": 1.85,
+ "lighting": {
+  "dome": 2400.0,
+  "ceiling": 0.0,
+  "fill": {
+   "power": 183463.6,
+   "rgb": [
+    1.0,
+    0.978,
+    0.945
+   ],
+   "dir": [
+    0.0,
+    1.0,
+    0.0
+   ]
+  }
+ },
+ "triangles": 49999,
+ "source_triangles": 90043,
+ "materials": [
+  {
+   "name": "aluminium",
+   "mesh": "aluminium.obj",
+   "triangles": 1500,
+   "source_triangles": 1848,
+   "rgba": [
+    0.7419,
+    0.7484,
+    0.7354,
+    1.0
+   ],
+   "specular": 0.276,
+   "shininess": 0.69,
+   "vertices": 2611
+  },
+  {
+   "name": "brass",
+   "mesh": "brass.obj",
+   "triangles": 360,
+   "source_triangles": 360,
+   "rgba": [
+    0.7152,
+    0.5749,
+    0.3318,
+    1.0
+   ],
+   "specular": 0.276,
+   "shininess": 0.69,
+   "vertices": 384
+  },
+  {
+   "name": "clearglass",
+   "mesh": "clearglass.obj",
+   "triangles": 96,
+   "source_triangles": 96,
+   "rgba": [
+    0.8808,
+    0.9212,
+    0.9261,
+    0.12
+   ],
+   "specular": 0.096,
+   "shininess": 0.9,
+   "vertices": 192
+  },
+  {
+   "name": "concreteedge",
+   "mesh": "concreteedge.obj",
+   "triangles": 12,
+   "source_triangles": 12,
+   "rgba": [
+    0.5749,
+    0.5749,
+    0.5657,
+    1.0
+   ],
+   "specular": 0.038,
+   "shininess": 0.38,
+   "vertices": 24
+  },
+  {
+   "name": "galvanized",
+   "mesh": "galvanized.obj",
+   "triangles": 2900,
+   "source_triangles": 5528,
+   "texture": "galvanized.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.209,
+   "shininess": 0.508,
+   "vertices": 7086
+  },
+  {
+   "name": "gasket",
+   "mesh": "gasket.obj",
+   "triangles": 384,
+   "source_triangles": 384,
+   "rgba": [
+    0.1863,
+    0.1897,
+    0.1828,
+    1.0
+   ],
+   "specular": 0.032,
+   "shininess": 0.32,
+   "vertices": 640
+  },
+  {
+   "name": "industrialsteel_material_001",
+   "mesh": "industrialsteel_material_001.obj",
+   "triangles": 11658,
+   "source_triangles": 22218,
+   "texture": "industrialsteel_material_001.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.12,
+   "shininess": 0.623,
+   "vertices": 12827
+  },
+  {
+   "name": "paint",
+   "mesh": "paint.obj",
+   "triangles": 192,
+   "source_triangles": 192,
+   "texture": "paint.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.019,
+   "shininess": 0.19,
+   "vertices": 362
+  },
+  {
+   "name": "perforatedtop_look_88f5a3",
+   "mesh": "perforatedtop_look_88f5a3.obj",
+   "triangles": 20786,
+   "source_triangles": 39612,
+   "rgba": [
+    0.77,
+    0.78,
+    0.78,
+    1.0
+   ],
+   "specular": 0.36,
+   "shininess": 0.72,
+   "vertices": 17015
+  },
+  {
+   "name": "perforatedtop_look_ebb8cc",
+   "mesh": "perforatedtop_look_ebb8cc.obj",
+   "triangles": 8482,
+   "source_triangles": 16164,
+   "rgba": [
+    0.87,
+    0.6864,
+    0.0134,
+    1.0
+   ],
+   "specular": 0.099,
+   "shininess": 0.62,
+   "vertices": 8616
+  },
+  {
+   "name": "perforatedtop_material_001",
+   "mesh": "perforatedtop_material_001.obj",
+   "triangles": 444,
+   "source_triangles": 444,
+   "texture": "perforatedtop_material_001.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.065,
+   "shininess": 0.634,
+   "vertices": 308
+  },
+  {
+   "name": "pipered",
+   "mesh": "pipered.obj",
+   "triangles": 748,
+   "source_triangles": 748,
+   "rgba": [
+    0.7084,
+    0.1334,
+    0.0999,
+    1.0
+   ],
+   "specular": 0.153,
+   "shininess": 0.67,
+   "vertices": 766
+  },
+  {
+   "name": "redcoupling",
+   "mesh": "redcoupling.obj",
+   "triangles": 1364,
+   "source_triangles": 1364,
+   "rgba": [
+    0.6012,
+    0.1121,
+    0.0861,
+    1.0
+   ],
+   "specular": 0.151,
+   "shininess": 0.62,
+   "vertices": 1408
+  },
+  {
+   "name": "safetyblack",
+   "mesh": "safetyblack.obj",
+   "triangles": 87,
+   "source_triangles": 87,
+   "rgba": [
+    0.2029,
+    0.1931,
+    0.1641,
+    1.0
+   ],
+   "specular": 0.084,
+   "shininess": 0.57,
+   "vertices": 183
+  },
+  {
+   "name": "slab",
+   "mesh": "slab.obj",
+   "triangles": 2,
+   "source_triangles": 2,
+   "texture": "slab.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.057,
+   "shininess": 0.567,
+   "vertices": 4
+  },
+  {
+   "name": "structuralsteel",
+   "mesh": "structuralsteel.obj",
+   "triangles": 972,
+   "source_triangles": 972,
+   "rgba": [
+    0.5749,
+    0.5838,
+    0.5838,
+    1.0
+   ],
+   "specular": 0.172,
+   "shininess": 0.53,
+   "vertices": 1424
+  },
+  {
+   "name": "yellow",
+   "mesh": "yellow.obj",
+   "triangles": 12,
+   "source_triangles": 12,
+   "rgba": [
+    0.9867,
+    0.7736,
+    0.0932,
+    1.0
+   ],
+   "specular": 0.077,
+   "shininess": 0.55,
+   "vertices": 24
+  }
+ ],
+ "sha256": {
+  "aluminium.obj": "f6fd2322d00176c2eecf6989f48f44f4c3860ebcbfff26d8b06d22808b605176",
+  "brass.obj": "4d0326f172cece7e82e2e06c18454868e9014790433aa8234abd9253df88bbd3",
+  "clearglass.obj": "537a0f8f8be51ebcc59bea4c85387d6e7cc3d68cfc34b70b7d8550ea9b289e1b",
+  "concreteedge.obj": "420c166fda06a49d68105f1fefc6f200e3c717a0b0173332ed5d054794c31a72",
+  "galvanized.obj": "ae422051e6c8ee3f72660c1662715f43733fc98c32fe904eed132436b4e2738e",
+  "galvanized.png": "5d6862f4117166a50a66e8d3e2e3231098bd57ab2db2befb8be15b0a94f23c21",
+  "gasket.obj": "0696c8a4465534e1e70e0c07ce57acb36c97ec87aa018f5b11cd58f83a2bd9eb",
+  "industrialsteel_material_001.obj": "3a7dc29935cc6821fed4f153e3893c202585edc47e11f1d5620af463bfe63095",
+  "industrialsteel_material_001.png": "147a02ca5a844252dbd50ea473329a0c68d2aab628f72383d11712a35b570226",
+  "paint.obj": "984f8175692566350068e3023c85a9401172408f1d83a4e815de22f0663fcd67",
+  "paint.png": "06c806a9870fc679aa0e26ab51d175785ed708f0a65a4cf14b79f58db5a6e85f",
+  "perforatedtop_look_88f5a3.obj": "a4063172ccbd6c9217767c05b3f057032d10f41c117807909ba9afa08db8dab8",
+  "perforatedtop_look_ebb8cc.obj": "437f1a96a720180dcf6430eff21b3daa3f6243b3ba4e8a857dd3c57ef5e40519",
+  "perforatedtop_material_001.obj": "e0e2420afc6022a745f8cecaba31675148cbb985e789f22e63052ce828971e24",
+  "perforatedtop_material_001.png": "55258f6c022705b19a2ff956c4090db9f371f8af2f635b98d391e2866502e7c7",
+  "pipered.obj": "d096141fcfc70e2524b48cfd8ee33314df23ffb1ba785ca7007514b569784c93",
+  "redcoupling.obj": "278d48cf3ab87bb5805b359a249195ac8c17213b12d5ff49fc5825654db630e4",
+  "safetyblack.obj": "68238dab3e3bbf38818475844ffa4fd4da2a896734d1fc579491b13e0a492d40",
+  "slab.obj": "930e7170811634489a0dcf19f6f209c2685dbb31126feb227821ec913ab91752",
+  "slab.png": "d839c8345aabda39cf6b0e26206aaa334dd0da9e7a023aabc0386fc1a59419ec",
+  "structuralsteel.obj": "2798d6d7a1d75fe6548f02adcef6fbca8c71fc6313d25bef7c34fac9c315682d",
+  "yellow.obj": "85d282ab91154c64172c7215a5a066f6c6aed175929895e09c19ecbe7c8c9a68"
+ }
+}

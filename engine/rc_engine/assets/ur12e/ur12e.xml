@@ -1,0 +1,106 @@
+<mujoco model="ur12e">
+  <compiler angle="radian" meshdir="assets/"/>
+
+  <option timestep="0.005" integrator="implicitfast"/>
+
+  <asset>
+    <mesh name="base" file="base.stl"/>
+    <mesh name="base_visual_black" file="base_visual_black.obj"/>
+    <mesh name="base_visual_jointgrey" file="base_visual_jointgrey.obj"/>
+    <mesh name="shoulder" file="shoulder.stl"/>
+    <mesh name="shoulder_visual_black" file="shoulder_visual_black.obj"/>
+    <mesh name="shoulder_visual_jointgrey" file="shoulder_visual_jointgrey.obj"/>
+    <mesh name="shoulder_visual_urblue" file="shoulder_visual_urblue.obj"/>
+    <mesh name="upperarm" file="upperarm.stl"/>
+    <mesh name="upperarm_visual_black" file="upperarm_visual_black.obj"/>
+    <mesh name="upperarm_visual_jointgrey" file="upperarm_visual_jointgrey.obj"/>
+    <mesh name="upperarm_visual_linkgrey" file="upperarm_visual_linkgrey.obj"/>
+    <mesh name="upperarm_visual_urblue" file="upperarm_visual_urblue.obj"/>
+    <mesh name="forearm" file="forearm.stl"/>
+    <mesh name="forearm_visual_black" file="forearm_visual_black.obj"/>
+    <mesh name="forearm_visual_jointgrey" file="forearm_visual_jointgrey.obj"/>
+    <mesh name="forearm_visual_linkgrey" file="forearm_visual_linkgrey.obj"/>
+    <mesh name="forearm_visual_urblue" file="forearm_visual_urblue.obj"/>
+    <mesh name="wrist1" file="wrist1.stl"/>
+    <mesh name="wrist1_visual_black" file="wrist1_visual_black.obj"/>
+    <mesh name="wrist1_visual_jointgrey" file="wrist1_visual_jointgrey.obj"/>
+    <mesh name="wrist1_visual_urblue" file="wrist1_visual_urblue.obj"/>
+    <mesh name="wrist2" file="wrist2.stl"/>
+    <mesh name="wrist2_visual_black" file="wrist2_visual_black.obj"/>
+    <mesh name="wrist2_visual_jointgrey" file="wrist2_visual_jointgrey.obj"/>
+    <mesh name="wrist2_visual_urblue" file="wrist2_visual_urblue.obj"/>
+    <mesh name="wrist3" file="wrist3.stl"/>
+    <mesh name="wrist3_visual_linkgrey" file="wrist3_visual_linkgrey.obj"/>
+  </asset>
+
+  <worldbody>
+    <body name="base_link">
+      <body name="base_link_inertia" quat="0 0 0 1">
+        <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="4" diaginertia="0.01125 0.00610633 0.00610633"/>
+        <geom quat="0 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="base_visual_black" rgba="0.03310248 0.03310248 0.03310248 1"/>
+        <geom quat="0 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="base_visual_jointgrey" rgba="0.2784314 0.2784314 0.2784314 1"/>
+        <geom quat="0 0 0 1" type="mesh" group="3" mesh="base"/>
+        <body name="shoulder_link" pos="0 0 0.1807">
+          <inertial pos="0.021 -0.027 0" quat="0.988634 -0.000680926 0.148578 -0.0229591" mass="7.369" diaginertia="0.0353866 0.0352903 0.0202532"/>
+          <joint name="shoulder_pan_joint" pos="0 0 0" axis="0 0 1" range="-6.28319 6.28319" actuatorfrcrange="-330 330" armature="0.1" damping="10"/>
+          <geom quat="0 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="shoulder_visual_black" rgba="0.03310248 0.03310248 0.03310248 1"/>
+          <geom quat="0 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="shoulder_visual_jointgrey" rgba="0.2784314 0.2784314 0.2784314 1"/>
+          <geom quat="0 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="shoulder_visual_urblue" rgba="0.4901961 0.6784314 0.8 1"/>
+          <geom quat="0 0 0 1" type="mesh" group="3" mesh="shoulder"/>
+          <body name="upper_arm_link" quat="0.707107 0.707107 0 0">
+            <inertial pos="-0.2327 0 0.158" quat="0.500033 0.499784 0.489585 0.510381" mass="13.051" diaginertia="0.77068 0.769758 0.0278114"/>
+            <joint name="shoulder_lift_joint" pos="0 0 0" axis="0 0 1" range="-6.28319 6.28319" actuatorfrcrange="-330 330" armature="0.1" damping="10"/>
+            <geom pos="0 0 0.1762" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="upperarm_visual_black" rgba="0.03310248 0.03310248 0.03310248 1"/>
+            <geom pos="0 0 0.1762" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="upperarm_visual_jointgrey" rgba="0.2784314 0.2784314 0.2784314 1"/>
+            <geom pos="0 0 0.1762" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="upperarm_visual_linkgrey" rgba="0.8203922 0.8203922 0.8203922 1"/>
+            <geom pos="0 0 0.1762" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="upperarm_visual_urblue" rgba="0.4901961 0.6784314 0.8 1"/>
+            <geom pos="0 0 0.1762" quat="0.5 0.5 -0.5 -0.5" type="mesh" group="3" mesh="upperarm"/>
+            <body name="forearm_link" pos="-0.6127 0 0">
+              <inertial pos="-0.33155 0 0.068" quat="0.492051 0.507971 0.507346 0.492394" mass="3.989" diaginertia="0.30928 0.306743 0.00985709"/>
+              <joint name="elbow_joint" pos="0 0 0" axis="0 0 1" range="-2.792526803190927 2.792526803190927" actuatorfrcrange="-150 150" armature="0.1" damping="10"/>
+              <geom pos="0 0 0.0393" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="forearm_visual_black" rgba="0.03310248 0.03310248 0.03310248 1"/>
+              <geom pos="0 0 0.0393" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="forearm_visual_jointgrey" rgba="0.2784314 0.2784314 0.2784314 1"/>
+              <geom pos="0 0 0.0393" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="forearm_visual_linkgrey" rgba="0.8203922 0.8203922 0.8203922 1"/>
+              <geom pos="0 0 0.0393" quat="0.5 0.5 -0.5 -0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="forearm_visual_urblue" rgba="0.4901961 0.6784314 0.8 1"/>
+              <geom pos="0 0 0.0393" quat="0.5 0.5 -0.5 -0.5" type="mesh" group="3" mesh="forearm"/>
+              <body name="wrist_1_link" pos="-0.57155 0 0.17415">
+                <inertial pos="0 -0.018 0.007" quat="0.525776 0.850564 -0.0100431 9.45801e-05" mass="2.1" diaginertia="0.00296017 0.00269992 0.00209991"/>
+                <joint name="wrist_1_joint" pos="0 0 0" axis="0 0 1" range="-6.28319 6.28319" actuatorfrcrange="-54 54" armature="0.1" damping="10"/>
+                <geom pos="0 0 -0.135" quat="0.707107 0.707107 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist1_visual_black" rgba="0.03310248 0.03310248 0.03310248 1"/>
+                <geom pos="0 0 -0.135" quat="0.707107 0.707107 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist1_visual_jointgrey" rgba="0.2784314 0.2784314 0.2784314 1"/>
+                <geom pos="0 0 -0.135" quat="0.707107 0.707107 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist1_visual_urblue" rgba="0.4901961 0.6784314 0.8 1"/>
+                <geom pos="0 0 -0.135" quat="0.707107 0.707107 0 0" type="mesh" group="3" mesh="wrist1"/>
+                <body name="wrist_2_link" pos="0 -0.11985 -2.45816e-11" quat="0.707107 0.707107 0 0">
+                  <inertial pos="0 0.018 -0.007" quat="0.525776 0.850564 -0.0100431 9.45801e-05" mass="1.98" diaginertia="0.00296017 0.00269992 0.00209991"/>
+                  <joint name="wrist_2_joint" pos="0 0 0" axis="0 0 1" range="-6.28319 6.28319" actuatorfrcrange="-54 54" armature="0.1" damping="10"/>
+                  <geom pos="0 0 -0.12" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist2_visual_black" rgba="0.03310248 0.03310248 0.03310248 1"/>
+                  <geom pos="0 0 -0.12" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist2_visual_jointgrey" rgba="0.2784314 0.2784314 0.2784314 1"/>
+                  <geom pos="0 0 -0.12" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist2_visual_urblue" rgba="0.4901961 0.6784314 0.8 1"/>
+                  <geom pos="0 0 -0.12" quat="1 0 0 0" type="mesh" group="3" mesh="wrist2"/>
+                  <body name="wrist_3_link" pos="0 0.11655 -2.39048e-11" quat="0.707107 -0.707107 0 0">
+                    <inertial pos="0 0 -0.026" quat="0.707107 0 0 0.707107" mass="0.615" diaginertia="0.00041 0.0004 0.00034"/>
+                    <joint name="wrist_3_joint" pos="0 0 0" axis="0 0 1" range="-6.28319 6.28319" actuatorfrcrange="-54 54" armature="0.1" damping="10"/>
+                    <geom pos="0 -0.0005 -0.1168" quat="0.707107 0.707107 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist3_visual_linkgrey" rgba="0.8203922 0.8203922 0.8203922 1"/>
+                    <geom pos="0 -0.0005 -0.1168" quat="0.707107 0.707107 0 0" type="mesh" group="3" mesh="wrist3"/>
+                    <body name="flange" quat="0.5 -0.5 -0.5 -0.5">
+                      <body name="tool0" quat="0.5 0.5 0.5 0.5"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <general name="shoulder_pan" joint="shoulder_pan_joint" ctrlrange="-6.28319 6.28319" forcelimited="true" forcerange="-330 330" biastype="affine" gainprm="2000" biasprm="0 -2000 -100"/>
+    <general name="shoulder_lift" joint="shoulder_lift_joint" ctrlrange="-6.28319 6.28319" forcelimited="true" forcerange="-330 330" biastype="affine" gainprm="2000" biasprm="0 -2000 -100"/>
+    <general name="elbow" joint="elbow_joint" ctrlrange="-2.792526803190927 2.792526803190927" forcelimited="true" forcerange="-150 150" biastype="affine" gainprm="2000" biasprm="0 -2000 -100"/>
+    <general name="wrist_1" joint="wrist_1_joint" ctrlrange="-6.28319 6.28319" forcelimited="true" forcerange="-54 54" biastype="affine" gainprm="2000" biasprm="0 -2000 -100"/>
+    <general name="wrist_2" joint="wrist_2_joint" ctrlrange="-6.28319 6.28319" forcelimited="true" forcerange="-54 54" biastype="affine" gainprm="2000" biasprm="0 -2000 -100"/>
+    <general name="wrist_3" joint="wrist_3_joint" ctrlrange="-6.28319 6.28319" forcelimited="true" forcerange="-54 54" biastype="affine" gainprm="2000" biasprm="0 -2000 -100"/>
+  </actuator>
+</mujoco>
