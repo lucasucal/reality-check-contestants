@@ -15,6 +15,7 @@ from .policy import Policy
 CONTRACT = "v0"
 SCHEMA_VERSION = 2  # observation/action schema v2 (UR12e, 6 arm joints)
 CAPABILITIES = {"chunking": True, "caching": False}
+DEFAULT_PORT = 8080  # the port the judged image serves on
 
 
 def load_manifest(path: str) -> Dict[str, Any]:
@@ -93,6 +94,12 @@ class _Handler(BaseHTTPRequestHandler):
         except Exception as exc:  # surface a readable failure, keep server up
             self._send_json(500, {"error": f"policy act() failed: {exc}"})
             return
+        try:
+            json.dumps(action)
+        except (TypeError, ValueError) as exc:
+            print(f"[rc_sdk] /act step {step}: action is not JSON-serializable: {exc}", flush=True)
+            self._send_json(500, {"error": f"action is not JSON-serializable: {exc}"})
+            return
         # CONTRACT: response echoes episode_id and step VERBATIM; headers
         # X-RC-Episode-Id / X-RC-Step ride along for dedupe/logging.
         self._send_json(200, {"episode_id": episode_id, "step": step, "action": action},
@@ -145,11 +152,11 @@ def main(argv: Optional[list] = None) -> None:
     parser.add_argument("--policy", default="policy.example:ExamplePolicy",
                         help="'module:Class' of your Policy subclass")
     parser.add_argument("--port", type=int, default=None,
-                        help="overrides manifest.json port (default 8080)")
+                        help=f"default: manifest.json port, else {DEFAULT_PORT}")
     args = parser.parse_args(argv)
 
     manifest = load_manifest(args.manifest)
-    port = args.port if args.port is not None else int(manifest.get("port", 8080))
+    port = args.port if args.port is not None else int(manifest.get("port", DEFAULT_PORT))
     policy = import_policy(args.policy)
     server = PolicyServer(port, policy)
     server.start_load()  # healthz answers immediately; readyz flips after load

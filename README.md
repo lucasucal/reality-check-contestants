@@ -28,4 +28,4 @@ paste tokens or private credentials into an issue.
 Organizers publish this repository from their own source. Pull requests are
 welcome as suggestions, but they are not merged here: an organizer applies the
 change at the source and the next publish brings it in. `PUBLISHED_FROM`
-records the source commit of the current contents.
+records the base source commit; this publication also includes an RTX PRO 6000 wording update pending in the source repository.

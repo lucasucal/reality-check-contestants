@@ -78,7 +78,7 @@ class EpisodeManager:
         self.env, self.episode_id = env, uuid.uuid4().hex
         self.last_payload = self._with_views(
             {"episode_id": self.episode_id, "step": 0, "observation": observation, "done": False}, env)
-        return self.last_payload
+        return self._with_render_pose(self.last_payload, body)
 
     def step(self, body: dict[str, Any]) -> dict[str, Any]:
         """Apply one action or chunk. For tasks that measure motion limits (arm_limits.py), `info` carries
@@ -146,7 +146,22 @@ class EpisodeManager:
                      "deadline_expired": deadline is not None and time.monotonic() >= deadline,
                      **({"speed_scaled": scaled, "safety_peaks": peaks} if peaks is not None else {})},
         }, env)
-        return self.last_payload
+        return self._with_render_pose(self.last_payload, body)
+
+    def _with_render_pose(self, payload: dict[str, Any], request: dict[str, Any]) -> dict[str, Any]:
+        if request.get("render_pose") is not True or self.env is None or self.env.spec.visibility != "public":
+            return payload
+        sample = getattr(self.env, "render_pose", None)
+        if sample is None:
+            return payload
+        try:
+            pose = sample()
+        except Exception:
+            # Preview is best effort and stays out of cached engine responses.
+            return payload
+        if pose is None:
+            return payload
+        return {**payload, "render_pose": {**pose, "captured_at": time.time()}}
 
     def render(self, body: dict[str, Any]) -> dict[str, Any]:
         """Organizer replay (`POST /render`, only when RC_ENGINE_REPLAY=1): re-render the policy cameras

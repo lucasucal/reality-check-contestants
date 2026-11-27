@@ -330,6 +330,7 @@ def run_episode(
     on_clamp: Callable[[], None] | None = None,
     check: Callable[[], None] | None = None,
     publisher: FramePublisher | None = None,
+    preview_frame: Callable[[dict[str, Any]], None] | None = None,
     episodes_total: int | None = None,
     pace: float = 0.0,
     clock: Callable[[], float] = time.monotonic,
@@ -388,6 +389,8 @@ def run_episode(
         if views:
             frame["views"] = views
         try:
+            if preview_frame is not None:
+                preview_frame(frame)
             publisher.publish(frame, force=final)
         except Exception:  # noqa: BLE001 - live view must never disturb the loop
             pass

@@ -2,7 +2,7 @@
 
 You submit two things: a **public GitHub repository** with your Python code and a **public, ungated
 Hugging Face model** with your weights. Judging runs them in the published policy image, offline, on an
-NVIDIA H100 (amd64). Limits: [limits table](RULES.md#limits).
+NVIDIA RTX PRO 6000 (amd64). Limits: [limits table](RULES.md#limits).
 
 ### Steps
 

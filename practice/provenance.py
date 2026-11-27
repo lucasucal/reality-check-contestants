@@ -13,7 +13,7 @@ from typing import Callable, Optional
 
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 HF_URL = re.compile(r"^https?://(?:www\.)?huggingface\.co/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)(?:/tree/([^/]+))?/?$")
-PRACTICE_LABEL = ("PRACTICE RESULT: functional check on {where}. It is not proof of judged H100 behavior, timing or memory, "
+PRACTICE_LABEL = ("PRACTICE RESULT: functional check on {where}. It is not proof of judged RTX PRO 6000 behavior, timing or memory, "
                   "and not a hidden-task score. Practice is optional and never a submission prerequisite.")
 
 

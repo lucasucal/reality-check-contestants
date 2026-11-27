@@ -61,7 +61,7 @@ MESSAGES: dict = {
     "snapshot_empty": ("reject", "The model snapshot contains no files."),
     "snapshot_format": ("warn", "Model snapshot file {path}: {detail}"),
     # dtype
-    "dtype_non_baseline": ("warn", "{path} contains tensors in formats that are not tested on the judged H100 image: {formats}.{caveat}"),
+    "dtype_non_baseline": ("warn", "{path} contains tensors in formats that are not tested on the judged RTX PRO 6000 image: {formats}.{caveat}"),
     "dtype_unchecked_format": ("warn", "{n} file(s) with extension {ext} ({example}...) cannot be dtype-checked cheaply; numeric format is your responsibility.{caveat}"),
     "dtype_header_unreadable": ("warn", "Could not read the safetensors header of {path}; numeric format was not checked.{caveat}"),
 }

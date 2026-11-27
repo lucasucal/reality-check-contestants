@@ -177,7 +177,7 @@ simulated ones.
 
 ## Limits
 
-Container sizes (memory, CPU) are being finalised for the H100 and **may change before the event**. The
+Container sizes (memory, CPU) are being finalised for the RTX PRO 6000 and **may change before the event**. The
 organizers publish the final values on the dashboard; until then, plan around the values below.
 
 | Limit | Value |
@@ -188,7 +188,7 @@ organizers publish the final values on the dashboard; until then, plan around th
 | Program-form server | Listening within 10 min of start |
 | Total judged run | 90 min, model download included |
 | `/act` response | 2 MiB; 1–16 actions |
-| GPU | NVIDIA H100 (80 GB), amd64 |
+| GPU | NVIDIA RTX PRO 6000, amd64 |
 | Memory | One combined CPU + GPU limit; over it ends the run (`policy_memory_exceeded`, limit and peak shown). The value is being finalised; it will be on the dashboard |
 | CPUs, processes | 8 CPUs, 1024 processes |
 | Writable space | `/scratch` 8 GB tmpfs (the only writable path); `/dev/shm` 1 GB |

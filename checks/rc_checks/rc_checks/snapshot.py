@@ -60,7 +60,7 @@ def _config_findings(root: Path, rel: str, path: Path, result: CheckResult) -> N
                 result.findings.append(make("snapshot_format", rel, detail=QUANT_UNSUPPORTED[method]))
             elif method and method != "bitsandbytes":
                 result.findings.append(make("snapshot_format", rel, detail=(
-                    f"quantization method {method!r} is not installed or not tested on the judged H100 image; "
+                    f"quantization method {method!r} is not installed or not tested on the judged RTX PRO 6000 image; "
                     "only bitsandbytes is available. Upload BF16 weights (merged, not quantized).")))
 
 

@@ -2,7 +2,7 @@
 
 Last updated: 2026-11-26
 
-What the judged policy image (NVIDIA H100, amd64, Python 3.12.3, CUDA 13) gives your policy, and the rules it runs under. When a failed run matches one of the KSI entries below, your submission page links to it (not for failures during the hidden tasks). IDs are stable and never reused.
+What the judged policy image (NVIDIA RTX PRO 6000, amd64, Python 3.12.3, CUDA 13) gives your policy, and the rules it runs under. When a failed run matches one of the KSI entries below, your submission page links to it (not for failures during the hidden tasks). IDs are stable and never reused.
 
 ## Packages
 

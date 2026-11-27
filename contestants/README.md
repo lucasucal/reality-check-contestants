@@ -2,7 +2,7 @@
 
 Train a policy that drives a simulated UR12e arm through fastener tasks. Submit a public GitHub
 repository (your Python code) and a public Hugging Face model (your weights) in EngineExchange.
-Judging runs your code in the published policy image on an NVIDIA H100 (amd64).
+Judging runs your code in the published policy image on an NVIDIA RTX PRO 6000 (amd64).
 
 ## Start here
 

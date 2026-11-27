@@ -194,7 +194,7 @@ average for everything: transport, the JPEG-encoded images in every request, dec
 | 16 (`action_chunk` maximum) | 75 | 1,200 ms | 1.7 s |
 
 The 23 ms per call is provisional: a practice team measured it as the `/act` p50 of calls
-that skipped perception, in the judged image on their own harness, not on the judged H100. The
+that skipped perception, in the judged image on their own harness, not on the judged RTX PRO 6000. The
 budget stays 90 s. To cut the call count, return
 an `action_chunk` (up to 16 actions per call); `practice` prints your `/act` seconds per
 repetition against the budget.

@@ -13,7 +13,7 @@ Action contract:
     MAX_JOINT_DELTA: 0.10472 rad base and shoulder, 0.15708 rad elbow and wrists per step (UR12e joint speeds).
 
 For LeRobot SmolVLA see ``examples/smolvla/smolvla.py``. FP32, BF16 and FP16 weights are the
-baseline formats for the judged image (NVIDIA H100, amd64); see ``runtime/numeric_formats.json`` in
+baseline formats for the judged image (NVIDIA RTX PRO 6000, amd64); see ``runtime/numeric_formats.json`` in
 the participant bundle.
 """
 from __future__ import annotations

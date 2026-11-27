@@ -1395,6 +1395,21 @@ class TabletopEnv:
         self.max_steps = max_steps
         self._episode_config = (camera_configuration, max_steps, camera_poses)
 
+    def render_pose(self) -> dict | None:
+        """Public showcase state. All poses are in the engine world frame."""
+        if not self.episode or not self._room_switch.shown or self.spec.visibility != "public":
+            return None
+        visible_parts = {p.name for p in self.task.parts} | {g.part for g in self.task.goals} | set(self.active_clutter)
+        parts = {self.model.body(self.part_body[name]).name: [self._parts[name].part.part_id, self.materials[name]]
+                 for name in sorted(visible_parts)}
+        inactive = {body for name, body in self.part_body.items() if name not in visible_parts}
+        return {
+            "version": 1, "task": self.task.task_id, "variant": self.variant, "room": self._room_switch.shown,
+            "parts": parts,
+            "bodies": {self.model.body(i).name: [*self.data.xpos[i].tolist(), *self.data.xquat[i].tolist()]
+                       for i in range(1, self.model.nbody) if i not in inactive},
+        }
+
     def replay_snapshot(self) -> dict:
         mujoco.mj_getState(self.model, self.data, self.state, mujoco.mjtState.mjSTATE_INTEGRATION)
         ep = self.episode

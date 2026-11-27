@@ -71,10 +71,12 @@ class EngineClient:
         return data
 
     def step(self, episode_id: str, step: int, action: Any, *, timeout: float | None = None,
-             deadline_monotonic: float | None = None) -> dict[str, Any]:
+             deadline_monotonic: float | None = None, render_pose: bool = False) -> dict[str, Any]:
         body = {"episode_id": episode_id, "action": action, "step": step}
         if deadline_monotonic is not None:
             body['deadline_monotonic'] = deadline_monotonic
+        if render_pose:
+            body["render_pose"] = True
         data = self._request("POST", "/step", body, timeout=timeout)
         if "observation" not in data or "done" not in data or not isinstance(data.get("info"), dict):
             raise EngineInfraError("engine /step returned an unexpected shape")
