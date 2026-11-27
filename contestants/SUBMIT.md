@@ -8,7 +8,7 @@ NVIDIA RTX PRO 6000 (amd64). Limits: [limits table](RULES.md#limits).
 
 1. Copy [`starter/`](../starter/README.md) into a new repository and set `entry_point` in `manifest.json`.
 2. Run `python3 scripts/selftest.py --weights DIR` (checks the manifest and HTTP contract, then runs your `load()` and `act()` on DIR).
-3. Upload your weights to one Hugging Face model repo ([your model](#your-model)).
+3. Upload your weights to your own public, ungated Hugging Face model repo ([your model](#your-model)).
 4. Practice with the real model in the judged image ([PRACTICE.md](PRACTICE.md)). Optional, but it
    catches most failures before they cost a cooldown.
 5. Push to public GitHub. In EngineExchange create or join a team (exactly 4 people including the lead;
@@ -83,6 +83,10 @@ checkpoints load unchanged:
 
 ### Your model
 
+Gated model repositories cannot be submitted, even if you have access to them. Upload the weights
+your policy needs to your own public, ungated Hugging Face model repository, including when you use a
+pretrained model unchanged.
+
 At submit the model is checked by metadata only: public, ungated, a model repo, revision pinned to a
 commit, file names and sizes. Nothing is downloaded and the submission is accepted at once. Every judged
 run then downloads the pinned commit fresh from Hugging Face, checks each file against the list recorded
@@ -98,7 +102,6 @@ run. Nothing is cached between runs.
 | Offline | `HF_HUB_OFFLINE=1`. A hub id loaded by name fails (`OSError`). Disable pretrained downloads in configs (for example `pretrained_backbone_weights=None`) |
 | Several models | A base model plus an adapter, a detector plus a VLA, someone else's pretrained model: download them and upload them into your one repo, each in its own subfolder ([example](#several-models-in-one-repo)) |
 | LoRA | Upload the **merged** model (QLoRA: merge onto a BF16 base), or the base and the adapter as two subfolders. An adapter pointing at another repo does not resolve |
-| Licences | Re-upload only models whose licence lets you redistribute them in a public, ungated repo, and keep their licence and attribution files. Check gated models (Llama, Gemma, PaliGemma) first |
 | Not in GitHub | Weights never go in the code repo (20 MB per-file cap) |
 | Revision | Optional: a full 40-character commit SHA, a tag or a branch. A tag or branch is resolved at submit and pinned to that commit; later pushes do not change the submission. Omitted = current head |
 | Keep it available | Every judged run downloads the pinned commit again. Until results are final keep the repo public and ungated, and do not delete it or rewrite the pinned commit (force-push, squash, history reset). Otherwise the run fails with `weights_unavailable`, charged |

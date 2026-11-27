@@ -11,8 +11,9 @@ and the HTTP contract in [`docs/api.md`](../docs/api.md).
    (your Hugging Face snapshot, mounted read-only); `act(obs)` returns one
    action per control step. `manifest.json` names the class:
    `"entry_point": "policy.example:ExamplePolicy"`.
-2. **Upload your weights** to a public, ungated Hugging Face model (safetensors
-   recommended; no archives). Everything `load()` reads goes in that one repo; the
+2. **Upload your weights** to your own public, ungated Hugging Face model repo (safetensors
+   recommended; no archives). Gated repos cannot be submitted. Upload pretrained weights even when unchanged.
+   Everything `load()` reads goes in that one repo; the
    repo root is `/weights` and several models go in subfolders (`/weights/<subfolder>`,
    [your model](../contestants/SUBMIT.md#your-model)). Every judged run downloads the
    pinned commit again, so keep the repo public and the commit intact until results

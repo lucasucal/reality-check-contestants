@@ -22,7 +22,8 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
 - **Code:** a public GitHub repository, started from a copy of `starter/`. `manifest.json` names the
   entry point: a `Policy` class (`"policy.example:ExamplePolicy"`) or a program serving HTTP on
   `0.0.0.0:8080`.
-- **Weights:** one public, ungated Hugging Face model repository containing everything the policy loads.
+- **Weights:** the team's own public, ungated Hugging Face model repository containing everything the policy
+  loads, including unchanged pretrained weights. Gated repositories cannot be submitted.
   It is mounted read-only at `/weights` (`RC_WEIGHTS_DIR`) with the repo's folder layout. The submit pins
   a commit; every judged run downloads that commit fresh, so the repo must stay public and the commit
   intact until results are final. Never put weights in GitHub.
