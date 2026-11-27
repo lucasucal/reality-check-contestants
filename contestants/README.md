@@ -1,7 +1,9 @@
 # Reality Check participant guide
 
 Train a policy that drives a simulated UR12e arm through fastener tasks. Submit a public GitHub
-repository (your Python code) and a public Hugging Face model (your weights) in EngineExchange.
+repository (your Python code) and your own public, ungated Hugging Face model repository (your weights)
+in EngineExchange. Gated models cannot be submitted; upload the weights even if the pretrained model is
+unchanged. See [your model](SUBMIT.md#your-model).
 Judging runs your code in the published policy image on an NVIDIA RTX PRO 6000 (amd64).
 
 ## Start here

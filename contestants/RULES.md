@@ -26,8 +26,10 @@ go to the [real-arm final](#real-arm-final).
 - Allowed: any **public** data, data your team collects (sim or real), and pretrained models.
 - At kickoff every team gets the same demonstration data and the **parts package**. Every task, public
   or hidden, uses only parts from the package, including parts no public task uses.
-- Weights live in one public, ungated Hugging Face model, pinned at submission and mounted read-only
-  at `/weights`. Never in GitHub. Details: [your model](SUBMIT.md#your-model).
+- Upload all weights to your own public, ungated Hugging Face model repository, even if you use a
+  pretrained model unchanged. Gated repositories cannot be submitted. The model is pinned at submission
+  and mounted read-only at `/weights`. Never put weights in GitHub. Details:
+  [your model](SUBMIT.md#your-model).
 
 ## Code
 
