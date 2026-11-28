@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 
 from .env import Env
 from .episode import EngineError, EpisodeManager
-from .schema import SCHEMA_VERSION
+from .schema import SCHEMA_VERSION, encode_obs
 from .score import SCORER
 from .tasks import make_env
 
@@ -29,6 +29,11 @@ def build_info(jpeg_quality: int) -> dict[str, Any]:
     """Renderer facts a replay must match (recorded in the runner's journal header)."""
     info: dict[str, Any] = {"mujoco_gl": os.environ.get("MUJOCO_GL", ""), "jpeg_quality": jpeg_quality,
                             "render_offsamples": os.environ.get("RC_RENDER_OFFSAMPLES") or "0"}  # unset = 0
+    try:
+        from .arm_limits import safety_stop_mode  # MuJoCo; validated at startup (__main__)
+        info["safety_stop"] = safety_stop_mode()
+    except Exception:  # noqa: BLE001 - dummy-only engines may run without MuJoCo
+        pass
     try:
         import mujoco
         info["mujoco"] = mujoco.__version__
@@ -148,7 +153,8 @@ class EngineServer(HTTPServer):
             return
         try:
             for env in self._loaded.values():
-                env.reset(0)
+                raw = env.reset(0)
+                encode_obs(env.spec, 0, raw, self.jpeg_quality)
         except Exception as exc:
             self.load_error = f"warm-up reset failed: {exc}"
             return

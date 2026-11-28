@@ -37,10 +37,10 @@ Never commit weights; `.gitignore` already excludes common checkpoint files.
 | Path | What it is |
 |---|---|
 | `policy/example.py` | The policy you edit: a tiny linear model loaded from `/weights/model.safetensors` |
-| `manifest.json` | `contract` and `entry_point`; the model link you submit in the dashboard selects the model |
+| `manifest.json` | `contract`, `schema_version` and `entry_point`. The model link you submit in the dashboard selects the model |
 | `scripts/selftest.py` | Checks the manifest, your entry point and the HTTP contract; never downloads a model |
 | `scripts/make_example_weights.py` | Writes the example checkpoint |
-| `scripts/sample_obs/` | The step-0 camera and goal JPEGs the self-test sends to your `act()` |
+| `scripts/sample_obs/` | The six step-0 current and goal JPEGs the self-test sends to your `act()` |
 | `rc_sdk/` | Serves `/healthz`, `/readyz` and `/act` around your `Policy` class. Keep it; judging uses the image's own copy |
 | `examples/` | Optional alternatives, below |
 

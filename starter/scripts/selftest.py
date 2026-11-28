@@ -42,6 +42,7 @@ for candidate in (os.path.join(ROOT, "..", "runtime"),):  # monorepo checkout
         sys.path.append(candidate)
 
 try:
+    from rc_sdk.contract import CAMERA_VIEWS, MAX_JOINT_DELTA, SCHEMA_VERSION, check_manifest_schema  # noqa: E402
     from rc_sdk.policy import Policy  # noqa: E402
     from rc_sdk.server import PolicyServer  # noqa: E402
 except ImportError:
@@ -63,7 +64,7 @@ except ImportError:
 
 DELIBERATE_FAILURE = "selftest: deliberate load failure (expected)"
 HOME_Q = (-0.2055, -1.1091, 1.6007, -1.9708, -1.5708, 1.5708)  # the arm's joint target at step 0 (docs/api.md)
-STEP_LIMIT = (0.10472, 0.10472, 0.15708, 0.15708, 0.15708, 0.15708)
+STEP_LIMIT = (MAX_JOINT_DELTA,) * 6
 SAMPLE_DIR = os.path.join(HERE, "sample_obs")  # step 0 of bolt_to_tray seed 0, as the engine renders it
 EXAMPLE_ENTRY = "policy.example:ExamplePolicy"  # the only entry point the tiny generated checkpoint fits
 ENTRY_POINT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*$")
@@ -110,25 +111,24 @@ class FailedLoadPolicy(Policy):
 
 
 def sample_observation(step: int = 0, episode_id: str = "selftest") -> dict:
-    """A /act request as the runner sends it (camera JPEGs from scripts/sample_obs/ when present)."""
+    """A schema v3 /act request from the public seed-0 finished and initial scenes."""
     import base64
 
     def jpeg(name):
         path = os.path.join(SAMPLE_DIR, name + ".jpg")
-        if not os.path.isfile(path):
-            return None
         with open(path, "rb") as source:
             return base64.b64encode(source.read()).decode()
-    obs = {"episode_id": episode_id, "step": step, "task_id": "bolt_to_tray",
-           "instruction": "Move the gold bolt to the tray.", "schema_version": 2,
-           "proprio": {"joint_pos": list(HOME_Q), "joint_vel": [0.0] * 6, "gripper": 0.9968,
-                       "ee_pos": [0.8906, -0.0078, 0.2016], "ee_quat": [-0.0289, -0.6302, 0.7751, 0.0355]}}
-    images = {name: jpeg(name) for name in ("wrist", "left", "right")}
-    if all(images.values()):
-        obs["images"] = images
-    if jpeg("goal"):
-        obs["goal"] = jpeg("goal")
-    return obs
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "episode_id": episode_id,
+        "step": step,
+        "task_id": "bolt_to_tray",
+        "instruction": "Move the bolt to the tray.",
+        "images": {name: jpeg(name) for name in CAMERA_VIEWS},
+        "goal": {name: jpeg(f"goal-{name}") for name in CAMERA_VIEWS},
+        "proprio": {"joint_pos": list(HOME_Q), "joint_vel": [0.0] * 6, "gripper": 0.9968,
+                    "ee_pos": [0.8906, -0.0078, 0.2016], "ee_quat": [-0.0289, -0.6302, 0.7751, 0.0355]},
+    }
 
 
 def _runner_motion():
@@ -236,7 +236,8 @@ def check_manifest() -> dict:
             raise ValueError("manifest must be a JSON object")
         if manifest.get("contract") != "v0":
             raise ValueError('contract must be "v0"')
-        entry_kind(manifest.get("entry_point"))
+        if entry_kind(manifest.get("entry_point")) == "class":
+            check_manifest_schema(manifest)
         if "port" in manifest and (type(manifest["port"]) is not int or manifest["port"] != 8080):
             raise ValueError("port must be 8080 or omitted (the image always serves on 8080)")
         weights = manifest.get("weights")
@@ -266,8 +267,9 @@ def check_program(root, entry: str, label: str, weights_dir=None) -> None:
         port = free_port()
         env = {k: v for k, v in os.environ.items() if not k.startswith("RC_")}
         env.update(RC_WEIGHTS_DIR=weights, RC_SCRATCH=scratch, RC_POLICY_PORT=str(port), PYTHONUNBUFFERED="1")
+        env["PYTHONPATH"] = os.pathsep.join(SDK_DIRS)
         if rt_loader is not None:
-            env["PYTHONPATH"] = os.pathsep.join([*SDK_DIRS, os.path.join(ROOT, "..", "runtime")])
+            env["PYTHONPATH"] += os.pathsep + os.path.join(ROOT, "..", "runtime")
             cmd = [sys.executable, "-m", "rc_runtime", "--submission", str(root), "--port", str(port)]
             how = "rc_runtime runs it as __main__"
         else:
@@ -303,16 +305,18 @@ def check_program(root, entry: str, label: str, weights_dir=None) -> None:
                 if body.get("error") or time.monotonic() > deadline:
                     fail(f"/readyz never became ready: {body}")
                 time.sleep(0.1)
-            assert status == 200 and body["contract"] == "v0" and body["schema_version"] == 2, body
+            assert status == 200 and body["contract"] == "v0" and body["schema_version"] == SCHEMA_VERSION, body
             assert set(body["capabilities"]) >= {"chunking", "caching"} and body["capabilities"]["chunking"] is True, body
-            report("PASS", f"{label}: /readyz ready after weights load, contract v0, schema_version 2")
-            status, body, headers = request(port, "POST", "/act", sample_observation(3, "ep-9"))
+            report("PASS", f"{label}: /readyz ready after weights load, contract v0, schema_version {SCHEMA_VERSION}")
+            obs = sample_observation(3, "ep-9")
+            status, body, headers = request(port, "POST", "/act", obs)
             assert status == 200 and body["episode_id"] == "ep-9" and body["step"] == 3, (status, body)
             low = {k.lower(): v for k, v in headers.items()}  # header names are case-insensitive
             assert low.get("x-rc-episode-id") == "ep-9" and low.get("x-rc-step") == "3", headers
             summary = check_action(body["action"], label)
             report("PASS", f"{label}: /act echoes episode_id/step (body + headers) and returns a {summary}")
-            status, body, _ = request(port, "POST", "/act", {"episode_id": "ep-9"})
+            del obs["step"]
+            status, body, _ = request(port, "POST", "/act", obs)
             assert status == 400 and "step" in body["error"], (status, body)
             report("PASS", f"{label}: malformed /act (missing step) -> 400")
         finally:
@@ -331,7 +335,7 @@ def stage_submission(source) -> "Path":
     atexit.register(shutil.rmtree, staged, True)
     root = Path(staged) / "submission"
     shutil.copytree(source, root, ignore=shutil.ignore_patterns(
-        "rc_sdk", "Dockerfile", "Dockerfile.legacy", ".git", "__pycache__", "scripts", "examples"))
+        "rc_sdk", "Dockerfile", "Dockerfile.legacy", ".git", ".venv", "__pycache__", "scripts", "examples"))
     return root
 
 
@@ -476,18 +480,16 @@ def _check_sdk_server() -> None:
 
     status, body, _ = request(port, "GET", "/readyz")
     assert status == 200 and body["ready"] is False, (status, body)
-    assert body["contract"] == "v0" and body["schema_version"] == 2
+    assert body["contract"] == "v0" and body["schema_version"] == SCHEMA_VERSION
     assert body["capabilities"] == {"chunking": True, "caching": False}
-    report("PASS", "/readyz not-ready before load, contract v0, schema_version 2, capabilities")
+    report("PASS", f"/readyz not-ready before load, contract v0, schema_version {SCHEMA_VERSION}, capabilities")
 
     time.sleep(0.5)
     status, body, _ = request(port, "GET", "/readyz")
     assert status == 200 and body["ready"] is True, (status, body)
     report("PASS", "/readyz flips ready after load() completes")
 
-    obs = {"episode_id": "ep-123", "step": 7, "task_id": "t1",
-           "images": {"wrist": "PLACEHOLDER", "left": "PLACEHOLDER", "right": "PLACEHOLDER"},
-           "proprio": {"joint_pos": [0.0] * 6}}
+    obs = sample_observation(7, "ep-123")
     status, body, headers = request(port, "POST", "/act", obs)
     assert status == 200, (status, body)
     assert body["episode_id"] == "ep-123" and body["step"] == 7  # verbatim echo
@@ -495,9 +497,17 @@ def _check_sdk_server() -> None:
     assert headers.get("X-RC-Episode-Id") == "ep-123" and headers.get("X-RC-Step") == "7"
     report("PASS", "/act echoes episode_id/step verbatim (body + X-RC-* headers) + action")
 
-    status, body, _ = request(port, "POST", "/act", {"episode_id": "ep-123"})
+    del obs["step"]
+    status, body, _ = request(port, "POST", "/act", obs)
     assert status == 400 and "step" in body["error"], (status, body)
     report("PASS", "malformed /act (missing step) -> 400 with readable message")
+    obs["step"] = 7
+    status, body, _ = request(port, "POST", "/act", dict(obs, schema_version=2))
+    assert status == 400 and "schema_version" in body["error"], (status, body)
+    del obs["goal"]["right"]
+    status, body, _ = request(port, "POST", "/act", obs)
+    assert status == 400 and "goal" in body["error"], (status, body)
+    report("PASS", "/act rejects schema v2 and incomplete goal views")
 
     server.shutdown()
 

@@ -6,8 +6,8 @@ The organizers' decisions on eligibility and conduct are final.
 
 | Rule | Value |
 |---|---|
-| Size | **Exactly 4 people, including the lead**, formed in EngineExchange. No 5th member, no smaller teams |
-| Submitting | A team can submit once all 4 members are approved and checked in at the venue |
+| Size | **3 or 4 people, including the lead**, formed in EngineExchange |
+| Submitting | A team can submit once every member is approved and checked in at the venue |
 | Changes | Until submissions close you can create, join or leave a team; the lead can invite or remove members |
 | Roster lock | Teams lock at the submission cutoff (Sunday 12:30, London time) |
 | Which team | A submission counts for the team you are on when you press submit; accepted runs stay with the team that submitted them |
@@ -28,8 +28,8 @@ go to the [real-arm final](#real-arm-final).
   or hidden, uses only parts from the package, including parts no public task uses.
 - Upload all weights to your own public, ungated Hugging Face model repository, even if you use a
   pretrained model unchanged. Gated repositories cannot be submitted. The model is pinned at submission
-  and mounted read-only at `/weights`. Never put weights in GitHub. Details:
-  [your model](SUBMIT.md#your-model).
+  and mounted read-only at `/weights`. Never put weights in GitHub. Re-upload only models whose licence
+  permits public redistribution, with their licence files. Details: [your model](SUBMIT.md#your-model).
 
 ## Code
 
@@ -45,11 +45,14 @@ Your entry point is a `Policy` class the image serves, or your own server implem
 A judged run is 6 tasks × 4 repetitions = 24 repetitions: the two public tasks first, then the four
 hidden ones. The 4 starts of a task differ from each other, are the same for every team and submission,
 and are not your practice starts: part poses differ within the ranges the practice seeds cover. Some
-judged repetitions vary the scene more and move a part during the episode, so act on what you see.
+judged repetitions vary the scene more than the public ranges, so act on what you see.
 
 A repetition ends on success, after **60 simulated seconds** (1,200 steps at 20 Hz), or when its
 **90 s cumulative `/act` budget** runs out. Running out of steps is a normal end, scored on the state
-reached.
+reached. A fourth end, the **protective stop**, exists only in a simulator started with its opt-in
+enforcement (`RC_SAFETY_STOP=enforce`); it is **off in judged runs** unless the organizers announce
+otherwise. When on, a 50 ms step over a UR12e safety limit (see "Action boundary") ends the repetition,
+unsuccessful, scored on the state reached (`end_reason: "protective_stop"`).
 
 Hidden tasks reach your policy under anonymous ids `"1"`–`"4"`. You may branch on `task_id`, but do not
 try to learn hidden task names or contents.
@@ -57,25 +60,26 @@ try to learn hidden task names or contents.
 ### The parts
 
 ISO hex bolts M16×50, M24×70 and M30×100; hex nuts M24, M30 and M36; an M33 washer; smaller nuts and
-washers (M12–M20) as clutter. Each part is nylon, stainless steel, brass or aluminium, chosen per seed,
-so the same bolt weighs from about 15 g to 0.8 kg and looks different. The printed fixture has a tray,
+washers (M12–M20) as clutter. Every part is grey PLA, like the 3D-printed kit at the event, with about
+a real print's mass (20% infill, 3 walls: an estimated 680 kg/m³, so the M30×100 bolt weighs about 65 g
+and the M16×50 about 9 g). Parts differ only in shape and size. The printed fixture has a tray,
 three vertical holes (one per bolt, chamfered) and three hex pockets (one per nut). Dimensions are in
 `engine/rc_engine/assets/`.
 
-**Parts and assets.** The fasteners and the three rooms come from
+**Parts and assets.** The fasteners and three of the four rooms come from
 [SimReady Hardware](https://huggingface.co/datasets/projectsim/simready-hardware) by Project Sim
 (Kaedim), revision `827f45cdffe63ae699351fdba58c50de73e4d40a`, CC-BY-4.0. The simulator's converted
 copies are in `engine/rc_engine/assets/fasteners/` and `engine/rc_engine/assets/rooms/`; each folder's
-`VENDORED.md` lists the source packages, dimensions and masses. The fixture is original
+`VENDORED.md` lists the source packages and dimensions. The fixture is original
 (`engine/rc_engine/assets/fixture/`).
 
 ### Instructions
 
-Every step carries one phrasing from the task's pool, chosen per episode, and a goal image of that
-episode's scene finished. Phrasings that name a material, colour or position ("the brass bolt", "the
-bolt nearer the tray") are used only when they pick out exactly one part. Hidden tasks phrase
-instructions the same way and may tell parts apart by material alone. The public pools are listed
-[below](#public-instruction-pools); `/tasks` serves them too.
+Every step carries one phrasing from the task's pool, chosen per episode, and three goal views of
+that episode's finished scene. Phrasings name parts by kind, size or position ("the smaller bolt", "the
+bolt nearer the tray"), never by colour or material; a position phrasing is used only when it picks out
+exactly one part. Hidden tasks phrase instructions the same way and may tell parts apart by size alone.
+The public pools are listed [below](#public-instruction-pools); `/tasks` serves them too.
 
 ### Scene variation
 
@@ -84,15 +88,13 @@ The seed sets, within the public ranges in `engine/rc_engine/assets/variation/pu
 - part poses (several cm, tens of degrees) and start states: a bolt may lie on its side, stand on its
   head or lean against the fixture; a nut may stand on a flat; in `bolt_to_tray`, whether the part is
   the bolt or the washer;
-- each part's material (mass and look);
-- lighting, table and fixture tints, the room (one of three);
+- one shade of grey shared by every part (a few per cent);
+- lighting, table and fixture tints, the room (one of four; one is the venue of the real-arm final);
 - the two tripod cameras' poses (±1.5 cm, ±1.5°); the wrist camera is fixed;
 - the fixture's position and turn (±4 cm, ±15°);
 - up to two extra small parts. An extra part or decoy in a goal's seat scores the repetition 0.
 
-The same seed and actions give identical pixels on every run. The `nudge` option (some judged
-repetitions; in practice `"options": {"nudge": true}` on `/reset`) moves a part lying flat 3–6 cm and
-up to 45°, 1.5–3.5 s into the episode, never while the gripper holds it.
+The same seed and actions give identical pixels on every run.
 
 A part is **placed** when it rests, released, in its seat: inside the tray; standing head-up in its own
 hole; or flat in its own hex pocket with the flats aligned. A part in another part's seat scores nothing.
@@ -138,28 +140,30 @@ total = (p1 + p2 + 1.5 × (h1 + h2 + h3 + h4)) / 8.
 
 ## Observation cameras
 
-`three_view`: `images.wrist`, `images.left`, `images.right`, JPEGs decoding to 640×360 RGB (wrist bracket
-plus two tripods). The goal image comes with every step. Proprioception: six joint positions and
-velocities (shoulder pan, shoulder lift, elbow, wrist 1–3), gripper opening, palm position and
-quaternion (wxyz). Wire details: [API reference](../docs/api.md).
+`three_view`: `images.wrist`, `images.left`, `images.right`, 640×360 RGB JPEGs. The same roles
+appear in `goal` on every step as views of the finished scene. Proprioception: six joint positions
+and velocities, gripper opening, palm position and quaternion (wxyz) in the robot base frame.
+The scene is the real-arm cell ([the cell](PRACTICE.md#the-cell)).
+Wire details: [API reference](../docs/api.md#request).
 
 ## Action boundary
 
 Return one `joint_delta` or an `action_chunk` of 1–16: six joint increments plus a gripper target
-(0 closed, 1 open). The arm follows the UR12e's published speeds and default safety limits:
+(0 closed, 1 open). Simulation applies these limits.
 
 | Limit | Value | What happens |
 |---|---|---|
-| Joint step, shoulder pan and lift | ±0.10472 rad per step (120°/s) | Clamped, counted |
-| Joint step, elbow and wrists | ±0.15708 rad per step (180°/s) | Clamped, counted |
+| Joint step, all six joints | ±0.05 rad per 50 ms step | Clamped, counted |
 | Joint target | ±2π; elbow ±160° | Clamped, counted |
 | Gripper | [0, 1] | Clamped |
 | TCP and elbow speed | 1.5 m/s | Whole step scaled down, direction kept, counted |
-| TCP force, momentum, power | 150 N, 25 kg·m/s, 300 W | Measured only; a public notice says it "would trigger a safety stop on the real arm". Not scored |
+| TCP force, momentum, power | 150 N, 25 kg·m/s, 300 W, each averaged over the 50 ms step | Measured only; a public notice says it "would trigger a safety stop on the real arm". Not scored. With the opt-in protective stop (off in judged runs) the first step over a limit ends the repetition instead |
 
 - A malformed action (bad JSON, missing or wrong-length fields, non-finite values, wrong chunk length,
-  echo mismatch) does not stop the run: that step is **held** (no joint motion, previous gripper target).
-- Unknown top-level fields are ignored and listed once on your result page.
+  echo mismatch) applies one **held** step with zero joint increments and the previous gripper target.
+  An invalid chunk applies none of its elements.
+- Extra fields at response or chunk level are ignored and listed once on your result page. Unknown
+  fields in a `joint_delta` make the response malformed.
 - A response over 2 MiB ends that repetition (during warmup it fails the run).
 - Judged `/act` calls are never retried.
 
@@ -171,11 +175,12 @@ Your public results break clamps down by limit and joint ("wrist_1 limit 312 of 
 |---|---|
 | Who | Top 3 teams by simulation score at the cutoff, after eligibility checks |
 | What runs | Your best submission, unchanged. Organizers may re-run it to verify it |
-| Runs | Once per public task, same `/act` contract; the goal image is a photo of the finished real scene |
+| Runs | Once per public task, same `/act` contract with photos of the finished real scene from all three camera views |
 | Ranking | Mean real-arm score; simulation score breaks ties |
+| Scene | The fixture is fixed at its nominal pose, square to the table where the simulator's default places it, with no variation |
 
-The real parts are 3D-printed copies of the package parts and can differ in mass and look from the
-simulated ones.
+The real parts are 3D-printed grey PLA copies of the package parts. Their exact mass depends on the
+print and can differ from the simulated estimate.
 
 ## Limits
 
@@ -190,7 +195,7 @@ organizers publish the final values on the dashboard; until then, plan around th
 | Program-form server | Listening within 10 min of start |
 | Total judged run | 90 min, model download included |
 | `/act` response | 2 MiB; 1–16 actions |
-| GPU | NVIDIA RTX PRO 6000, amd64 |
+| GPU | NVIDIA RTX PRO 6000 Blackwell Server Edition (96 GB), amd64 |
 | Memory | One combined CPU + GPU limit; over it ends the run (`policy_memory_exceeded`, limit and peak shown). The value is being finalised; it will be on the dashboard |
 | CPUs, processes | 8 CPUs, 1024 processes |
 | Writable space | `/scratch` 8 GB tmpfs (the only writable path); `/dev/shm` 1 GB |
@@ -199,7 +204,7 @@ organizers publish the final values on the dashboard; until then, plan around th
 | Cooldown | 1 accepted submission per team per hour |
 | Failure budget | 8 team-caused failures per rolling hour |
 | Published policy log | First 50 and last 150 lines (≤ 32 KiB) per policy start; ≤ 8 starts and 128 KiB per submission |
-| Practice runner | 10 s per `/act` call, one retry |
+| Practice runner | 90 s cumulative `/act` budget, one attempt per call |
 
 ## Public instruction pools
 
@@ -211,10 +216,8 @@ organizers publish the final values on the dashboard; until then, plan around th
 - Move the bolt to the tray.
 - Place the bolt in the tray.
 - Pick up the bolt and put it in the tray.
-- Move the gold bolt to the tray.
-- Put the gold bolt in the tray.
-- Put the {material:bolt} bolt in the tray.
-- Pick up the {material:bolt} bolt and place it in the tray.
+- Set the bolt down in the tray.
+- Carry the bolt over to the tray.
 
 `bolt_to_tray`, odd seeds (the M33 washer):
 
@@ -223,9 +226,9 @@ organizers publish the final values on the dashboard; until then, plan around th
 - Move the washer to the tray.
 - Place the washer in the tray.
 - Pick up the washer and put it in the tray.
-- Put the white washer in the tray.
-- Put the {material:washer} washer in the tray.
-- Move the {material:washer} washer to the tray.
+- Drop the washer into the tray.
+- Set the washer down in the tray.
+- Carry the washer over to the tray.
 
 `bolt_and_nut_to_fixture`:
 
@@ -236,8 +239,7 @@ organizers publish the final values on the dashboard; until then, plan around th
 - Place the nut in the hex pocket that matches its size and the smaller bolt in the hole that matches its size.
 - Put the smaller of the two bolts in its matching hole, then the nut in its matching hex pocket.
 - Insert the bolt nearer the tray into the hole that matches its size, then seat the nut in the hex pocket that matches its size.
-- Seat the gold nut in its hex pocket and the smaller bolt in its hole.
-- Insert the {material:small_bolt} bolt into the hole that matches its size, then seat the nut in the hex pocket that matches its size.
-- Seat the {material:nut} nut in its hex pocket and the smaller bolt in its hole.
+- Insert the shorter bolt into the hole that matches its size, then seat the nut in the hex pocket that matches its size.
+- Seat the nut in its hex pocket and the smaller bolt in its hole.
 
-`{material:<part>}` becomes nylon, stainless steel, brass or aluminium. `small_bolt` is the M16×50.
+The smaller (shorter) bolt is the M16×50.

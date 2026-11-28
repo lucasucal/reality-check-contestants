@@ -2,7 +2,7 @@
 
 You submit two things: a **public GitHub repository** with your Python code and a **public, ungated
 Hugging Face model** with your weights. Judging runs them in the published policy image, offline, on an
-NVIDIA RTX PRO 6000 (amd64). Limits: [limits table](RULES.md#limits).
+NVIDIA RTX PRO 6000 (amd64). See the [limits table](RULES.md#limits).
 
 ### Steps
 
@@ -11,8 +11,8 @@ NVIDIA RTX PRO 6000 (amd64). Limits: [limits table](RULES.md#limits).
 3. Upload your weights to your own public, ungated Hugging Face model repo ([your model](#your-model)).
 4. Practice with the real model in the judged image ([PRACTICE.md](PRACTICE.md)). Optional, but it
    catches most failures before they cost a cooldown.
-5. Push to public GitHub. In EngineExchange create or join a team (exactly 4 people including the lead;
-   all 4 approved and checked in before it can submit), open **Policy runs** and submit: repo URL and
+5. Push to public GitHub. In EngineExchange create or join a team ([teams](RULES.md#teams)), open
+   **Policy runs** and submit: repo URL and
    branch, tag or commit SHA; model link and optional revision. There is no track to declare and no
    method note.
 6. The submission is accepted as soon as the repo and model checks pass (seconds; the model is not
@@ -25,12 +25,14 @@ it to a fresh repo (`git push <fresh-remote> HEAD:main`).
 
 ```text
 your-policy-repo/        # public GitHub repo, Python only
-  manifest.json          # {"contract": "v0", "entry_point": "policy.example:ExamplePolicy"}
+  manifest.json          # {"contract": "v0", "schema_version": 3, "entry_point": "policy.example:ExamplePolicy"}
   policy/
     example.py
 ```
 
-`manifest.json` is strict JSON with two fields: `contract` (`"v0"`) and `entry_point`, in one of two forms:
+`manifest.json` is strict JSON. Set `contract` to `"v0"`. A class policy must declare
+`"schema_version": 3`. A program reports the schema in `/readyz`. Choose one of the
+following forms for `entry_point`.
 
 | Form | `entry_point` | Who serves HTTP |
 |---|---|---|
@@ -102,6 +104,7 @@ run. Nothing is cached between runs.
 | Offline | `HF_HUB_OFFLINE=1`. A hub id loaded by name fails (`OSError`). Disable pretrained downloads in configs (for example `pretrained_backbone_weights=None`) |
 | Several models | A base model plus an adapter, a detector plus a VLA, someone else's pretrained model: download them and upload them into your one repo, each in its own subfolder ([example](#several-models-in-one-repo)) |
 | LoRA | Upload the **merged** model (QLoRA: merge onto a BF16 base), or the base and the adapter as two subfolders. An adapter pointing at another repo does not resolve |
+| Licences | Re-upload only models whose licence permits redistribution in a public, ungated repo, including unchanged pretrained models, and keep the original licence and attribution files alongside the weights. Models distributed gated (Llama, Gemma, PaliGemma) often restrict redistribution: check the licence first. If it does not allow public redistribution, that model cannot be used |
 | Not in GitHub | Weights never go in the code repo (20 MB per-file cap) |
 | Revision | Optional: a full 40-character commit SHA, a tag or a branch. A tag or branch is resolved at submit and pinned to that commit; later pushes do not change the submission. Omitted = current head |
 | Keep it available | Every judged run downloads the pinned commit again. Until results are final keep the repo public and ungated, and do not delete it or rewrite the pinned commit (force-push, squash, history reset). Otherwise the run fails with `weights_unavailable`, charged |
@@ -215,6 +218,7 @@ submissions.
 
 ## Wire contract
 
-Each step: instruction, goal image, `wrist`/`left`/`right` 640×360 RGB JPEGs and joint state in; six
-joint deltas plus a gripper target in `[0, 1]` out (or a chunk of up to 16). Limits:
-[action boundary](RULES.md#action-boundary). Full contract: [API reference](../docs/api.md).
+Each schema v3 step carries an instruction, current and finished-scene `wrist`, `left` and
+`right` RGB JPEGs at 640×360, and proprioception. Return six joint deltas within ±0.05 rad per
+step and an absolute gripper target in `[0, 1]`, or a chunk of up to 16 such actions. See the
+[action boundary](RULES.md#action-boundary) and [API reference](../docs/api.md).

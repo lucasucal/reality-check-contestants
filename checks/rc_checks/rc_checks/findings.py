@@ -22,6 +22,7 @@ MESSAGES: dict = {
     "manifest_missing": ("reject", "Add manifest.json at the repository root."),
     "manifest_invalid": ("reject", "manifest.json must be a strict JSON object (no comments or trailing commas): {detail}"),
     "manifest_contract": ("reject", 'manifest.json "contract" must be exactly "v0".'),
+    "manifest_policy_schema": ("reject", 'Class policies must set "schema_version": {version} in manifest.json. Update your policy to use the current observation and action contract.'),
     "manifest_port": ("reject", 'manifest.json "port" must be 8080 or omitted; the runtime image always serves on 8080.'),
     "context_no_dockerfile": ("reject", "Add a Dockerfile at the repository root."),
     "weights_in_repo": ("reject", "Remove the top-level weights/ directory; weights belong on Hugging Face."),

@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "release_id": "rc-policy-v11",
-  "created_at": "2026-11-26T20:28:39Z",
+  "release_id": "rc-policy-v13",
+  "created_at": "2026-11-27T21:00:31Z",
   "image": {
     "repository": "ghcr.io/lucasucal/rc-policy",
-    "tag": "v11",
-    "manifest_digest": "sha256:e8ea98c1e0f7843bc8c39d8a443a63267035da4e69eafea198e9f9e77dcf6c42",
+    "tag": "v13",
+    "manifest_digest": "sha256:2f1c2229eb45fd94bba7bdaf0bee623246d96f2664f24396ff41adc872842f99",
     "platform_digests": {
-      "linux/arm64": "sha256:a2d240be3460bfd3272bd0a16a72e9982ef478d003d93a0001253bd44b9f70fa",
-      "linux/amd64": "sha256:4e479dc8a0ab8f4d434ac66d63075e8c7bacbee5979b4af4f80b0fb7ed756c27"
+      "linux/arm64": "sha256:44c732f59be0be553e9ed6a1b2094f01d6065a0394280f4b6038f02816a40375",
+      "linux/amd64": "sha256:35798e9e7beb1bad67e375b3b8b6ad4173672dd4bd72c33e182bfba9ea3850f4"
     },
     "config_digests": {
-      "linux/arm64": "sha256:ce698a56f2209171dd796119659de462d66d3630476b63b955a5778e29ccb61b",
-      "linux/amd64": "sha256:384d58aec18ab67e38b1f54c4f41391ecdbc22dd5eaad157bf9bf69889ee08e8"
+      "linux/arm64": "sha256:54a9a0b44531467b2fcae571762a07ab1c7c13e3de859196742623fe54a8fae0",
+      "linux/amd64": "sha256:9d4611253f9af0603b9d14cf40851db6d531811e0a5eea2de78997c3051bb1fb"
     }
   },
   "python": {
@@ -107,6 +107,7 @@
     "_weakref",
     "_weakrefset",
     "_winapi",
+    "_wmi",
     "_zoneinfo",
     "abc",
     "aifc",
@@ -482,6 +483,7 @@
     "mypy_extensions",
     "namex",
     "narwhals",
+    "natten",
     "nbformat",
     "nest_asyncio",
     "networkx",
@@ -2516,6 +2518,18 @@
       "platforms": {
         "linux/amd64": "2.29.0",
         "linux/arm64": "2.29.0"
+      },
+      "status": {
+        "spark": "installed",
+        "modal": "installed"
+      }
+    },
+    {
+      "name": "natten",
+      "version": "0.21.7",
+      "platforms": {
+        "linux/amd64": "0.21.7",
+        "linux/arm64": "0.21.7"
       },
       "status": {
         "spark": "installed",

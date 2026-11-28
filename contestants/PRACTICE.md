@@ -65,7 +65,7 @@ From the root of the unpacked participant bundle:
 | `--weights-dir DIR` | Uses local weights instead |
 | `--seeds 0-3` | Public seeds to play (four different starts) |
 | `--tasks bolt_to_tray` | Plays only these public tasks (comma-separated) |
-| `--judged` | Judged episode settings: the 90 s `/act` budget per repetition |
+| `--judged` | Select judged episode settings in the practice launcher |
 | `--scenario-seconds S` | With `--judged`, the `/act` budget per repetition (default 90); not the 60 s simulated length |
 | `--max-steps N` | Ends each repetition after N steps, for a short CPU run (judged: up to 1,200) |
 | `--gpus none` | Runs the policy without a GPU (default: all GPUs) |
@@ -88,8 +88,8 @@ From the root of the unpacked participant bundle:
 - On stdout, one JSON object with the score (`total`, `breakdown`), `provenance` and per-repetition
   `episodes`.
 
-Practice may retry a failed `/act` once with a 10 s timeout; judging never retries. A policy that is
-fine at several seconds per call in practice can run out of the 90 s budget in judging.
+Practice and judging allow 90 s of cumulative `/act` request time per schema v3
+repetition. Transport time counts toward that budget. Each call gets one attempt.
 
 ## Train or export inside the image
 
@@ -127,3 +127,41 @@ cd runner && uv run python -m rc_runner.practice \
 ```
 
 This skips the image, mounts and checks, so it does not match judging.
+
+## The cell
+
+The simulator is the real-arm cell, measured from LiDAR scans of the venue and a camera calibration
+(`engine/rc_engine/assets/cell/cell.json`):
+
+- **Robot and table.** The UR12e stands on its own pedestal beside a 2.5 × 1.06 m dark wood table. Its base
+  plane is 0.187 m above the tabletop.
+- **Fixture.** The cyan fixture's nominal pose is the real one's: square to the table, about 0.59 m in front
+  of the base, tray to the robot's left. Episodes vary it ([scene variation](RULES.md#scene-variation));
+  in the real-arm final it stays at the nominal pose.
+- **Side cameras.** The left and right cameras are the real Gemini 336s at their calibrated poses (54.9°
+  vertical FOV).
+- **Wrist camera.** The wrist camera is the Gemini 335Lg on the bracket (61.1° vertical FOV).
+- **Motion.** Every joint's step is clamped to 0.05 rad per 50 ms (1 rad/s), as on the real arm.
+- **Proprioception.** `ee_pos` and `ee_quat` are in the robot base frame (UR `base_link`), as the real arm
+  reports them.
+
+Each frame is 640×360. No distortion, exposure, rolling shutter, depth or sensor noise is modelled.
+
+## Rehearse on the real cell
+
+The episode's room is drawn by the seed from four rooms. One of them, `real_cell`, is the venue of the
+real-arm final: the team's scans of the room, with the backgrounds the two side cameras see textured from
+their own frames. To play every repetition there, pass the room to the practice runner:
+
+```sh
+cd runner && uv run python -m rc_runner.practice --engine http://127.0.0.1:8090 \
+  --policy http://127.0.0.1:8080 --room real_cell --seeds 0-3
+```
+
+or send `"options": {"room": "real_cell"}` in the engine's `/reset` body yourself. The option is for practice:
+judging draws the room by the seed, and refuses it with the eval profile.
+
+Some of the cell is still provisional. The robot's place in the scans is fitted from the scans until a
+gripper touch-off on the real arm, and the side cameras' poses follow it, so they may move by a few
+centimetres. Where the real arm stood during the capture, the side views show the scan instead of the
+camera frame.

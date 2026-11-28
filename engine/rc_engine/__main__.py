@@ -28,6 +28,17 @@ def main(argv: list[str] | None = None) -> None:
         resolve(args.embodiment)
     except ValueError as exc:
         parser.error(str(exc))
+    try:
+        from .arm_limits import safety_stop_mode  # noqa: PLC0415 - MuJoCo-free engines skip the check
+    except ImportError:
+        pass
+    else:
+        try:
+            mode = safety_stop_mode()
+        except ValueError as exc:
+            parser.error(str(exc))
+        if mode == "enforce":
+            print("[rc_engine] protective stop enforced (RC_SAFETY_STOP=enforce)", flush=True)
 
     catalog = builtin_catalog()
     if args.task_packs:

@@ -111,7 +111,7 @@ class PolicyClient:
             "X-RC-Step": str(step),
             "X-RC-Episode-Token": token,
         }
-        timeout_cfg = httpx.Timeout(timeout, connect=min(timeout, self._connect_timeout)) if timeout is not None else None
+        timeout_cfg = httpx.Timeout(timeout, connect=min(timeout, self._connect_timeout, 5.0)) if timeout is not None else None
         max_retries = self._retries if retries is None else retries
         failed: list[dict[str, Any]] = []
         for attempt in range(1, max_retries + 2):

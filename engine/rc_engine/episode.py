@@ -9,7 +9,7 @@ from typing import Any
 
 from .cameras import CAMERA_SETS
 from .env import Env
-from .schema import ProtocolViolation, encode_obs, encode_views, goal_jpeg, parse_action
+from .schema import ProtocolViolation, encode_obs, encode_policy_images, encode_views, parse_action
 
 MAX_SEED = 2**32
 
@@ -49,7 +49,8 @@ class EpisodeManager:
             isinstance(max_steps, bool) or not isinstance(max_steps, int) or max_steps < 1
         ):
             raise EngineError(400, "bad_request", "max_steps must be null or a positive integer")
-        # Per-episode options (fastener tasks, tasks/variation.py): {"profile": "public"|"eval", "nudge": bool}.
+        # Per-episode options (fastener tasks, tasks/variation.py): {"profile": "public"|"eval"}, and for
+        # practice {"room": <a room>} (one of rooms.ROOM_NAMES, e.g. "real_cell"; never with eval).
         options = body.get("options")
         if options is not None:
             if "options" not in inspect.signature(env.reset).parameters:
@@ -57,10 +58,10 @@ class EpisodeManager:
             from .tasks.variation import parse_options  # noqa: PLC0415 - MuJoCo-free engines never get here
 
             try:
-                profile, nudge = parse_options(options)
+                profile = parse_options(options)
             except ValueError as exc:
                 raise EngineError(400, "bad_request", str(exc)) from exc
-            options = {"profile": profile, "nudge": nudge}
+            options = {"profile": profile, **({"room": options["room"]} if "room" in options else {})}
         configure = getattr(env, "configure_episode", None)
         if configure is not None:
             poses = body.get("camera_poses")
@@ -77,14 +78,17 @@ class EpisodeManager:
             raise EngineError(500, "engine_error", f"reset failed: {exc!r}") from exc
         self.env, self.episode_id = env, uuid.uuid4().hex
         self.last_payload = self._with_views(
-            {"episode_id": self.episode_id, "step": 0, "observation": observation, "done": False}, env)
+            {"episode_id": self.episode_id, "step": 0, "observation": observation, "done": False,
+             "goal_metadata": env.spec.episode_goal.metadata(self.jpeg_quality)}, env)
         return self._with_render_pose(self.last_payload, body)
 
     def step(self, body: dict[str, Any]) -> dict[str, Any]:
         """Apply one action or chunk. For tasks that measure motion limits (arm_limits.py), `info` carries
-        `speed_scaled` {"tcp_speed": n, "elbow_speed": m}: how many of the applied substeps went over the 1.5 m/s
-        TCP / elbow speed and were scaled down; and `safety_peaks` {"tcp_force_n", "momentum_kg_m_s", "power_w"}:
-        the repetition's running peaks so far (measured, never enforced)."""
+        `speed_scaled` {"tcp_speed": n, "elbow_speed": m, "joint_clamp": k}: how many of the applied substeps went
+        over the 1.5 m/s TCP / elbow speed and were scaled down, and how many had a joint step over the 0.05 rad
+        clamp (arm_limits.JOINT_STEP_CLAMP); and `safety_peaks` {"tcp_force_n", "momentum_kg_m_s", "power_w"}:
+        the repetition's running peaks so far (measured; enforced only when the engine runs with
+        RC_SAFETY_STOP=enforce, which adds `protective_stop` {limit, value, step} on the step that ended the episode)."""
         if "episode_id" not in body or "action" not in body:
             raise EngineError(400, "bad_request", "body must contain episode_id and action")
         if self.env is None or body["episode_id"] != self.episode_id:
@@ -109,8 +113,9 @@ class EpisodeManager:
                 raise EngineError(400, 'bad_request', 'deadline_monotonic must be a finite number')
         try:
             hashes = []
-            scaled = {"tcp_speed": 0, "elbow_speed": 0}
+            scaled = {"tcp_speed": 0, "elbow_speed": 0, "joint_clamp": 0}
             peaks = None
+            stop = None
             for action in actions:
                 if deadline is not None and time.monotonic() >= deadline:
                     break
@@ -120,6 +125,7 @@ class EpisodeManager:
                     for key in scaled:
                         scaled[key] += int(result.limits["speed_scaled"][key])
                     peaks = result.limits["safety_peaks"]
+                    stop = result.limits.get("protective_stop")
                 if result.done:
                     break
             if not hashes:
@@ -144,7 +150,8 @@ class EpisodeManager:
             "quality_limit": result.quality_limit,
             "info": {"state_hash": hashes[-1], "substep_hashes": hashes, "applied": len(hashes),
                      "deadline_expired": deadline is not None and time.monotonic() >= deadline,
-                     **({"speed_scaled": scaled, "safety_peaks": peaks} if peaks is not None else {})},
+                     **({"speed_scaled": scaled, "safety_peaks": peaks} if peaks is not None else {}),
+                     **({"protective_stop": stop} if stop is not None else {})},
         }, env)
         return self._with_render_pose(self.last_payload, body)
 
@@ -165,7 +172,7 @@ class EpisodeManager:
 
     def render(self, body: dict[str, Any]) -> dict[str, Any]:
         """Organizer replay (`POST /render`, only when RC_ENGINE_REPLAY=1): re-render the policy cameras
-        and the goal image from a recorded simulator snapshot. Never part of an episode."""
+        and the three staged goal views from a recorded simulator snapshot. Never part of an episode."""
         task_id, snapshot = body.get("task_id"), body.get("simulator_state")
         if not isinstance(task_id, str) or task_id not in self.envs:
             raise EngineError(400, "unknown_task", f"unknown task_id {task_id!r}")
@@ -179,14 +186,14 @@ class EpisodeManager:
         config = body.get("camera_configuration", "three_view")
         if config not in CAMERA_SETS:
             raise EngineError(400, "bad_request", "unknown camera_configuration")
+        self.env, self.episode_id = None, None  # replay configuration/snapshot can change live state
         try:
             configure(config, None, body.get("camera_poses"))
             frames = renderer(snapshot)
         except (ValueError, TypeError, KeyError) as exc:
             raise EngineError(400, "bad_request", str(exc)) from exc
-        self.env, self.episode_id = None, None  # the render overwrote the live data
-        return {"task_id": task_id, "images": encode_views(frames, self.jpeg_quality),
-                "goal": goal_jpeg(env.spec.goal_id(), self.jpeg_quality)}
+        return {"task_id": task_id, "images": encode_policy_images(frames, self.jpeg_quality),
+                "goal": env.spec.episode_goal.jpeg(self.jpeg_quality)}
 
     def _with_views(self, payload: dict[str, Any], env: Env) -> dict[str, Any]:
         snapshot = getattr(env, "replay_snapshot", None)

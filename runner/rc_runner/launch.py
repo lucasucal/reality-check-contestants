@@ -204,11 +204,14 @@ def materialize_submission(context_dir: Path, dest: Path) -> Path:
 
 def readyz_state(status_code: int, payload: Any) -> str:
     """Classify a policy /readyz answer, shared by the judged warmup and practice startup:
-    `load_error` (body carries `error`), `contract_mismatch` (ready but not contract v0 / schema 2),
+    `load_error` (body carries `error`), `contract_mismatch` (ready but not contract v0 / schema 3),
     `ready`, or `not_ready`."""
     body = payload if isinstance(payload, dict) else {}
+    if body.get("error_code") == "policy_schema_incompatible":
+        return "contract_mismatch"
     if body.get("error"):
         return "load_error"
     if status_code == 200 and body.get("ready") is True:
-        return "ready" if body.get("contract") == "v0" and body.get("schema_version") == 2 else "contract_mismatch"
+        version = body.get("schema_version")
+        return "ready" if body.get("contract") == "v0" and type(version) is int and version == 3 else "contract_mismatch"
     return "not_ready"

@@ -49,7 +49,8 @@ def export(out: Path, task_ids: tuple[str, ...] = PUBLIC_IDS) -> dict[str, Any]:
         env = _make_envs(catalog, (scene_id,))[scene_id]
         try:
             env.set_orbit(ORBIT_AZIMUTHS[0], ORBIT_ELEVATION)  # type: ignore[attr-defined]
-            obs = encode_obs(env.spec, 0, env.reset(0), JPEG_QUALITY)
+            raw = env.reset(0)
+            obs = encode_obs(env.spec, 0, raw, JPEG_QUALITY)
             packet = _packet(obs, "preview")
             views = _views(env) or {}
             cameras = {name: _write(out, f"{scene_id}/camera-{name}.jpg", b64)
@@ -66,7 +67,7 @@ def export(out: Path, task_ids: tuple[str, ...] = PUBLIC_IDS) -> dict[str, Any]:
                 "instruction": packet.get("instruction"),
                 "episode_length": env.spec.episode_length,
                 "scene": next(iter(cameras.values()), None),
-                "goal": _write(out, f"{scene_id}/goal.jpg", obs["goal"]),
+                "goal": _write(out, f"{scene_id}/goal.jpg", obs["goal"]["wrist"]),
                 "views": {name: _write(out, f"{scene_id}/{name}.jpg", views[name])
                           for name in ("side", "booth") if name in views},
                 "orbit": orbit,

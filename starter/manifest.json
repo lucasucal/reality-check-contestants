@@ -1,4 +1,5 @@
 {
   "contract": "v0",
+  "schema_version": 3,
   "entry_point": "policy.example:ExamplePolicy"
 }

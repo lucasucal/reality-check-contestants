@@ -1,6 +1,6 @@
 # What's in the image
 
-Last updated: 2026-11-26
+Last updated: 2026-11-27
 
 What the judged policy image (NVIDIA RTX PRO 6000, amd64, Python 3.12.3, CUDA 13) gives your policy, and the rules it runs under. When a failed run matches one of the KSI entries below, your submission page links to it (not for failures during the hidden tasks). IDs are stable and never reused.
 
@@ -18,7 +18,14 @@ What the judged policy image (NVIDIA RTX PRO 6000, amd64, Python 3.12.3, CUDA 13
 
 Every package and version: [`runtime/locks/requirements.amd64.txt`](../runtime/locks/requirements.amd64.txt) (judging). Practice on arm64 uses [`requirements.arm64.txt`](../runtime/locks/requirements.arm64.txt), with the same versions.
 
-Not included: FlashAttention and TensorFlow (below), and anything else not in the lock file.
+Not included: FlashAttention, compiled NATTEN kernels and TensorFlow (below), and anything else not in the lock file. NATTEN 0.21.7 is included with the PyTorch Flex Attention backend.
+
+## KSI-030 - FLUX 3 Action and NATTEN
+
+- Symptom: FLUX 3 Action cannot import NATTEN in the older v12 image, or a policy requests compiled NATTEN kernels that are not shipped.
+- Workaround: use the published v13 image and NATTEN's PyTorch `flex-fna` backend. Test memory use and response time with your actual inputs in practice; transformer SDPA alone does not replace the video VAE's NATTEN dependency.
+- Status: the v13 image includes NATTEN 0.21.7 with its PyTorch `flex-fna` backend. The compiled NATTEN kernels are not included. The previous v12 image does not include NATTEN.
+- FLUX 3 Action: an official SO-101 checkpoint loaded and produced a finite synthetic action on RTX PRO 6000 using this backend. Larger inputs can consume more memory, and full-episode performance depends on the policy; check it in practice. Selecting PyTorch SDPA for transformer attention alone does not replace the video VAE's separate NATTEN dependency. See [BFL setup](https://github.com/black-forest-labs/flux-action/blob/main/docs/setup.md).
 
 ## KSI-003 - FlashAttention is not in the image: use SDPA
 
@@ -54,6 +61,16 @@ Not included: FlashAttention and TensorFlow (below), and anything else not in th
 
 - Symptom: `policy_memory_exceeded`, `CUDA out of memory`, or exit code 137.
 - Workaround: compare the peak memory practice reports with the [limit](RULES.md#limits); load weights once, in bf16 or fp16.
+
+## KSI-022 - Joint steps over 0.05 rad are clamped, as on the real arm
+
+- Symptom: the arm moves slower than the deltas you send; your results count "joint step over 0.05 rad".
+- Workaround: send at most 0.05 rad per joint per step (1 rad/s), or chunks of smaller steps. The real arm's driver applies the same clamp, so a policy that relies on bigger steps moves differently there ([action boundary](RULES.md#action-boundary)).
+
+## KSI-023 - Sim data from before 28 Nov is from the old cell
+
+- Symptom: a policy trained on earlier sim data misses parts, aims at the wrong side of the fixture, or reads `ee_pos` 0.19 m off.
+- Workaround: record your sim data again. The simulator is now the real cell: the arm on its pedestal 0.187 m above the table, the fixture square to the table where the real one stands, the real side cameras, a 61.1° wrist camera and `ee_pos` in the robot base frame ([the cell](PRACTICE.md#the-cell)).
 
 ## Problems with a specific model
 

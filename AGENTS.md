@@ -9,13 +9,15 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
 
 | File | What it tells you |
 |---|---|
-| `contestants/README.md` | The event at a glance |
-| `contestants/RULES.md` | Approach, scoring, tasks, limits |
-| `docs/api.md` | The policy HTTP contract: observations, actions, timing |
-| `contestants/SUBMIT.md` | How to package code and weights so the judged run loads them |
+| `README.md` | A short guide to getting started |
+| `reference/README.md` | Index of the detailed guides |
+| `reference/contestants/README.md` | The event at a glance |
+| `reference/contestants/RULES.md` | Approach, scoring, tasks, limits |
+| `reference/docs/api.md` | The policy HTTP contract: observations, actions, timing |
+| `reference/contestants/SUBMIT.md` | How to package code and weights so the judged run loads them |
 | `starter/README.md` | The template the team's policy repository starts from |
-| `contestants/PRACTICE.md` | Running the policy locally in the judged image on the public tasks |
-| `contestants/KNOWN-ISSUES.md` | What's in the image: packages and versions, what is missing, the runtime rules |
+| `reference/contestants/PRACTICE.md` | Running the policy locally in the judged image on the public tasks |
+| `reference/contestants/KNOWN-ISSUES.md` | What's in the image: packages and versions, what is missing, the runtime rules |
 
 ## What a submission is
 
@@ -27,8 +29,9 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
   It is mounted read-only at `/weights` (`RC_WEIGHTS_DIR`) with the repo's folder layout. The submit pins
   a commit; every judged run downloads that commit fresh, so the repo must stay public and the commit
   intact until results are final. Never put weights in GitHub.
-- **Team:** exactly 4 people including the lead, formed in EngineExchange; the team can submit once
-  all 4 are approved and checked in. A submission counts for the team the submitter is on at that moment.
+- **Team:** 3 or 4 people including the lead, formed in EngineExchange. The team can submit once
+  every member is approved and checked in. A submission counts for the team the submitter is on
+  at that moment.
 - **Approach:** one track, any approach. Any model that works from the cameras can drive the arm (a
   VLA, a world or action model, a visuomotor policy); training or fine-tuning one is encouraged. No
   track declaration and no method note.
@@ -47,7 +50,8 @@ participant bundle (`reality-check-practice/`). Paths below are relative to it.
   gripper target in [0, 1]) or an `action_chunk` of up to 16 actions. Out-of-range values are clamped.
 - A repetition lasts at most 60 simulated seconds (1,200 steps at 20 Hz), and the policy's `/act`
   response time is capped at 90 s cumulative per repetition.
-- Read the instruction and the goal image on every step. The judged starting scenes are not published.
+- Every step carries the instruction, three current views and three goal views. Your policy may ignore the goals.
+- Declare `"schema_version": 3` in a class policy manifest or advertise version 3 from a program's `/readyz`.
 
 ## Commands
 

@@ -6,15 +6,15 @@ Stdlib only (http.server / json). Run with: python -m rc_sdk
 
 import argparse
 import json
+import os
 import threading
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Dict, Optional, Tuple
+from http.server import BaseHTTPRequestHandler
+from typing import Any, Dict, Optional
 
+from .contract import CAPABILITIES, CONTRACT, SCHEMA_VERSION, check_manifest_schema, observation_error
 from .policy import Policy
+from .transport import PolicyHTTPServer, tls_server_context
 
-CONTRACT = "v0"
-SCHEMA_VERSION = 2  # observation/action schema v2 (UR12e, 6 arm joints)
-CAPABILITIES = {"chunking": True, "caching": False}
 DEFAULT_PORT = 8080  # the port the judged image serves on
 
 
@@ -80,15 +80,17 @@ class _Handler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
+            if length < 0:
+                raise ValueError("Content-Length must be nonnegative")
             envelope = json.loads(self.rfile.read(length) or b"{}")
-        except (ValueError, json.JSONDecodeError) as exc:
+        except ValueError as exc:
             self._send_json(400, {"error": f"invalid JSON body: {exc}"})
             return
-        ok, err, echoed = self._validate_envelope(envelope)
-        if not ok:
-            self._send_json(400, {"error": err})
+        error = observation_error(envelope)
+        if error:
+            self._send_json(400, {"error": error})
             return
-        episode_id, step = echoed
+        episode_id, step = envelope["episode_id"], envelope["step"]
         try:
             action = self.server.policy.act(envelope)
         except Exception as exc:  # surface a readable failure, keep server up
@@ -105,26 +107,14 @@ class _Handler(BaseHTTPRequestHandler):
         self._send_json(200, {"episode_id": episode_id, "step": step, "action": action},
                         {"X-RC-Episode-Id": str(episode_id), "X-RC-Step": str(step)})
 
-    @staticmethod
-    def _validate_envelope(envelope: Any) -> Tuple[bool, Optional[str], Tuple[Any, Any]]:
-        if not isinstance(envelope, dict):
-            return False, "request body must be a JSON object", (None, None)
-        if "episode_id" not in envelope:
-            return False, "missing required field: episode_id", (None, None)
-        if "step" not in envelope:
-            return False, "missing required field: step", (None, None)
-        # Schema v2 (6 joint_delta + gripper). images / proprio / instruction / goal
-        # are optional and passed through to act().
-        return True, None, (envelope["episode_id"], envelope["step"])
 
-
-class PolicyServer(ThreadingHTTPServer):
+class PolicyServer(PolicyHTTPServer):
     """HTTPServer + background load thread; ready flips after load() returns."""
 
     daemon_threads = True
 
-    def __init__(self, port: int, policy: Policy) -> None:
-        super().__init__(("0.0.0.0", port), _Handler)
+    def __init__(self, port: int, policy: Policy, *, tls_context=None) -> None:
+        super().__init__(("0.0.0.0", port), _Handler, tls_context=tls_context)
         self.policy = policy
         self.ready = threading.Event()
         self.load_error: Optional[BaseException] = None
@@ -149,19 +139,30 @@ class PolicyServer(ThreadingHTTPServer):
 def main(argv: Optional[list] = None) -> None:
     parser = argparse.ArgumentParser(prog="rc_sdk")
     parser.add_argument("--manifest", default="manifest.json")
-    parser.add_argument("--policy", default="policy.example:ExamplePolicy",
-                        help="'module:Class' of your Policy subclass")
+    parser.add_argument("--policy",
+                        help="'module:Class' of your Policy subclass (default: manifest entry_point)")
     parser.add_argument("--port", type=int, default=None,
                         help=f"default: manifest.json port, else {DEFAULT_PORT}")
     args = parser.parse_args(argv)
 
-    manifest = load_manifest(args.manifest)
-    port = args.port if args.port is not None else int(manifest.get("port", DEFAULT_PORT))
-    policy = import_policy(args.policy)
-    server = PolicyServer(port, policy)
+    try:
+        manifest = load_manifest(args.manifest)
+        check_manifest_schema(manifest)
+        entry = args.policy or manifest.get("entry_point")
+        if not isinstance(entry, str):
+            raise ValueError("set manifest entry_point or --policy to 'module:Class'")
+        port = args.port if args.port is not None else int(manifest.get("port", DEFAULT_PORT))
+        tls_context = tls_server_context(os.environ)
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
+    policy = import_policy(entry)
+    server = PolicyServer(port, policy, tls_context=tls_context)
     server.start_load()  # healthz answers immediately; readyz flips after load
-    print(f"[rc_sdk] serving contract {CONTRACT} on port {port}", flush=True)
+    transport = "HTTPS" if tls_context else "HTTP"
+    print(f"[rc_sdk] serving {transport} contract {CONTRACT}, schema {SCHEMA_VERSION}, on port {port}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
+    finally:
+        server.server_close()

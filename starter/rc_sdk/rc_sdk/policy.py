@@ -1,7 +1,7 @@
 """Policy base class — subclass this and swap in your model.
 
-Schema v2: 6 arm `joint_delta` values (|Δq| ≤ 0.10472 rad base and shoulder, 0.15708 rad elbow and wrists)
-plus gripper in [0, 1].
+Schema v3: 6 arm `joint_delta` values (|Δq| ≤ 0.05 rad per 50 ms step)
+plus an absolute gripper target in [0, 1].
 """
 
 from typing import Any, Dict
@@ -17,9 +17,8 @@ class Policy:
 
     act() must be a PURE FUNCTION of the request envelope: same envelope for
     the same (episode_id, step) => valid action (deterministic recompute is
-    fine). No external side effects; no assumed call rate. Judged evaluation
-    does not retry /act; the practice/non-judged runner may retry byte-identical
-    requests after a transport failure.
+    fine). Keep external side effects out of act() and allow requests to arrive
+    at any rate.
     """
 
     def load(self) -> None:
@@ -33,12 +32,12 @@ class Policy:
         raise NotImplementedError("implement load() to fetch/prepare your weights")
 
     def act(self, obs: Dict[str, Any]) -> Dict[str, Any]:
-        """One observation in, one action dict out (schema v2: 6 joint_delta + gripper).
+        """One observation in, one action dict out (schema v3: 6 joint_delta + gripper).
 
-        `obs` is the parsed /act request envelope: {episode_id, step, task_id,
-        instruction?, goal?, images?, proprio?}. `instruction` is the
-        natural-language sentence for the task. `goal` is a 640×480 JPEG of
-        the finished scene. Return the ACTION dict only — the server echoes
-        episode_id/step for you.
+        The `obs` envelope contains schema_version, episode_id, step, task_id,
+        instruction, images, goal and proprio. Both images and goal contain
+        wrist, left and right 640×360 base64 RGB JPEGs. A policy can ignore
+        goal if it relies on the instruction or other inputs. Return the
+        action dict alone. The server echoes episode_id and step.
         """
         raise NotImplementedError("implement act() to run your model")

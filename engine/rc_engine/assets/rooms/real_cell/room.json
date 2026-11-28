@@ -1,0 +1,166 @@
+{
+ "room": "real_cell",
+ "source": "Reality Check team LiDAR scans of the real-arm cell, 2026-11-27",
+ "placement": {
+  "frame": "scan",
+  "by": "cell/cell.json scan_to_robot"
+ },
+ "lighting": {
+  "dome": 2400.0,
+  "fill": {
+   "power": 40000.0,
+   "rgb": [
+    1.0,
+    0.98,
+    0.95
+   ],
+   "dir": [
+    0.7,
+    -0.6,
+    -0.35
+   ]
+  }
+ },
+ "triangles": 107042,
+ "source_triangles": 804606,
+ "materials": [
+  {
+   "name": "scan",
+   "mesh": "scan.obj",
+   "texture": "scan.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.05,
+   "shininess": 0.2,
+   "triangles": 30305,
+   "source_triangles": 385927,
+   "vertices": 25031
+  },
+  {
+   "name": "scan2",
+   "mesh": "scan2.obj",
+   "texture": "scan2.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.05,
+   "shininess": 0.2,
+   "triangles": 38872,
+   "source_triangles": 418679,
+   "vertices": 45758
+  },
+  {
+   "name": "shell_floor",
+   "mesh": "shell_floor.obj",
+   "rgba": [
+    0.7765,
+    0.6784,
+    0.5608,
+    1.0
+   ],
+   "specular": 0.02,
+   "shininess": 0.1,
+   "triangles": 1553,
+   "vertices": 1035
+  },
+  {
+   "name": "pano",
+   "mesh": "pano.obj",
+   "texture": "pano.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.0,
+   "shininess": 0.1,
+   "triangles": 14418,
+   "vertices": 8067
+  },
+  {
+   "name": "proj_left",
+   "mesh": "proj_left.obj",
+   "texture": "proj_left.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.0,
+   "shininess": 0.1,
+   "triangles": 14798,
+   "vertices": 9272
+  },
+  {
+   "name": "proj_right",
+   "mesh": "proj_right.obj",
+   "texture": "proj_right.png",
+   "rgba": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "specular": 0.0,
+   "shininess": 0.1,
+   "triangles": 7096,
+   "vertices": 4345
+  }
+ ],
+ "sha256": {
+  "pano.obj": "6a6d97763602710777d0b7e6c36eae74caa21d19104ca2cb02464d8b8cd37173",
+  "pano.png": "731b5a373980723921fff2e00b1bd06da210ad3968e6379eedf67c6bf29efc94",
+  "proj_left.obj": "ccb476a50dc3d29e3777e946e2eb506f91adf150c56ecfef14aa3f04d6e6fc40",
+  "proj_left.png": "cd249c7476bdaeb576dbf14eb480485efba9fdc27ea25f949c32d5b91ae52efd",
+  "proj_right.obj": "aa24ce1051ee1c9c6554c896a257cb2b099cc40236dab2088dde45ae9a660874",
+  "proj_right.png": "07a39cf9a31794f49edacf043d8527ec86732664fd7fd7c88f61a438d2cd3cfe",
+  "scan.obj": "c568bae2e7a2acc856224886e1ec7a70b08f3652687fa46ff7af59b33b158539",
+  "scan.png": "7dd03e3a12afe3ee42242516d5a4203fd4d56e38eaa324ef4c87d2f5a44b3553",
+  "scan2.obj": "fa42866c063a7b284d349010408a5d5b909b88b359fbc8a7e4d13ee242936107",
+  "scan2.png": "c267b3a6f66a8464f1e1e27d918690c81120fec56b4a14bafce6f31e8ae8e48e",
+  "shell_floor.obj": "e86338a97e40abd8b8dcfab939c86938655771de8916b0713de204bc4f2dba59"
+ },
+ "panorama": {
+  "photo": "9.png",
+  "centre": [
+   0.265,
+   0.377,
+   1.087
+  ],
+  "az0": 3.032,
+  "period": 2674.6,
+  "f": 420.2,
+  "y0": 211.3
+ },
+ "projection": {
+  "frames": [
+   "grab_hd1/left.jpg",
+   "grab_hd1/right.jpg"
+  ],
+  "arm_q_real": [
+   -3.1422,
+   -1.657,
+   -2.8252,
+   -0.2856,
+   1.429,
+   -4.5251
+  ],
+  "projected_triangles": {
+   "pano": 2355,
+   "scan": 16719,
+   "scan2": 464,
+   "shell_floor": 2356,
+   "proj_left": 14798,
+   "proj_right": 7096
+  }
+ }
+}

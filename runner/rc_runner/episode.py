@@ -3,8 +3,7 @@ worker and the practice CLI.
 
 Per control step: build the /act envelope (the engine's observation object plus
 `episode_id`, base64 images embedded verbatim — no decode/re-encode), POST it to
-the policy with X-RC-Episode-Id/Step/Token headers (single byte-identical retry on
-timeout/connect failure), verify the echo, forward `action` verbatim to the
+the policy with X-RC-Episode-Id/Step/Token headers (schema v3 episodes use a cumulative transport budget without retries), verify the echo, forward `action` verbatim to the
 engine's /step with `step` for retry-safety, journal one JSONL line.
 
 Failure attribution: PolicyFailure / budget overrun end the episode as a TEAM
@@ -26,7 +25,7 @@ import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol
 
-from .engine_client import EngineClient
+from .engine_client import POLICY_SCHEMA_VERSION, EngineClient, require_engine_schema
 from .errors import ActionRejected, EngineInfraError
 from .journal import (JOURNAL_FORMAT, compact_state, JournalWriter, evidence_response, image_digest, image_digests, now_iso,
                       state_chain_digest)
@@ -37,7 +36,10 @@ from .motion import MotionViolation, add_clamps, add_speed_scaled, clamp_action,
 
 ACT_BUDGET_EXCEEDED = "act_budget_exceeded"
 STEP_LIMIT = "step_limit"
+PROTECTIVE_STOP = "protective_stop"
 DEFAULT_STEP_LIMIT_SECONDS = 60.0
+ACT_BUDGET_SECONDS = 90.0
+CAMERA_ROLES = {"wrist", "left", "right"}
 _OMIT_OVER = 4096  # strings longer than this (base64 frames) are journaled as hash + size on non-image steps
 
 
@@ -68,7 +70,7 @@ class EpisodeResult:
     ordinal: int
     task_id: str  # the label used for reporting/journals (alias for hidden tasks)
     seed: int
-    # Judged plan options sent to the engine /reset ({"profile", "nudge"}); None outside judged runs. Organizer-only.
+    # Judged plan options sent to the engine /reset ({"profile"}); None outside judged runs. Organizer-only.
     episode_options: dict[str, Any] | None = None
     episode_id: str | None = None
     completed: bool = False  # the episode ran to engine `done` (team failures are not completed)
@@ -91,6 +93,7 @@ class EpisodeResult:
     # Why a *completed* repetition ended early, for the team. Not a failure: it never changes scoring.
     # "act_budget_exceeded": the policy's /act time used up the per-repetition budget (scenario clock).
     # "step_limit": the repetition ran its full simulated-time cap (default 60 simulated seconds).
+    # "protective_stop": the engine (RC_SAFETY_STOP=enforce) ended it: a UR12e safety limit was exceeded.
     end_reason: str | None = None
     team_detail: str | None = field(default=None, repr=False)  # team-safe one-liner from the PolicyFailure
     failure_reason: str | None = field(default=None, repr=False)  # error-surfacing reason (not in summary())
@@ -248,7 +251,7 @@ def _bounded_act(policy: PolicyClient, body: bytes, *, episode_id: str, step: in
     """
     finished = threading.Event()
     request_finished = threading.Event()
-    request_start: list[float] = []
+    deadline = time.monotonic() + budget
     request_durations: list[float] = []
     def mark_request_finished(duration: float) -> None:
         request_durations.append(duration)
@@ -259,7 +262,7 @@ def _bounded_act(policy: PolicyClient, body: bytes, *, episode_id: str, step: in
         try:
             outcome.append(policy.act(body, episode_id=episode_id, step=step, token=token,
                                       timeout=budget, retries=0, record=records.append,
-                                      request_finished=mark_request_finished, request_started=request_start.append))
+                                      request_finished=mark_request_finished))
         except BaseException as exc:
             outcome.append(exc)
         finally:
@@ -268,7 +271,7 @@ def _bounded_act(policy: PolicyClient, body: bytes, *, episode_id: str, step: in
     while True:
         if check:
             check()
-        remaining = request_start[0] + budget - time.monotonic() if request_start else WAIT_SLICE
+        remaining = deadline - time.monotonic()
         if remaining <= 0 and not request_finished.is_set():
             if record:
                 record({'error': 'absolute scenario deadline during policy request'})
@@ -277,6 +280,8 @@ def _bounded_act(policy: PolicyClient, body: bytes, *, episode_id: str, step: in
             if record:
                 for item in records:
                     record(item)
+            if check:
+                check()
             value = outcome[0]
             if isinstance(value, BaseException):
                 if isinstance(value, PolicyFailure) and request_durations:
@@ -298,11 +303,27 @@ def _wait(seconds: float, check: Callable[[], None] | None, clock: Callable[[], 
         sleep(min(WAIT_SLICE, remaining))
 
 
+def camera_frame(observation: dict[str, Any]) -> dict[str, Any]:
+    """The dashboard accepts one goal image and optional named live views."""
+    images = observation.get("images") or {}
+    frame = {name: images.get(name) for name in ("top", "wrist", "left", "right")}
+    goal = observation.get("goal")
+    frame["goal"] = goal.get("wrist") if isinstance(goal, dict) else goal
+    return frame
+
+
 def build_envelope(observation: dict[str, Any], episode_id: str, step: int) -> bytes:
-    """Serialize the /act body once; the same bytes are reused for the retry and hashed
-    for the journal. Image strings are carried through untouched."""
-    envelope = {**observation, "episode_id": episode_id}
-    envelope.setdefault("step", step)
+    """Serialize the /act body once. Image strings are carried through untouched."""
+    require_engine_schema(observation.get("schema_version"), "observation")
+    for field in ("images", "goal"):
+        views = observation.get(field)
+        if (not isinstance(views, dict) or views.keys() != CAMERA_ROLES
+                or any(not isinstance(view, str) or not view for view in views.values())):
+            raise EngineInfraError(f"schema v3 requires a wrist, left and right JPEG in {field}")
+    for field in ("task_id", "instruction"):
+        if not isinstance(observation.get(field), str) or not observation[field].strip():
+            raise EngineInfraError(f"schema v3 requires a nonempty {field}")
+    envelope = {**observation, "episode_id": episode_id, "step": step}
     return json.dumps(envelope, separators=(",", ":")).encode()
 
 
@@ -325,7 +346,7 @@ def run_episode(
     journal: JournalWriter | None = None,
     journal_file: str | None = None,
     submission_id: int | None = None,
-    schema_version: Any = None,
+    schema_version: int = POLICY_SCHEMA_VERSION,
     on_step: Callable[[int], None] | None = None,
     on_clamp: Callable[[], None] | None = None,
     check: Callable[[], None] | None = None,
@@ -346,11 +367,11 @@ def run_episode(
     time at the task's control_hz) only stretches wall clock — it never touches what is
     sent to the policy/engine or journaled. Paced waits do not count against the
     episode timeout."""
+    require_engine_schema(schema_version, "/tasks")
     task_id = task["task_id"]
     result = EpisodeResult(ordinal=ordinal, task_id=label, seed=seed, journal_file=journal_file,
                            episode_options=episode_options)
     started = clock()
-    paced_total = 0.0  # wall-clock spent in pacing waits, excluded from the episode budget
     ended = False
     hz = task.get("control_hz")
     step_period = 1.0 / hz if isinstance(hz, (int, float)) and not isinstance(hz, bool) and hz > 0 else 0.0
@@ -359,6 +380,8 @@ def run_episode(
     episode_length = task.get("episode_length")
     policy_elapsed = 0.0
     step_cap = step_limit_steps(settings.step_limit_seconds, hz) if settings.judged else None
+    act_budget = min(settings.episode_timeout, ACT_BUDGET_SECONDS)
+    step_cap = min(step_cap or 1200, 1200)
     image_every = settings.journal_image_every if isinstance(settings.journal_image_every, int) and settings.journal_image_every > 0 else 0
 
     def full_images(at_step: int) -> bool:
@@ -369,20 +392,18 @@ def run_episode(
     def emit(observation: dict[str, Any], at_step: int, final: bool, views: dict[str, Any] | None = None) -> None:
         if publisher is None:
             return
-        images = observation.get("images") or {}
         frame: dict[str, Any] = {
-            "top": images.get("top"), "wrist": images.get("wrist"), "task": label, "seed": seed,
+            **camera_frame(observation), "task": label, "seed": seed,
             "episode": ordinal, "episodes_total": episodes_total, "step": at_step,
             "episode_length": episode_length, "done": final,
             "success": bool(result.success) if final else None,
-            "goal": observation.get("goal"),
             "instruction": observation.get("instruction"),
         }
         if settings.judged:
             # A judged scenario ends when its policy-time budget is spent, not at
             # episode_length steps, so live viewers need the budget to show progress.
-            frame["elapsed_seconds"] = round(max(0.0, min(policy_elapsed, settings.episode_timeout)), 2)
-            frame["scenario_seconds"] = settings.episode_timeout
+            frame["elapsed_seconds"] = round(max(0.0, min(policy_elapsed, act_budget)), 2)
+            frame["scenario_seconds"] = act_budget
             if step_cap is not None:
                 frame["max_steps"] = step_cap  # a fast policy reaches the step limit first
         # Audience cameras ride beside the policy observation. They are not in /act.
@@ -404,7 +425,9 @@ def run_episode(
             final_obs_state["full"] = True
         if journal:
             record: dict[str, Any] = {"type": "episode_end", "finished_at": now_iso(), "outcome": outcome,
-                                      "steps": result.steps, "state_chain_digest": result.digest}
+                                      "steps": result.steps, "state_chain_digest": result.digest,
+                                      "wall_seconds": clock() - started, "action_seconds": result.steps * step_period,
+                                      "policy_seconds": result.policy_seconds}
             if result.failure_code:
                 record["failure_code"] = result.failure_code
             if result.message:
@@ -426,7 +449,8 @@ def run_episode(
         sent = engine_options(episode_options)
         if sent is not None:
             options['options'] = sent
-        reset = engine.reset(task_id, seed, **options) if settings.judged else engine.reset(task_id, seed)
+        reset = (engine.reset(task_id, seed, **options) if settings.judged
+                 else engine.reset(task_id, seed, **({'options': sent} if sent is not None else {})))
     except EngineInfraError:
         result.failure_code = "infra_error"
         _end("infra")
@@ -435,14 +459,17 @@ def run_episode(
     result.episode_id = episode_id
     token = secrets.token_hex(16)  # per-episode runner-minted auth token (plan §4)
     obs: dict[str, Any] = reset["observation"]
+    require_engine_schema(obs.get("schema_version"), "reset observation")
+    episode_goal = obs.get("goal")
+    episode_context = (obs.get("task_id"), obs.get("instruction"))
+    if obs.get("task_id") != task.get("wire_id", task_id):
+        raise EngineInfraError("engine reset task does not match the requested policy-facing ID")
     if journal and settings.judged:
         journal.write({'type': 'reset', 'response': packed(reset) if image_every > 0 else evidence_response(reset)})
     target = list(reset.get('simulator_state', {}).get('target', obs.get('proprio', {}).get('joint_pos', [])))
     target_ok = len(target) == 6 and not any(isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x) for x in target)
-    if settings.judged and not target_ok:
+    if not target_ok:
         raise EngineInfraError('engine reset lacks six joint positions for motion boundary')
-    # Practice (not judged) keeps the same boundary whenever the engine gave a target; without one it passes through.
-    motion_on = settings.judged or target_ok
     gripper_now = reset.get('simulator_state', {}).get('gripper_target') if isinstance(reset.get('simulator_state'), dict) else None
     if isinstance(gripper_now, bool) or not isinstance(gripper_now, (int, float)):
         gripper_now = (obs.get('proprio') or {}).get('gripper')
@@ -491,6 +518,8 @@ def run_episode(
         if result.doneness is None:
             result.doneness = 0.0
         result.completed = True
+        if result.policy_pending:
+            result.policy_seconds = act_budget
         result.end_reason = ACT_BUDGET_EXCEEDED
         _end("scenario_time_limit")
         return result
@@ -501,6 +530,7 @@ def run_episode(
                        "journal_format": JOURNAL_FORMAT, "journal_images": "none" if image_every == 0 else "all" if image_every == 1 else f"every:{image_every}",
                        "camera_configuration": settings.camera_configuration, "camera_poses": settings.camera_poses,
                        "engine": settings.engine_info,
+                       **({"goal_metadata": reset["goal_metadata"]} if "goal_metadata" in reset else {}),
                        **({"episode_options": episode_options} if episode_options is not None else {})})
     emit(obs, step, done, views)
     try:
@@ -510,13 +540,13 @@ def run_episode(
             if step_cap is not None and step >= step_cap:
                 return finish_step_limit()
             step_started = clock()
-            elapsed = policy_elapsed if settings.judged else step_started - started - paced_total
-            if elapsed >= settings.episode_timeout:
-                if settings.judged:
-                    return finish_scenario_deadline()
-                return fail("episode_budget_exceeded", f"episode exceeded {settings.episode_timeout:g}s")
+            if policy_elapsed >= act_budget:
+                return finish_scenario_deadline()
             if on_step:
                 on_step(step)
+            if ((obs.get("task_id"), obs.get("instruction")) != episode_context
+                    or obs.get("goal") != episode_goal):
+                raise EngineInfraError("policy context or goal changed during the repetition")
             body = build_envelope(obs, episode_id, step)
             request_full = full_images(step) or (image_every > 0 and step_cap is not None and step + 1 >= step_cap)
             if journal and settings.judged:
@@ -524,6 +554,7 @@ def run_episode(
                                'body': body.decode() if request_full else json.dumps(slim({**obs, 'episode_id': episode_id, 'step': step}), separators=(',', ':')),
                                'images': 'full' if request_full else 'omitted', 'episode_token': token,
                                'image_digests': image_digests(obs.get('images')),
+                               'goal_digests': image_digests(obs.get('goal')),
                                'goal_digest': image_digest(obs['goal']) if isinstance(obs.get('goal'), str) else None})
 
             def keep_request_full() -> None:
@@ -531,25 +562,22 @@ def run_episode(
                 if journal and settings.judged and image_every > 0 and not request_full:
                     journal.write({'type': 'policy_request_full', 'step': step, 'body': body.decode()})
             try:
-                if settings.judged:
-                    act = _bounded_act(policy, body, episode_id=episode_id, step=step, token=token,
-                                       budget=max(0.001, settings.episode_timeout - elapsed), check=check,
-                                       record=(lambda response: journal.write({'type': 'policy_response', 'step': step, **response})) if journal else None)
-                else:
-                    act = policy.act(body, episode_id=episode_id, step=step, token=token)
+                act = _bounded_act(policy, body, episode_id=episode_id, step=step, token=token,
+                                   budget=act_budget - policy_elapsed, check=check,
+                                   record=(lambda response: journal.write({'type': 'policy_response', 'step': step, **response})) if journal and settings.judged else None)
             except _PolicyDeadline:
                 keep_request_full()
                 result.policy_pending = True
                 return finish_scenario_deadline()
             except PolicyFailure as failure:
                 keep_request_full()
-                policy_duration = getattr(failure, "request_seconds", 0.0) if settings.judged else 0.0
+                policy_duration = getattr(failure, "request_seconds", 0.0)
                 result.policy_seconds = policy_elapsed + policy_duration
                 if journal:
                     for attempt in failure.attempts:
                         journal.write({"type": "act_failed", "step": step, "task_id": label, "seed": seed, **attempt})
-                if (settings.judged and failure.code != "policy_crashed"
-                        and policy_elapsed + policy_duration >= settings.episode_timeout):
+                if (failure.code != "policy_crashed"
+                        and policy_elapsed + policy_duration >= act_budget):
                     # A known crash keeps its attribution (and the worker's OOM check). A transport timeout at
                     # the deadline is ambiguous: the request may still be in flight, so restart the policy.
                     if failure.code == "policy_timeout":
@@ -566,25 +594,23 @@ def run_episode(
                 act_action, act_attempt, act_total_ms = None, len(failure.attempts) + 1, round(policy_duration * 1000, 1)
             else:
                 held_reason = None
-                if settings.judged:
-                    policy_elapsed += act.request_seconds
-                    result.policy_seconds = policy_elapsed
+                policy_elapsed += act.request_seconds
+                result.policy_seconds = policy_elapsed
                 if journal:
                     for attempt in act.failed_attempts:
                         journal.write({"type": "act_failed", "step": step, "task_id": label, "seed": seed, **attempt})
                 act_action, act_attempt, act_total_ms = act.action, act.attempt, act.total_ms
                 if isinstance(act_total_ms, (int, float)) and not isinstance(act_total_ms, bool):
                     result.act_ms.append(float(act_total_ms))
-                if settings.judged:
-                    if check:
-                        check()
-                    if policy_elapsed >= settings.episode_timeout:
-                        return finish_scenario_deadline()
+                if check:
+                    check()
+                if policy_elapsed >= act_budget:
+                    return finish_scenario_deadline()
             safe_action: Any = act_action
             row_action: Any = None
             new_target = target
             element_hits: list[list[tuple[str, str]]] = []
-            if held_reason is None and motion_on:
+            if held_reason is None:
                 try:
                     safe_action, new_target, clamped = clamp_action(act_action, target, hits=element_hits)
                     note_ignored(result.ignored_fields, ignored_top_level(act_action))
@@ -599,8 +625,6 @@ def run_episode(
                 except MotionViolation as exc:
                     held_reason = exc.reason
                     keep_request_full()
-            elif held_reason is None:
-                note_ignored(result.ignored_fields, getattr(act, 'ignored_fields', ()))
 
             def note_hold(reason: str, at_step: int, original: Any, replacement: Any) -> None:
                 result.held[reason] = result.held.get(reason, 0) + 1
@@ -621,74 +645,72 @@ def run_episode(
                 except ActionRejected as exc:
                     raise EngineInfraError(f"engine rejected a hold-position step: {exc}") from exc
 
-            if not motion_on:  # practice without a known joint target: the action is passed through unvalidated
+            # DEC-2, judged and practice alike: chunk elements go to the engine one at a time. Engine steps are
+            # irreversible, so elements already applied stay applied; the element the engine rejects and the rest
+            # of the chunk are replaced by ONE hold-position step.
+            actions = safe_action['actions'] if safe_action.get('type') == 'action_chunk' else [safe_action]
+            if step_cap is not None:
+                actions = actions[:step_cap - step]
+            hashes_all: list[str] = []
+            applied = 0
+            stepped = None
+            position = list(target)
+            synced = False
+            chunk_gripper = gripper
+            sent: list[dict[str, Any]] = []  # what the engine really received, for the journal and replay
+            for index, action in enumerate(actions):
+                if index and paced:
+                    wait_start = clock()
+                    _wait(step_period * pace - (wait_start - element_started), check, clock, sleep)
+                element_started = clock()
+                if check:
+                    check()
+                engine_held = False
                 try:
-                    stepped = step_hold(step, safe_action) if held_reason is not None else engine.step(episode_id, step, safe_action)
+                    response = (step_hold(step + applied, action) if held_reason is not None
+                                else engine.step(episode_id, step + applied, action))
                 except ActionRejected:
-                    safe_action = hold_action(gripper)
-                    note_hold('engine_rejected', step, act_action, safe_action)
-                    stepped = step_hold(step, safe_action)
-            else:
-                # DEC-2, judged and practice alike: chunk elements go to the engine one at a time. Engine steps are
-                # irreversible, so elements already applied stay applied; the element the engine rejects and the rest
-                # of the chunk are replaced by ONE hold-position step.
-                actions = safe_action['actions'] if safe_action.get('type') == 'action_chunk' else [safe_action]
-                hashes_all: list[str] = []
-                applied = 0
-                stepped = None
-                position = list(target)
-                synced = False
-                chunk_gripper = gripper
-                sent: list[dict[str, Any]] = []  # what the engine really received, for the journal and replay
-                for index, action in enumerate(actions):
-                    if check:
-                        check()
-                    engine_held = False
-                    try:
-                        response = (step_hold(step + applied, action) if held_reason is not None
-                                    else engine.step(episode_id, step + applied, action))
-                    except ActionRejected:
-                        action = hold_action(chunk_gripper)
-                        note_hold('engine_rejected', step + applied, act_action, action)
-                        engine_held = True
-                        new_target = position
-                        response = step_hold(step + applied, action)
-                    sent.append(action)
-                    if not engine_held:
-                        engine_target = _engine_target(response)
-                        synced = synced or engine_target is not None
-                        position = engine_target or [p + d for p, d in zip(position, action['values'])]
-                        chunk_gripper = action['gripper']
-                    if journal and settings.judged:  # practice journals keep their one row per step
-                        response_full = image_every > 0 and (
-                            full_images(step + applied) or bool(response.get('done'))
-                            or (step_cap is not None and step + applied + 1 >= step_cap))
-                        # Default: digests + packed simulator state only. Image bodies only on request (RC_JOURNAL_IMAGES).
-                        journal.write({'type': 'engine_response', 'step': step + applied,
-                                       'response': packed(response) if response_full else evidence_response(response)})
-                        if image_every > 0:
-                            final_obs_state.update(obs=response.get('observation'), step=step + applied + 1, full=response_full)
-                    info = response['info']
-                    hashes_all.extend(info.get('substep_hashes', []))
-                    if (held_reason is None and not engine_held and int(info.get('applied', 0)) > 0
-                            and index < len(element_hits)):
-                        add_clamps(result.clamps, element_hits[index])
-                    _note_safety(result, info)
-                    if add_speed_scaled(result.clamps, info):
-                        result.actions_clamped = True
-                        if on_clamp:
-                            on_clamp()
-                    applied += int(info.get('applied', 0))
-                    stepped = response
-                    if response['done'] or info.get('deadline_expired') or not info.get('applied') or engine_held:
-                        break
-                if stepped is None:
-                    return finish_scenario_deadline()
-                stepped = {**stepped, 'info': {**stepped['info'], 'applied': applied, 'substep_hashes': hashes_all}}
-                target = position if synced else new_target
-                gripper = chunk_gripper
-                if any(a is not b for a, b in zip(sent, actions)) or len(sent) != len(actions):
-                    row_action = {'type': 'action_chunk', 'actions': sent}  # an engine rejection cut the chunk short
+                    action = hold_action(chunk_gripper)
+                    note_hold('engine_rejected', step + applied, act_action, action)
+                    engine_held = True
+                    new_target = position
+                    response = step_hold(step + applied, action)
+                sent.append(action)
+                if not engine_held:
+                    engine_target = _engine_target(response)
+                    synced = synced or engine_target is not None
+                    position = engine_target or [p + d for p, d in zip(position, action['values'])]
+                    chunk_gripper = action['gripper']
+                if journal and settings.judged:  # practice journals keep their one row per step
+                    response_full = image_every > 0 and (
+                        full_images(step + applied) or bool(response.get('done'))
+                        or (step_cap is not None and step + applied + 1 >= step_cap))
+                    # Default: digests + packed simulator state only. Image bodies only on request (RC_JOURNAL_IMAGES).
+                    journal.write({'type': 'engine_response', 'step': step + applied,
+                                   'response': packed(response) if response_full else evidence_response(response)})
+                    if image_every > 0:
+                        final_obs_state.update(obs=response.get('observation'), step=step + applied + 1, full=response_full)
+                info = response['info']
+                hashes_all.extend(info.get('substep_hashes', []))
+                if (held_reason is None and not engine_held and int(info.get('applied', 0)) > 0
+                        and index < len(element_hits)):
+                    add_clamps(result.clamps, element_hits[index])
+                _note_safety(result, info)
+                if add_speed_scaled(result.clamps, info):
+                    result.actions_clamped = True
+                    if on_clamp:
+                        on_clamp()
+                applied += int(info.get('applied', 0))
+                stepped = response
+                if response['done'] or info.get('deadline_expired') or not info.get('applied') or engine_held:
+                    break
+            if stepped is None:
+                return finish_scenario_deadline()
+            stepped = {**stepped, 'info': {**stepped['info'], 'applied': applied, 'substep_hashes': hashes_all}}
+            target = position if synced else new_target
+            gripper = chunk_gripper
+            if any(a is not b for a, b in zip(sent, actions)) or len(sent) != len(actions):
+                row_action = {'type': 'action_chunk', 'actions': sent}  # an engine rejection cut the chunk short
             info = stepped["info"]
             if check:
                 check()
@@ -710,14 +732,18 @@ def run_episode(
             result.success = bool(stepped.get("success", False))
             last_payload = stepped
             emit(obs, step, done or (not settings.judged and isinstance(episode_length, int) and step >= episode_length), views)
-            if paced:  # sleep the remainder of this step's wall-clock budget
+            if paced:  # sleep the remainder of the last applied element's wall-clock budget
                 wait_start = clock()
-                _wait(step_period * pace - (wait_start - step_started), check, clock, sleep)
-                paced_total += clock() - wait_start
+                _wait(step_period * pace - (wait_start - (element_started if applied > 1 else step_started)), check, clock, sleep)
         result.completed = True
         if last_payload is not None:
             _capture_metrics(result, last_payload)
-        _end("success" if result.success else "failed")
+        if (done and not result.success and last_payload is not None
+                and isinstance((last_payload.get("info") or {}).get("protective_stop"), dict)):
+            result.end_reason = PROTECTIVE_STOP  # engine enforced its safety stop (RC_SAFETY_STOP=enforce)
+            _end(PROTECTIVE_STOP)
+        else:
+            _end("success" if result.success else "failed")
         if paced and settings.final_hold > 0:  # let a viewer see the result; abortable, after the journal is closed out
             _wait(settings.final_hold, check, clock, sleep)
         return result

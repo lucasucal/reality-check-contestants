@@ -5,26 +5,23 @@ write a tiny Policy subclass instead of raw HTTP handling.
 
 Contract rules encoded here:
 - GET /healthz -> 200 {} immediately on start (LIVENESS ONLY, before weights load).
-- GET /readyz  -> 200 {"ready": bool, "contract": "v0", "schema_version": 2,
+- GET /readyz  -> 200 {"ready": bool, "contract": "v0", "schema_version": 3,
                        "capabilities": {"chunking": true, "caching": false}}
                   ready flips true after Policy.load() finishes (background thread).
-- POST /act    -> request envelope {episode_id, step, task_id, instruction?, goal?,
-                  images?, proprio?}; instruction is the natural-language
-                  sentence for the task, goal is a 640×480 JPEG of the
-                  finished scene;
+- POST /act    -> request envelope {schema_version, episode_id, step, task_id,
+                  instruction, images, goal, proprio}. images and goal both map
+                  wrist, left and right to 640×360 base64 RGB JPEGs.
                   response echoes episode_id and step VERBATIM plus "action":
                   {"episode_id": ..., "step": ..., "action": <Policy.act result>}.
-                  Malformed requests (missing episode_id/step, bad JSON) -> 400.
+                  Invalid requests (including incompatible versions) -> 400.
                   episode_id/step also echoed as headers X-RC-Episode-Id / X-RC-Step.
 
 PURE-FUNCTION REQUIREMENT (/act): the same request envelope for the same
 (episode_id, step) must yield a valid action — deterministic recompute suffices.
-No external side effects; no assumed call rate (calls may arrive at any rate,
-or be retried byte-identically by the runner). This holds for the framework;
-the team's act() should honor it too.
+Keep external side effects out of act() and allow requests to arrive at any rate.
 
-OBSERVATION/ACTION SCHEMA v2: 6 arm joint_delta values + gripper. Shape lives in
-Policy.act; this shim only reports schema_version on /readyz.
+OBSERVATION/ACTION SCHEMA v3: 6 arm joint_delta values at up to ±0.05 rad
+per step plus gripper. A class policy declares schema_version 3 in its manifest.
 """
 
 from .policy import Policy

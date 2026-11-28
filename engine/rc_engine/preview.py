@@ -118,7 +118,8 @@ def run_view(task_id: str, publish: Callable[[dict[str, Any]], None], *,
     env = _make_envs(catalog or builtin_catalog(), (task_id,))[task_id]
     camera = aim()
     _aim_env(env, lambda: camera)
-    obs = encode_obs(env.spec, 0, env.reset(0), 90)
+    raw = env.reset(0)
+    obs = encode_obs(env.spec, 0, raw, 90)
     episode_id = uuid.uuid4().hex
     while not stop.is_set():
         packet = _packet(obs, episode_id)
@@ -127,7 +128,7 @@ def run_view(task_id: str, publish: Callable[[dict[str, Any]], None], *,
             "mode": "view",
             "scene": _scene(obs),
             "views": _views(env),
-            "goal": obs.get("goal"),
+            "goal": obs["goal"]["wrist"],
             "packet": packet,
             "action": None,
             "task_id": packet.get("task_id"),
@@ -203,7 +204,8 @@ def _run_episode(env: Env, seed: int, index: int, successes: list[bool],
                  mode: str, previous: dict[str, Any],
                  aim: Callable[[], tuple[float, float]] | None = None) -> dict[str, Any]:
     _aim_env(env, aim)
-    obs = encode_obs(env.spec, 0, env.reset(seed), 90)
+    raw = env.reset(seed)
+    obs = encode_obs(env.spec, 0, raw, 90)
     episode_id = uuid.uuid4().hex
     step = 0
     action: dict[str, Any] | None = None
@@ -218,7 +220,7 @@ def _run_episode(env: Env, seed: int, index: int, successes: list[bool],
             "mode": mode,
             "scene": _scene(obs),
             "views": _views(env),
-            "goal": obs.get("goal"),
+            "goal": obs["goal"]["wrist"],
             "packet": packet,
             "action": action,
             "task_id": packet.get("task_id"),

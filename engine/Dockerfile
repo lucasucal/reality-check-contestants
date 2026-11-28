@@ -1,5 +1,5 @@
 # Reality Check simulation engine. The SAME image is used by participants for local practice
-# (public cup tasks baked in) and by the scoring runner (hidden task packs mounted at /packs).
+# (public fastener tasks baked in) and by the scoring runner (hidden task packs mounted at /packs).
 #
 #   docker build -t rc-engine:dev engine/
 #   docker run --rm -p 127.0.0.1:8090:8090 rc-engine:dev                      # practice, CPU or GPU

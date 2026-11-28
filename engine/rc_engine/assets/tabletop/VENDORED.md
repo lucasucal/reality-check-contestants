@@ -2,11 +2,11 @@
 
 ## Workshop background and bench
 
-`workshop_sky.png` is a 2-by-3 cubemap baked from [Poly Haven University Workshop](https://polyhaven.com/a/university_workshop), by Savva Zakharov. `workbench_metal.png` is the diffuse image from [Poly Haven Blue Metal Plate](https://polyhaven.com/a/blue_metal_plate), by Rob Tuytel. Both are [CC0](https://polyhaven.com/license), including redistribution and commercial use. The sky is a photographic background; MuJoCo's scene lights illuminate the robot and bench separately.
+`workshop_sky.png` is a 2-by-3 cubemap baked from [Poly Haven University Workshop](https://polyhaven.com/a/university_workshop), by Savva Zakharov. `workbench_metal.png` (no longer used, not in the participant bundle) is the diffuse image from [Poly Haven Blue Metal Plate](https://polyhaven.com/a/blue_metal_plate), by Rob Tuytel. Both are [CC0](https://polyhaven.com/license), including redistribution and commercial use. The sky is a photographic background; MuJoCo's scene lights illuminate the robot and bench separately.
 
 To reproduce, download the [4K HDR panorama](https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/university_workshop_4k.hdr) (SHA-256 `f3c5838d0e3f656c08af3e00cf32982e6cbecf7d398913eedd6d410906ae4b4d`) and [1K diffuse JPG](https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/blue_metal_plate/blue_metal_plate_diff_1k.jpg) (SHA-256 `a0162bffce47d4a35613a12af22571b28c18412dc5805cbb69eac343554ef750`), then run `python engine/rc_engine/assets/tabletop/bake_workshop.py path/to/university_workshop_4k.hdr path/to/blue_metal_plate_diff_1k.jpg engine/rc_engine/assets/tabletop`. The script needs NumPy and Pillow, decodes RGBE, tone maps to sRGB, samples six 1024-pixel faces in RLUDFB order, and converts the metal image to PNG.
 
-The following assets were used in earlier scenes and remain in the repository.
+The following assets were used in earlier scenes. They remain in the source repository and are not in the participant bundle.
 The nut and both trays are NVIDIA SimReady meshes (CC-BY-4.0). The room photographs are Poly Haven (CC0). The boat hull
 is drawn for this scene and uses the wooden tray's albedo.
 

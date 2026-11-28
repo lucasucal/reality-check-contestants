@@ -1,4 +1,4 @@
-"""Program-form example with the standard library only (http.server). Same contract and the same
+"""Program-form example with http.server and the image's stdlib-only rc_sdk. Same contract and the same
 example weights as ../server_fastapi/serve.py; use whichever style you like (Flask, aiohttp,
 FastAPI, plain sockets ... any Python program that serves docs/api.md).
 
@@ -9,7 +9,6 @@ and /act exactly as docs/api.md says.
 from __future__ import annotations
 
 import json
-import math
 import os
 import struct
 import threading
@@ -17,10 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-CONTRACT = "v0"
-SCHEMA_VERSION = 2
-CAPABILITIES = {"chunking": True, "caching": False}
-MAX_JOINT_DELTA = (0.10472, 0.10472, 0.15708, 0.15708, 0.15708, 0.15708)
+from rc_sdk.contract import CAPABILITIES, CONTRACT, MAX_JOINT_DELTA, SCHEMA_VERSION, observation_error
 STATE: dict[str, Any] = {"model": None, "error": None}
 
 
@@ -58,18 +54,9 @@ class ExampleModel:
         print(f"[example] loaded {path}", flush=True)
 
     def act(self, obs: dict) -> dict:
-        proprio = obs.get("proprio") if isinstance(obs.get("proprio"), dict) else {}
-        raw = proprio.get("joint_pos")
-        pos = []
-        for item in (raw if isinstance(raw, (list, tuple)) else [])[:6]:
-            try:
-                x = float(item)
-            except (TypeError, ValueError):
-                x = 0.0
-            pos.append(x if math.isfinite(x) else 0.0)
-        pos += [0.0] * (6 - len(pos))
+        pos = obs["proprio"]["joint_pos"]
         out = [sum(w * p for w, p in zip(row, pos)) + b for row, b in zip(self.weight, self.bias)]
-        values = [max(-m, min(m, v)) for v, m in zip(out[:6], MAX_JOINT_DELTA)]
+        values = [max(-MAX_JOINT_DELTA, min(MAX_JOINT_DELTA, v)) for v in out[:6]]
         return {"type": "joint_delta", "values": values, "gripper": max(0.0, min(1.0, out[6]))}
 
 
@@ -115,14 +102,15 @@ class Handler(BaseHTTPRequestHandler):
         if STATE["model"] is None:
             return self.send_json(503, {"error": "not ready; weights still loading"})
         try:
-            envelope = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))) or b"{}")
+            length = int(self.headers.get("Content-Length", "0"))
+            if length < 0:
+                raise ValueError("Content-Length must be nonnegative")
+            envelope = json.loads(self.rfile.read(length) or b"{}")
         except ValueError as exc:
             return self.send_json(400, {"error": f"invalid JSON body: {exc}"})
-        if not isinstance(envelope, dict):
-            return self.send_json(400, {"error": "request body must be a JSON object"})
-        for field in ("episode_id", "step"):
-            if field not in envelope:
-                return self.send_json(400, {"error": f"missing required field: {field}"})
+        error = observation_error(envelope)
+        if error:
+            return self.send_json(400, {"error": error})
         try:
             action = STATE["model"].act(envelope)
         except Exception as exc:

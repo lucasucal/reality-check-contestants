@@ -11,20 +11,19 @@
     "Place the nut in the hex pocket that matches its size and the smaller bolt in the hole that matches its size.",
     "Put the smaller of the two bolts in its matching hole, then the nut in its matching hex pocket.",
     {"text": "Insert the bolt nearer the tray into the hole that matches its size, then seat the nut in the hex pocket that matches its size.", "when": ["nearest:small_bolt:tray"]},
-    {"text": "Seat the gold nut in its hex pocket and the smaller bolt in its hole.", "when": ["colour:nut:gold"]},
-    "Insert the {material:small_bolt} bolt into the hole that matches its size, then seat the nut in the hex pocket that matches its size.",
-    "Seat the {material:nut} nut in its hex pocket and the smaller bolt in its hole."
+    "Insert the shorter bolt into the hole that matches its size, then seat the nut in the hex pocket that matches its size.",
+    "Seat the nut in its hex pocket and the smaller bolt in its hole."
   ],
   "clutter": [{"part": "washer_m12"}, {"part": "washer_m16"}, {"part": "washer_m20"}],
-  "description": "P2 (seen). An ISO 4017 M16x50 and an M24x70 bolt and an ISO 4032 M30 nut on the table, each of nylon, stainless steel, brass or aluminium (drawn per seed): the M16 lies on its side or (3 seeds in 10) leans on its head against the fixture's -y face; the nut lies flat or (3 in 10) stands on one of its side flats. Insert the M16 into the 20 mm hole and seat the M30 nut in the 51 mm hex pocket (the 60 mm pocket takes it loosely and does not count). Either order counts. The M24 bolt is a decoy: in any hole it zeroes the episode.",
+  "description": "P2 (seen). An ISO 4017 M16x50 and an M24x70 bolt and an ISO 4032 M30 nut on the table, all printed grey PLA (9 g, 30 g and 21 g): the M16 lies on its side or (3 seeds in 10) leans on its head against the fixture's -y face; the nut lies flat or (3 in 10) stands on one of its side flats. Insert the M16 into the 20 mm hole and seat the M30 nut in the 51 mm hex pocket (the 60 mm pocket takes it loosely and does not count). Either order counts. The M24 bolt is a decoy: in any hole it zeroes the episode.",
   "parts": [
-    {"id": "small_bolt", "part": "bolt_m16x50", "material": "any",
+    {"id": "small_bolt", "part": "bolt_m16x50",
      "spawn": {"xy": [0.70, -0.15], "jitter": [0.045, 0.028], "yaw_deg": 0, "yaw_jitter_deg": 30,
                "pose": {"lying": 7, "leaning": 3}}},
-    {"id": "large_bolt", "part": "bolt_m24x70", "material": "any",
+    {"id": "large_bolt", "part": "bolt_m24x70",
      "spawn": {"xy": [0.70, -0.34], "jitter": [0.045, 0.028], "yaw_deg": 0, "yaw_jitter_deg": 30}},
-    {"id": "nut", "part": "nut_m30", "material": "any",
-     "spawn": {"xy": [0.93, -0.19], "jitter": [0.03, 0.04], "yaw_deg": 0, "yaw_jitter_deg": 30,
+    {"id": "nut", "part": "nut_m30",
+     "spawn": {"xy": [0.87, -0.07], "jitter": [0.03, 0.04], "yaw_deg": 0, "yaw_jitter_deg": 30,
                "pose": {"lying": 7, "on_edge": 3}}}
   ],
   "goals": [
@@ -34,5 +33,5 @@
   "decoys": [{"part": "large_bolt", "not_in": ["bore_m16", "bore_m24", "bore_m30"]}],
   "ordered": false,
   "spawn_swap": true,
-  "notes": "Order is not enforced (team decision): the instruction reads 'then' as the natural sequence, but each goal counts on its own (one of the two earns partial credit under the scoring rules), and both in either order is success. The decoy rule covers every hole: the M24 cannot enter the 20 mm hole, so 'not in bore_m16' alone never fires; standing the wrong bolt in its own 28 mm hole (or the 35 mm one) is the mistake the decoy tests. Hex pockets are not decoy seats: a lying bolt can rest across one by accident. Materials: drawn per seed for each part (the two bolts may share one); 'the brass bolt' is said only when the other bolt is of another material. Clutter is washers only (a nut would make 'the nut' ambiguous). Spawn: all three lie on the -y side in view of both side cameras, regions 9x6 cm, never closer than ~1 cm edge to edge; the two bolts side by side along y, the nut past the fixture's far -y corner (clear of the parked gripper in the left view). spawn_swap: on odd seeds the two bolts trade regions, so 'the middle bolt' is not 'the smaller', and a blind replay of one seed's actions fails on most others."
+  "notes": "Order is not enforced (team decision): the instruction reads 'then' as the natural sequence, but each goal counts on its own (one of the two earns partial credit under the scoring rules), and both in either order is success. The decoy rule covers every hole: the M24 cannot enter the 20 mm hole, so 'not in bore_m16' alone never fires; standing the wrong bolt in its own 28 mm hole (or the 35 mm one) is the mistake the decoy tests. Hex pockets are not decoy seats: a lying bolt can rest across one by accident. Every part is the same grey PLA: the bolts differ only in size, which every phrasing names. Clutter is washers only (a nut would make 'the nut' ambiguous). Spawn: all three lie on the -y side in view of both side cameras, regions 9x6 cm, never closer than ~1 cm edge to edge; the two bolts side by side along y, the nut past the fixture's far -y corner (clear of the parked gripper in the left view). spawn_swap: on odd seeds the two bolts trade regions, so 'the middle bolt' is not 'the smaller', and a blind replay of one seed's actions fails on most others."
 }

@@ -16,7 +16,8 @@ from .release import Release, load_release
 from .types import Limits
 
 ENTRY_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*$")
-KNOWN_MANIFEST_KEYS = frozenset({"contract", "entry_point", "port", "weights"})
+KNOWN_MANIFEST_KEYS = frozenset({"contract", "schema_version", "entry_point", "port", "weights"})
+POLICY_SCHEMA_VERSION = 3
 RUNTIME_NAMES = frozenset({"rc_sdk", "rc_runtime"})
 # The image provides these; a team copy is stripped from the prepared context (with a warning), never run.
 RUNTIME_COPY_FILES = frozenset({"rc_sdk.py", "rc_runtime.py"})
@@ -299,6 +300,9 @@ def _entry_point_checks(repo_dir: Path, manifest: dict, release: Release, result
         return None, None
     if kind != "class":
         return _program_entry_checks(repo_dir, value, kind, release, result)
+    version = manifest.get("schema_version")
+    if type(version) is not int or version != POLICY_SCHEMA_VERSION:
+        result.findings.append(make("manifest_policy_schema", "manifest.json", version=POLICY_SCHEMA_VERSION))
     module, _, attr = value.partition(":")
     top = module.split(".")[0]
     # Shadowing by the image comes first: the module on disk would never be loaded.

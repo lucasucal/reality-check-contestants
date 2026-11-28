@@ -2,37 +2,28 @@
 
 Same seed and options => the same episode. An episode is reset with options
 
-    {"profile": "public" | "eval", "nudge": false | true}
+    {"profile": "public" | "eval"}
 
-(defaults public, no nudge). The profile sets the ranges; the seed draws within them:
+(defaults public). The profile sets the ranges; the seed draws within them:
 
-* materials - each task part's material (nylon, stainless steel, brass or aluminium:
-  its mass and look) from the ones its task allows (`tabletop.draw_materials`); clutter
-  draws its own.
 * instruction - one phrasing from the task's pool (`instructions` in the task file).
-  A phrasing may carry conditions (`when`): `colour:<part>:<name>` (the part has that
-  colour and no other part on the table shares its colour family),
-  `nearest:<part>:<tray|robot>` (of the parts of its kind, it is the nearest to the
-  tray / robot base by at least 3 cm) and `material:<part>` (no other part of its shape
-  on the table, clutter included, is of its material). `{material:<part>}` in the text
-  is that part's material word ("the brass bolt") and implies `material:<part>`. The
-  first phrasing has no conditions (a material it names must be unique by construction).
+  A phrasing may carry the condition (`when`) `nearest:<part>:<tray|robot>` (of the
+  parts of its kind, it is the nearest to the tray / robot base by at least 3 cm). The
+  first phrasing has no conditions. Every part is the same grey PLA, so no phrasing
+  names a material or a colour.
 * visuals - light direction, intensity and colour temperature, the ambient light,
-  the table tint, the fixture's PLA shade, each part's shade within its filament
-  family, the two tripod cameras' poses (the wrist camera is bolted to the arm), and
-  the background cube map turned in 90° steps.
+  the table tint, the fixture's PLA shade, one shade shared by every part, the two
+  tripod cameras' poses (the wrist camera is bolted to the arm), and the background
+  cube map turned in 90° steps.
 * room - one of the furnished rooms around the bench (rooms.py), uniform over the profile's `rooms`
-  (all three unless the profile lists them), from a stream of its own.
+  (all four unless the profile lists them), from a stream of its own; reset option `room` (practice,
+  not with "eval") picks one instead.
 * fixture pose - x/y and yaw on the table; seats, colliders and goal poses follow.
 * clutter - extra kit parts from the task's `clutter` pool, never of a kind that
   makes the instruction ambiguous; one in a goal seat (or the tray, when a goal is
   the tray) is a decoy violation.
 * start pose - a part whose spawn lists several poses (lying, standing, leaning, on
   edge; see tabletop.START_POSES) starts in one drawn by weight.
-* nudge (option, off by default) - once, 1.5-3.5 s in, the target part is moved 3-6 cm
-  and turned up to 45° to free table space (a teleport, never while the robot
-  touches it or the gripper is near it, and only a goal part that lies flat on the
-  table: never a standing, leaning or on-edge part, never one in a seat).
 
 The public profile is `assets/variation/public.json`. The eval profile is organizer
 private: it lives with the hidden task packs (`<task-packs>/profiles/eval.json`) and
@@ -42,39 +33,26 @@ from __future__ import annotations
 
 import json
 import math
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 
-from .fixture import FIXTURE_ORIGIN, FixturePose
+from .fixture import FIXTURE_ORIGIN, NOMINAL_YAW, FixturePose
 from .rooms import NOMINAL_ROOM, ROOM_NAMES
 
 PROFILE_DIR = Path(__file__).resolve().parent.parent / "assets" / "variation"
 EVAL_PROFILE_PATH = Path("profiles") / "eval.json"  # inside a mounted task-pack directory
-OPTION_KEYS = {"profile", "nudge"}
+OPTION_KEYS = {"profile", "room"}
 PROFILES = ("public", "eval")
 
-COLOUR_NAMES = {"brass": "gold", "stainless_steel": "grey", "aluminum": "silver", "nylon": "white",
-                "pla_gold": "gold", "pla_silver": "silver", "pla_grey": "grey", "pla_white": "white"}
-# Colours a camera (and a reader) can confuse under the lighting range: silver, grey and white are one family.
-COLOUR_FAMILY = {"gold": "gold", "silver": "light", "grey": "light", "white": "light"}
 NEAREST_MARGIN = 0.03
-# `{material:<part>}` in a phrasing: the episode's material word for that part (tabletop.MATERIAL_WORDS).
-_MATERIAL_SLOT = re.compile(r"\{material:([a-z][a-z0-9_]*)\}")
-
-
-def material_slots(text: str) -> list[str]:
-    """The parts whose material a phrasing names ({material:<part>})."""
-    return _MATERIAL_SLOT.findall(text)
-
 # Nominal light (tabletop._room): direction (-0.35, 0.15, -1): heading ~157°, ~69° down.
 NOMINAL_LIGHT_AZIMUTH = math.degrees(math.atan2(0.15, -0.35))
 NOMINAL_LIGHT_ELEVATION = math.degrees(math.atan2(1.0, math.hypot(0.35, 0.15)))
 
 # Independent random streams, so changing one mechanism does not move the others.
-_STREAMS = {"instruction": 1, "visual": 2, "fixture": 3, "clutter": 4, "nudge": 5, "pose": 6, "room": 7}
+_STREAMS = {"instruction": 1, "visual": 2, "fixture": 3, "clutter": 4, "pose": 6, "room": 7}
 
 
 def stream(seed: int, name: str) -> np.random.Generator:
@@ -93,7 +71,7 @@ class Profile:
     ambient: tuple[float, float] = (1.0, 1.0)
     table_tint: float = 0.0  # ± per channel, multiplicative
     fixture_shade: float = 0.0  # ± brightness, plus a third of it per channel
-    part_shade: float = 0.0
+    part_shade: float = 0.0  # one shade for every part
     camera_pos_m: float = 0.0  # ± per axis, tripod cameras
     camera_rot_deg: float = 0.0  # ± about each axis
     sky_rotation: bool = False
@@ -102,15 +80,13 @@ class Profile:
     fixture_yaw_deg: float = 0.0  # ±
     clutter_max: int = 0
     clutter_touching: bool = False  # some clutter may lie against a task part (never on its grasp)
-    nudge_window_s: tuple[float, float] = (1.5, 3.5)
-    nudge_shift_m: tuple[float, float] = (0.03, 0.06)
-    nudge_yaw_deg: float = 45.0
     instructions: dict[str, tuple] = field(default_factory=dict)  # task_id -> novel phrasings (eval)
     clutter_parts: dict[str, tuple] = field(default_factory=dict)  # task_id -> extra clutter pool (eval)
     part_manifest: Path | None = None  # kit for clutter_parts (the pack's manifest)
 
     @classmethod
     def from_json(cls, doc: dict, root: Path | None = None) -> "Profile":
+        # Older mounted profiles may contain a nudge section; it has no effect.
         known = {"profile", "light", "table_tint", "fixture_shade", "part_shade", "camera_jitter", "sky_rotation",
                  "rooms", "fixture_pose", "clutter", "nudge", "instructions", "clutter_parts", "part_manifest", "notes"}
         extra = set(doc) - known
@@ -120,7 +96,6 @@ class Profile:
         cam = doc.get("camera_jitter", {})
         pose = doc.get("fixture_pose", {})
         clutter = doc.get("clutter", {})
-        nudge = doc.get("nudge", {})
 
         def pair(v, default):
             return tuple(float(x) for x in v) if v is not None else default
@@ -150,9 +125,6 @@ class Profile:
             fixture_yaw_deg=float(pose.get("yaw_deg", 0.0)),
             clutter_max=int(clutter.get("max", 0)),
             clutter_touching=bool(clutter.get("touching", False)),
-            nudge_window_s=pair(nudge.get("window_s"), (1.5, 3.5)),
-            nudge_shift_m=pair(nudge.get("shift_m"), (0.03, 0.06)),
-            nudge_yaw_deg=float(nudge.get("yaw_deg", 45.0)),
             instructions={k: tuple(v) for k, v in (doc.get("instructions") or {}).items()},
             clutter_parts={k: tuple(v) for k, v in (doc.get("clutter_parts") or {}).items()},
             part_manifest=manifest,
@@ -202,24 +174,24 @@ def profile_named(name: str) -> Profile:
     raise ValueError(f"profile must be one of {', '.join(PROFILES)}, got {name!r}")
 
 
-def parse_options(options: object, *, internal: bool = False) -> tuple[str, bool]:
-    """Validate reset options -> (profile, nudge). `internal` also allows the 'nominal' profile."""
+def parse_options(options: object, *, internal: bool = False) -> str:
+    """Validate reset options and return the profile. `internal` also allows the 'nominal' profile."""
     if options is None:
-        return "public", False
+        return "public"
     if not isinstance(options, dict):
         raise ValueError("options must be an object")
     extra = set(options) - OPTION_KEYS
     if extra:
         raise ValueError(f"unknown options {sorted(extra)}; allowed: {sorted(OPTION_KEYS)}")
     profile = options.get("profile", "public")
-    nudge = options.get("nudge", False)
     allowed = PROFILES + (("nominal",) if internal else ())
     if profile not in allowed:
         raise ValueError(f"options.profile must be one of {', '.join(PROFILES)}, got {profile!r}")
-    if not isinstance(nudge, bool):
-        raise ValueError("options.nudge must be true or false")
     profile_named(profile)  # eval must be mounted
-    return profile, nudge
+    room = options.get("room")
+    if room is not None and (room not in ROOM_NAMES or profile == "eval"):
+        raise ValueError(f"options.room must be one of {', '.join(ROOM_NAMES)}, and not with the eval profile")
+    return profile
 
 
 # ------------------------------------------------------------------ geometry of lying parts
@@ -310,7 +282,6 @@ def clear_around(shape: Shape) -> Shape:
 class Episode:
     seed: int
     profile: str
-    nudge: bool
     instruction: str = ""
     fixture: FixturePose = field(default_factory=FixturePose)
     light_dir: np.ndarray | None = None
@@ -318,19 +289,15 @@ class Episode:
     ambient_scale: float = 1.0
     table_rgb: np.ndarray | None = None
     fixture_rgb: np.ndarray | None = None
-    part_rgb: dict[str, np.ndarray] = field(default_factory=dict)  # body name -> rgb multiplier
-    materials: dict[str, str] = field(default_factory=dict)  # task part name -> material (mass and look)
-    clutter_material: dict[str, str] = field(default_factory=dict)  # active clutter name -> material
+    part_rgb: np.ndarray | None = None  # rgb multiplier shared by every part
     clutter_pose: dict[str, tuple[np.ndarray, float]] = field(default_factory=dict)
     camera_offset: dict[str, tuple[np.ndarray, np.ndarray]] = field(default_factory=dict)  # name -> (dpos, rotvec)
     sky_turns: int = 0
     room: str = ""
-    nudge_part: str = ""
-    nudge_steps: tuple[int, int] = (0, 0)
-    nudge_moves: tuple[tuple[float, float, float], ...] = ()  # (distance, direction, dyaw) candidates
+    room_option: str | None = None  # reset option `room`: shown instead of the drawn room
 
     def key(self) -> tuple:
-        return (self.seed, self.profile, self.nudge)
+        return (self.seed, self.profile, self.room_option)
 
 
 def kelvin_rgb(kelvin: float) -> np.ndarray:
@@ -348,7 +315,7 @@ def _u(rng: np.random.Generator, lo: float, hi: float) -> float:
     return float(rng.uniform(lo, hi)) if hi > lo else float(lo)
 
 
-def draw_visuals(ep: Episode, profile: Profile, part_names: list[str], cameras: tuple[str, ...]) -> None:
+def draw_visuals(ep: Episode, profile: Profile, cameras: tuple[str, ...]) -> None:
     rng = stream(ep.seed, "visual")
     az = math.radians(NOMINAL_LIGHT_AZIMUTH + _u(rng, -profile.light_azimuth_deg, profile.light_azimuth_deg))
     el = math.radians(_u(rng, *profile.light_elevation_deg))
@@ -361,15 +328,14 @@ def draw_visuals(ep: Episode, profile: Profile, part_names: list[str], cameras: 
     f = profile.fixture_shade
     ep.fixture_rgb = (1.0 + _u(rng, -f, f)) + rng.uniform(-f / 3, f / 3, 3) if f else np.ones(3)
     p = profile.part_shade
-    for name in part_names:
-        ep.part_rgb[name] = (1.0 + _u(rng, -p, p)) + rng.uniform(-p / 3, p / 3, 3) if p else np.ones(3)
+    ep.part_rgb = (1.0 + _u(rng, -p, p)) + rng.uniform(-p / 3, p / 3, 3) if p else np.ones(3)
     for cam in cameras:
         dpos = rng.uniform(-profile.camera_pos_m, profile.camera_pos_m, 3) if profile.camera_pos_m else np.zeros(3)
         drot = (np.radians(rng.uniform(-profile.camera_rot_deg, profile.camera_rot_deg, 3))
                 if profile.camera_rot_deg else np.zeros(3))
         ep.camera_offset[cam] = (dpos, drot)
     ep.sky_turns = int(rng.integers(0, 4)) if profile.sky_rotation else 0
-    ep.room = draw_room(ep.seed, profile)
+    ep.room = ep.room_option or draw_room(ep.seed, profile)
 
 
 def draw_room(seed: int, profile: Profile) -> str:
@@ -386,7 +352,7 @@ def draw_fixture(ep: Episode, profile: Profile, shapes: list[Shape], clear_of, t
     rng = stream(ep.seed, "fixture")
     for _ in range(tries):
         dx, dy = rng.uniform(-profile.fixture_xy_m, profile.fixture_xy_m, 2)
-        yaw = math.radians(_u(rng, -profile.fixture_yaw_deg, profile.fixture_yaw_deg))
+        yaw = NOMINAL_YAW + math.radians(_u(rng, -profile.fixture_yaw_deg, profile.fixture_yaw_deg))
         pose = FixturePose(FIXTURE_ORIGIN[0] + float(dx), FIXTURE_ORIGIN[1] + float(dy), yaw)
         if clear_of(pose, shapes):
             ep.fixture = pose
@@ -394,72 +360,33 @@ def draw_fixture(ep: Episode, profile: Profile, shapes: list[Shape], clear_of, t
 
 
 def check_conditions(when: tuple[str, ...], scene: dict[str, tuple], tray_xy: np.ndarray) -> bool:
-    """`scene`: active part name -> (part, material, xy). See the module docstring for the conditions."""
+    """`scene`: active part name -> (part, xy). See the module docstring for the conditions."""
     for cond in when:
         kind, name, *rest = cond.split(":")
         value = rest[0] if rest else ""
-        if name not in scene:
+        if name not in scene or kind != "nearest":
             return False
-        part, material, xy = scene[name]
-        if kind == "material":
-            if any(m == material and p.shape == part.shape for n, (p, m, _xy) in scene.items() if n != name):
-                return False
-        elif kind == "colour":
-            colour = COLOUR_NAMES.get(material, material)
-            if colour != value:
-                return False
-            family = COLOUR_FAMILY.get(colour, colour)
-            if any(COLOUR_FAMILY.get(COLOUR_NAMES.get(m, m)) == family for n, (_p, m, _xy) in scene.items() if n != name):
-                return False
-        elif kind == "nearest":
-            ref = tray_xy if value == "tray" else np.zeros(2)
-            mine = float(np.linalg.norm(np.asarray(xy) - ref))
-            rivals = [float(np.linalg.norm(np.asarray(oxy) - ref)) for n, (op, _m, oxy) in scene.items()
-                      if n != name and op.shape == part.shape]
-            if any(r < mine + NEAREST_MARGIN for r in rivals):
-                return False
-        else:
+        part, xy = scene[name]
+        ref = tray_xy if value == "tray" else np.zeros(2)
+        mine = float(np.linalg.norm(np.asarray(xy) - ref))
+        rivals = [float(np.linalg.norm(np.asarray(oxy) - ref)) for n, (op, oxy) in scene.items()
+                  if n != name and op.shape == part.shape]
+        if any(r < mine + NEAREST_MARGIN for r in rivals):
             return False
     return True
 
 
-def fill_materials(text: str, scene: dict[str, tuple], words: dict[str, str]) -> str:
-    """`text` with each {material:<part>} replaced by that part's material word this episode."""
-    return _MATERIAL_SLOT.sub(lambda mt: words.get(scene[mt.group(1)][1], scene[mt.group(1)][1]), text)
-
-
-def choose_instruction(ep: Episode, pool: tuple, scene: dict[str, tuple], tray_xy: np.ndarray,
-                       words: dict[str, str] | None = None) -> str:
-    """One phrasing from `pool` (entries: text, or {text, when}) whose conditions hold in this scene. A
-    phrasing that names a part's material ({material:<part>}) also needs `material:<part>` (no other part
-    of that shape on the table is of that material); the word is filled in from `words`."""
+def choose_instruction(ep: Episode, pool: tuple, scene: dict[str, tuple], tray_xy: np.ndarray) -> str:
+    """One phrasing from `pool` (entries: text, or {text, when}) whose conditions hold in this scene."""
     rng = stream(ep.seed, "instruction")
     order = rng.permutation(len(pool))
-    words = words or {}
     for i in order:
         entry = pool[int(i)]
         text, when = (entry, ()) if isinstance(entry, str) else (entry["text"], tuple(entry.get("when", ())))
-        when = when + tuple(f"material:{name}" for name in material_slots(text))
         if check_conditions(when, scene, tray_xy):
-            return fill_materials(text, scene, words)
+            return text
     first = pool[0]
-    return fill_materials(first if isinstance(first, str) else first["text"], scene, words)
-
-
-def draw_nudge(ep: Episode, profile: Profile, goal_parts: list[str], control_hz: int) -> None:
-    """The nudge: which part (`goal_parts`, the goal parts that start lying flat; none: no nudge), when
-    and the candidate moves."""
-    if not goal_parts:
-        return
-    rng = stream(ep.seed, "nudge")
-    ep.nudge_part = goal_parts[int(rng.integers(0, len(goal_parts)))]
-    start = int(round(_u(rng, *profile.nudge_window_s) * control_hz))
-    ep.nudge_steps = (start, int(round(profile.nudge_window_s[1] * control_hz)))
-    moves = []
-    for _ in range(24):
-        moves.append((_u(rng, *profile.nudge_shift_m), float(rng.uniform(-math.pi, math.pi)),
-                      math.radians(_u(rng, -profile.nudge_yaw_deg, profile.nudge_yaw_deg))))
-    ep.nudge_moves = tuple(moves)
+    return first if isinstance(first, str) else first["text"]
 
 
 def validate_pool(pool: object, part_names: set[str], where: str) -> tuple:
@@ -483,14 +410,11 @@ def validate_pool(pool: object, part_names: set[str], where: str) -> tuple:
             raise ValueError(f"{where}[{i}].when must be a list")
         for cond in when:
             bits = cond.split(":") if isinstance(cond, str) else []
-            ok = ((len(bits) == 3 and bits[1] in part_names
-                   and ((bits[0] == "colour" and bits[2] in COLOUR_FAMILY)
-                        or (bits[0] == "nearest" and bits[2] in ("tray", "robot"))))
-                  or (len(bits) == 2 and bits[0] == "material" and bits[1] in part_names))
-            if not ok:
+            if not (len(bits) == 3 and bits[0] == "nearest" and bits[1] in part_names
+                    and bits[2] in ("tray", "robot")):
                 raise ValueError(f"{where}[{i}]: bad condition {cond!r}")
-        if "{" in text.replace("{material:", "") or any(n not in part_names for n in material_slots(text)):
-            raise ValueError(f"{where}[{i}]: a placeholder must be {{material:<part id>}}, got {text!r}")
+        if "{" in text or "}" in text:
+            raise ValueError(f"{where}[{i}]: phrasings take no placeholders, got {text!r}")
         if text.strip() in texts:
             raise ValueError(f"{where}: duplicate phrasing {text!r}")
         texts.add(text.strip())

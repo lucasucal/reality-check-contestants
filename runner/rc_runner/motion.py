@@ -1,7 +1,7 @@
 """Published runner-side UR12e command boundary.
 
-Per-joint step limits (STEP_LIMIT_RAD) are the UR12e's maximum joint speeds at 20 Hz: 120 °/s base and shoulder,
-180 °/s elbow and wrists (0.10472 / 0.15708 rad per step). The simulator then scales down a whole step whose TCP or
+The policy contract caps every joint increment at 0.05 rad per 50 ms step. The simulator also
+scales down a whole step whose TCP or
 elbow would move faster than 1.5 m/s (the UR12e's default Normal-mode safety limits); it reports those steps in
 the /step `info.speed_scaled` and they are counted here as the "tcp_speed" / "elbow_speed" limits.
 
@@ -49,18 +49,20 @@ MOTION_REASON = "action_shape"  # error-surfacing failure_reason for motion_limi
 # Which limit clamped a value (CS-B-10 / CS-AC-10). Fixed ids; the text is the team-facing wording. Counts are per
 # applied action element (one simulator step) and per joint, public repetitions only (scoring.evaluation_summary).
 JOINT_NAMES = ("shoulder_pan", "shoulder_lift", "elbow", "wrist_1", "wrist_2", "wrist_3")
-STEP_LIMIT_RAD = (0.10472, 0.10472, 0.15708, 0.15708, 0.15708, 0.15708)
+STEP_LIMIT_RAD = (0.05,) * 6
 JOINT_LIMIT_RAD = 6.28319
 ELBOW_LIMIT_RAD = 2.792526803190927
 CLAMP_LIMITS: dict[str, str] = {
-    "step_increment": "per-step increment (more than 0.10472 rad base and shoulder, 0.15708 rad elbow and wrists)",
+    "step_increment": "per-step increment (more than 0.05 rad)",
     "joint_limit": "joint limit (target beyond +-6.28319 rad)",
     "elbow_range": "elbow range (target beyond +-2.7925 rad)",
     "gripper_range": "gripper range (outside 0 to 1)",
     "tcp_speed": "TCP speed (over 1.5 m/s: the simulator scaled the whole step down)",
     "elbow_speed": "elbow speed (over 1.5 m/s: the simulator scaled the whole step down)",
+    "joint_clamp": "joint step over 0.05 rad (the simulator clamped it, as the real arm's driver does)",
 }
-SPEED_SCALED = {"tcp_speed": ("tcp_speed", "tcp"), "elbow_speed": ("elbow_speed", "elbow")}
+SPEED_SCALED = {"tcp_speed": ("tcp_speed", "tcp"), "elbow_speed": ("elbow_speed", "elbow"),
+                "joint_clamp": ("joint_clamp", "arm")}
 # The joints each limit can name ("gripper" for the gripper range).
 CLAMP_JOINTS: dict[str, tuple[str, ...]] = {
     "step_increment": JOINT_NAMES,
@@ -69,6 +71,7 @@ CLAMP_JOINTS: dict[str, tuple[str, ...]] = {
     "gripper_range": ("gripper",),
     "tcp_speed": ("tcp",),
     "elbow_speed": ("elbow",),
+    "joint_clamp": ("arm",),
 }
 _CLAMP_TOLERANCE = 1e-12  # float noise below this is not a clamp (a float32 overshoot of ~1e-9 is)
 
@@ -81,7 +84,8 @@ def add_clamps(store: dict[str, dict[str, int]], hits: Any) -> None:
 
 
 def add_speed_scaled(store: dict[str, dict[str, int]], info: Any) -> int:
-    """Count the engine's `info.speed_scaled` {"tcp_speed": n, "elbow_speed": m} into `store`; returns n + m."""
+    """Count the engine's `info.speed_scaled` {"tcp_speed": n, "elbow_speed": m, "joint_clamp": k} into `store`;
+    returns their sum."""
     scaled = info.get("speed_scaled") if isinstance(info, dict) else None
     total = 0
     if isinstance(scaled, dict):
@@ -101,7 +105,8 @@ def clamp_label(limit: str, joint: str) -> str:
         return f"{joint} per-step increment"
     if limit == "joint_limit":
         return f"{joint} joint limit"
-    return {"elbow_range": "elbow range", "tcp_speed": "TCP speed", "elbow_speed": "elbow speed"}.get(limit, "gripper range")
+    return {"elbow_range": "elbow range", "tcp_speed": "TCP speed", "elbow_speed": "elbow speed",
+            "joint_clamp": "joint step over 0.05 rad"}.get(limit, "gripper range")
 
 
 def clamp_lines(clamps: dict[str, dict[str, int]], steps: int) -> list[str]:
@@ -222,7 +227,9 @@ def clamp_action(action: Any, target: list[float], ignored: list[str] | None = N
             if abs(stepped - delta) > _CLAMP_TOLERANCE:
                 found.append(('elbow_range' if joint == 2 else 'joint_limit', JOINT_NAMES[joint]))
             deltas.append(delta)
-            position[joint] = next_position
+            # The engine applies its real-arm clamp after this boundary. Predict that
+            # applied increment so later chunk elements do not hit target limits early.
+            position[joint] += max(-0.05, min(0.05, delta))
         raw_grip = finite(item.get('gripper'))
         grip = max(0.0, min(1.0, raw_grip))
         if grip != raw_grip:

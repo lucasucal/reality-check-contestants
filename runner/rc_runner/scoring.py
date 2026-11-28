@@ -18,7 +18,7 @@ The number is in points (>= 0, no upper bound), and one public task's contest nu
 There is no N-of-M gate and no tie-break.
 
 The published score keeps public task names and each hidden task's score under its anonymous alias
-(hidden_1..hidden_4, in hidden task_id order, so hidden_N is wire id N); raw wire ids are dropped. It does
+(hidden_N, N being the wire id the policy sees; task_id order only for packs without wire ids); raw wire ids are dropped. It does
 not carry doneness, speed, energy (always 0.0 on the engine wire), centimeters, or seconds. Public evaluation
 summary rows carry each public repetition's points, finish quality and limiting measurement; hidden repetitions
 never do.
@@ -57,10 +57,15 @@ def hidden_report_label(label: str) -> bool:
 
 def task_labels(tasks: list[dict[str, Any]], *, alias_hidden: bool = True) -> dict[str, str]:
     """task_id -> reporting label. Public (or visibility-less) tasks keep their id; hidden
-    ones become hidden_1.. in task_id order when `alias_hidden` (off for practice)."""
+    ones become hidden_N when `alias_hidden` (off for practice), N being the wire id the policy
+    sees (the backend publishes hidden_N as wire id N). Packs without one fall back to task_id order."""
     labels: dict[str, str] = {}
-    hidden = sorted(t["task_id"] for t in tasks if alias_hidden and t.get("visibility") == "hidden")
-    aliases = {task_id: f"hidden_{i}" for i, task_id in enumerate(hidden, start=1)}
+    hidden = [t for t in tasks if alias_hidden and t.get("visibility") == "hidden"]
+    wired = {str(t.get("wire_id")) for t in hidden}
+    if len(wired) == len(hidden) and wired <= WIRE_IDS:
+        aliases = {t["task_id"]: f"hidden_{t['wire_id']}" for t in hidden}
+    else:
+        aliases = {task_id: f"hidden_{i}" for i, task_id in enumerate(sorted(t["task_id"] for t in hidden), start=1)}
     for task in tasks:
         labels[task["task_id"]] = aliases.get(task["task_id"], task["task_id"])
     return labels
@@ -258,8 +263,8 @@ def hidden_summary(hidden_results: list[EpisodeResult]) -> dict[str, Any]:
 
 
 def _end_reason(result: EpisodeResult) -> str:
-    """Closed set: act_budget_exceeded, step_limit, done, policy_error, infra_error, incomplete."""
-    if result.end_reason in ("act_budget_exceeded", "step_limit"):
+    """Closed set: act_budget_exceeded, step_limit, protective_stop, done, policy_error, infra_error, incomplete."""
+    if result.end_reason in ("act_budget_exceeded", "step_limit", "protective_stop"):
         return result.end_reason
     if result.failure_code == "infra_error":
         return "infra_error"
@@ -423,6 +428,11 @@ def evaluation_summary(results: list[EpisodeResult], hidden_labels: set[str] | N
     stops = public_safety_stops(public)
     if stops:
         extra["safety_stop"] = stops
+    # Only with the engine's opt-in enforcement (RC_SAFETY_STOP=enforce): public repetitions it ended. Absent
+    # otherwise, so default runs keep main's summary shape. The backend folds it into the safety_stop notice.
+    stopped = sum(1 for r in public if r.end_reason == "protective_stop")
+    if stopped:
+        extra["protective_stop"] = {"count": stopped, "of": of}
     return {
         "public": rows,
         "hidden": hidden_summary(hidden_results),

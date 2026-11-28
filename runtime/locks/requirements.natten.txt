@@ -1,0 +1,3 @@
+# NATTEN Python-only sdist; build with no visible CUDA device.
+natten==0.21.7 \
+    --hash=sha256:8417236b74db079b2d23899ec8f77514fb2dc73d4bbd6b346a45b6967fc05ffb

@@ -1,7 +1,7 @@
 """Fastener tasks on the printed fixture v3 (a tray, three vertical holes, three hex pockets).
 
-A task is data: an instruction pool, the parts on the table (kit part, material,
-spawn region, start poses), the goals (`Goal`: part -> seat, optionally `on`
+A task is data: an instruction pool, the parts on the table (kit part, spawn
+region, start poses), the goals (`Goal`: part -> seat, optionally `on`
 another part or in a `pose`), decoys (parts that must stay out of given seats)
 and an optional order; or 2-4 per-seed `variants` of parts, goals, decoys and
 phrasings (seed % count picks one). Public (seen) tasks are one JSON file each
@@ -44,8 +44,16 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from ..arm_limits import SAFETY_LIMITS, SafetyMeter, SpeedScaler
-from ..cameras import CAMERA_SETS, SIDE_CAMERA_FOVY, SIDE_CAMERA_POSES, frame_size
+from ..arm_limits import (
+    JOINT_STEP_CLAMP,
+    SAFETY_LIMITS,
+    SafetyMeter,
+    SpeedScaler,
+    over_limit,
+    safety_stop_mode,
+)
+from .. import cell
+from ..cameras import CAMERA_SETS, frame_size
 from ..embodiment import (
     ARM_KP,
     ARM_KV,
@@ -59,21 +67,20 @@ from ..embodiment import (
 )
 from ..env import StepResult, hash_state
 from ..schema import (
-    GOAL_HEIGHT,
-    GOAL_WIDTH,
     NUM_JOINTS,
     CameraSpec,
     JointDelta,
     RawObs,
     TaskSpec,
-    register_goal_image,
-    register_goal_source,
+    GoalSet,
+    MAX_STEPS,
 )
 from ..score import doneness_point, episode_score, measurement_quality, speed_bonus
 from . import rooms, variation
 from .fixture import (
     BODY_MESH,
     FIXTURE_BODY,
+    FIXTURE_ORIGIN,
     FIXTURE_SPEC,
     FOOTPRINT_X,
     FOOTPRINT_Y,
@@ -84,6 +91,7 @@ from .fixture import (
     Seat,
     add_fixture,
     hex_fit_yaw,
+    lean_face,
     seats_for,
 )
 from .variation import Episode, Shape, clear_around, gap, grasp_zone, shape_at, shape_of
@@ -115,7 +123,7 @@ _HEAD_UP_QUAT = (math.cos(-math.pi / 4), 0.0, math.sin(-math.pi / 4), 0.0)
 _HEAD_DOWN_QUAT = (math.cos(math.pi / 4), 0.0, math.sin(math.pi / 4), 0.0)
 # Upright: a bolt axis (or a nut/washer axis) within this of vertical.
 UPRIGHT_TILT = math.radians(10.0)
-# A part counts as lying flat (and can be nudged) with its rest axis within this of the table's.
+# A part counts as lying flat with its rest axis within this of the table's.
 _FLAT_TILT = math.radians(15.0)
 
 # Start poses by part shape. `lying`: on its side (bolt) or flat (nut, washer), the default.
@@ -156,35 +164,32 @@ TASK_DIR = _ASSETS / "tasks"
 
 PART_FRICTION = [1.2, 0.04, 0.001]
 
-# The parts are real ISO hardware from the SimReady Hardware dataset (assets/fasteners/VENDORED.md):
-# nylon, stainless steel, brass and aluminium, with the dataset's densities and a look made from each
-# material's PBR surface (manifest.json `materials`). Mass = the dataset's part volume x the density.
-_KIT_MANIFEST = json.loads((_FASTENERS / "manifest.json").read_text())
-KIT_MATERIALS: tuple[str, ...] = tuple(_KIT_MANIFEST["materials"])  # what a task part may be made of
-MATERIAL_WORDS: dict[str, str] = {k: str(v["word"]) for k, v in _KIT_MANIFEST["materials"].items()}
+# The part shapes are ISO hardware from the SimReady Hardware dataset (assets/fasteners/VENDORED.md);
+# every part is grey PLA, as the event kit is printed. Mass = the dataset's part volume x PART_DENSITY:
+# solid PLA (1240 kg/m³) at ~20% infill with 3 walls, about 55% of solid. Estimated; replace by
+# weighing real prints. Inertia uses the same density.
+PART_DENSITY = 680.0
+PART_MATERIAL = "pla_grey"
+PART_LOOK = {"rgba": [0.60, 0.61, 0.62, 1.0], "specular": 0.3, "shininess": 0.35}
 
-# Printed PLA at 100% infill (~1240 kg/m³ bulk, less ~3% voids): the earlier printed kit. No task uses
-# it now; the pla_* looks stay so older packs still load.
-PLA_DENSITY = 1200.0
+# Task files, and the bounds and views below, are written for the layout they were designed on: the
+# fixture at REFERENCE_ORIGIN. Every spawn, bound and view moves with the fixture's nominal position
+# (the real cell's, fixture.FIXTURE_ORIGIN) by LAYOUT_SHIFT, so the parts keep their place beside it.
+REFERENCE_ORIGIN = (0.66, 0.15)
+LAYOUT_SHIFT = (FIXTURE_ORIGIN[0] - REFERENCE_ORIGIN[0], FIXTURE_ORIGIN[1] - REFERENCE_ORIGIN[1])
 
-# `shininess` defaults to 0.5.
-MATERIALS: dict[str, dict[str, object]] = {
-    **{k: {key: v[key] for key in ("rgba", "density", "specular", "shininess")}
-       for k, v in _KIT_MANIFEST["materials"].items()},
-    "pla_gold": {"rgba": [0.85, 0.65, 0.25, 1.0], "density": PLA_DENSITY, "specular": 0.30, "shininess": 0.35},
-    "pla_silver": {"rgba": [0.85, 0.86, 0.88, 1.0], "density": PLA_DENSITY, "specular": 0.25, "shininess": 0.3},
-    "pla_grey": {"rgba": [0.70, 0.73, 0.78, 1.0], "density": PLA_DENSITY, "specular": 0.15, "shininess": 0.2},
-    "pla_white": {"rgba": [0.93, 0.92, 0.88, 1.0], "density": PLA_DENSITY, "specular": 0.12, "shininess": 0.2},
-}
-_MATERIAL_STRIDE = tuple(math.sqrt(p) % 1.0 for p in (11, 13, 29, 19))
+
+def _shifted(p: tuple[float, ...]) -> tuple[float, ...]:
+    return (p[0] + LAYOUT_SHIFT[0], p[1] + LAYOUT_SHIFT[1], *p[2:])
+
 
 # Spawn pads must keep a part on the table, inside comfortable reach and off the fixture.
-SPAWN_X = (0.40, 1.05)
-SPAWN_Y = (-0.42, 0.42)
+SPAWN_X = (0.40 + LAYOUT_SHIFT[0], 1.05 + LAYOUT_SHIFT[0])
+SPAWN_Y = (-0.42 + LAYOUT_SHIFT[1], 0.42 + LAYOUT_SHIFT[1])
 SPAWN_REACH = 1.05
 _SPAWN_FIXTURE_CLEARANCE = 0.015
 # Clutter lands on the parts' side of the fixture (-y), where both side cameras see it.
-CLUTTER_REGION = ((0.42, 1.02), (-0.42, -0.02))
+CLUTTER_REGION = ((0.42 + LAYOUT_SHIFT[0], 1.02 + LAYOUT_SHIFT[0]), (-0.42 + LAYOUT_SHIFT[1], -0.02 + LAYOUT_SHIFT[1]))
 _ID = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
 HIDDEN_WIRE_IDS = ("1", "2", "3", "4")  # the unseen tasks' ids on the wire, unique across mounted packs
 
@@ -201,7 +206,7 @@ class Cylinder:
 
 @dataclass(frozen=True)
 class Part:
-    """One kit fastener (geometry only; the material is chosen by the task). Metres."""
+    """One kit fastener (geometry; every part is PART_DENSITY grey PLA). Metres."""
 
     part_id: str
     shape: str  # "nut", "washer", "bolt"
@@ -333,18 +338,11 @@ class Start:
 class TaskPart:
     name: str  # id inside the task, e.g. "bolt", "decoy"
     part: Part
-    material: str  # the nominal material (the model's build, the task list's goal picture)
     spawn: Spawn
-    # What an episode may make it of (one is drawn per seed, `draw_materials`); (material,) when fixed.
-    materials: tuple[str, ...] = ()
 
     @property
     def body(self) -> str:
         return f"part_{self.name}"
-
-    @property
-    def choices(self) -> tuple[str, ...]:
-        return self.materials or (self.material,)
 
 
 @dataclass(frozen=True)
@@ -392,10 +390,8 @@ class TableTask:
     seats_map: dict[str, Seat] | None = None
     # Instruction pool (variation.py): the first phrasing is `instruction`, the rest may carry conditions.
     instructions: tuple = ()
-    # Clutter pool: kit parts an episode may add (`clutter<i>` bodies; the material is drawn per episode).
+    # Clutter pool: kit parts an episode may add (`clutter<i>` bodies).
     clutter: tuple[TaskPart, ...] = ()
-    # Groups of parts that always get different materials (`distinct_materials`).
-    distinct: tuple[tuple[str, ...], ...] = ()
 
     @property
     def seats(self) -> dict[str, Seat]:
@@ -430,8 +426,7 @@ class TableTask:
         if entry.get("kind", "tabletop") != "tabletop":
             raise ValueError(f"kind must be 'tabletop', got {entry.get('kind')!r}")
         known = {"task_id", "kind", "visibility", "wire_id", "instruction", "description", "parts", "goals",
-                 "decoys", "ordered", "episode_seconds", "notes", "spawn_swap", "variants", "instructions", "clutter",
-                 "distinct_materials"}
+                 "decoys", "ordered", "episode_seconds", "notes", "spawn_swap", "variants", "instructions", "clutter"}
         extra = set(entry) - known
         if extra:
             raise ValueError(f"unknown fields {sorted(extra)}")
@@ -510,12 +505,9 @@ class TableTask:
         if not isinstance(ordered, bool):
             raise ValueError("ordered must be a boolean")
         clutter = parse_clutter(entry.get("clutter", []), kit or KIT)
-        distinct = _parse_distinct(entry.get("distinct_materials", []), parts)
-        if pool:
-            _check_material_fallback(pool[0], parts, distinct, clutter)
         return cls(task_id, instruction.strip(), parts, tuple(goals), tuple(decoys), ordered, visibility,
                    wire_id, description, float(seconds), spawn_swap, (), fixture_spec, fixture_mesh, seats,
-                   pool, clutter, distinct)
+                   pool, clutter)
 
     @classmethod
     def _from_variants(cls, entry: dict, default_visibility: str, fixture_spec: dict | None,
@@ -544,7 +536,7 @@ class TableTask:
                                             fixture_spec=fixture_spec, fixture_mesh=fixture_mesh, kit=kit))
             except ValueError as exc:
                 raise ValueError(f"variant {i}: {exc}") from exc
-        keys = [(tuple((p.name, p.part.part_id, p.choices, p.spawn.poses) for p in t.parts), t.goals) for t in scenes]
+        keys = [(tuple((p.name, p.part.part_id, p.spawn.xy, p.spawn.poses) for p in t.parts), t.goals) for t in scenes]
         if len(set(keys)) != len(keys):
             raise ValueError("two variants are the same")
         return replace(scenes[0], variants=tuple(scenes))
@@ -586,14 +578,13 @@ def _num_pair(value: object, what: str) -> tuple[float, float]:
 
 
 def _parse_part(raw: object, kit: dict[str, Part]) -> TaskPart:
-    if not isinstance(raw, dict) or set(raw) - {"id", "part", "material", "spawn"}:
-        raise ValueError(f"part must be {{id, part, material, spawn}}, got {raw!r}")
+    if not isinstance(raw, dict) or set(raw) - {"id", "part", "spawn"}:
+        raise ValueError(f"part must be {{id, part, spawn}}, got {raw!r}")
     name = raw.get("id")
     if not isinstance(name, str) or not _ID.match(name):
         raise ValueError(f"part id must be a lowercase identifier, got {name!r}")
     if raw.get("part") not in kit:
         raise ValueError(f"unknown kit part {raw.get('part')!r}")
-    materials = _parse_materials(raw.get("material"), f"part {name}")
     spawn = raw.get("spawn")
     if (not isinstance(spawn, dict) or "xy" not in spawn
             or set(spawn) - {"xy", "jitter", "yaw_deg", "yaw_jitter_deg", "pose"}):
@@ -604,7 +595,7 @@ def _parse_part(raw: object, kit: dict[str, Part]) -> TaskPart:
     if (not isinstance(weights, dict) or not weights or any(p not in START_POSES[kind] for p in weights)
             or not all(isinstance(w, (int, float)) and w > 0 for w in weights.values())):
         raise ValueError(f"part {name}: spawn.pose must be one of {START_POSES[kind]} or {{pose: weight}} of them")
-    xy = _num_pair(spawn["xy"], f"part {name} spawn.xy")
+    xy = _shifted(_num_pair(spawn["xy"], f"part {name} spawn.xy"))
     jitter = _num_pair(spawn.get("jitter", [0.01, 0.01]), f"part {name} spawn.jitter")
     if not all(0.0 <= j <= 0.06 for j in jitter):
         raise ValueError(f"part {name}: spawn.jitter must be within [0, 0.06] m")
@@ -612,62 +603,9 @@ def _parse_part(raw: object, kit: dict[str, Part]) -> TaskPart:
     yaw_jitter = spawn.get("yaw_jitter_deg", 15.0)
     if not isinstance(yaw, (int, float)) or not isinstance(yaw_jitter, (int, float)) or not 0 <= yaw_jitter <= 180:
         raise ValueError(f"part {name}: yaw_deg must be a number and yaw_jitter_deg within [0, 180]")
-    return TaskPart(name, kit[raw["part"]], materials[0],
+    return TaskPart(name, kit[raw["part"]],
                     Spawn(xy, jitter, math.radians(float(yaw)), math.radians(float(yaw_jitter)),
-                          tuple((p, float(w)) for p, w in weights.items())),
-                    materials if len(materials) > 1 else ())
-
-
-def _parse_materials(raw: object, what: str) -> tuple[str, ...]:
-    """`material`: one material, a list of them (one drawn per episode), or "any" (KIT_MATERIALS)."""
-    choices = list(KIT_MATERIALS) if raw == "any" else [raw] if isinstance(raw, str) else raw
-    if (not isinstance(choices, list) or not choices or len(set(choices)) != len(choices)
-            or any(m not in MATERIALS for m in choices)):
-        raise ValueError(f"{what}: unknown material {raw!r}; known: {sorted(MATERIALS)}, a list of them, or 'any'")
-    return tuple(choices)
-
-
-def _can_assign_distinct(choices: tuple[tuple[str, ...], ...], taken: set[str]) -> bool:
-    if not choices:
-        return True
-    first, *remaining = choices
-    return any(_can_assign_distinct(tuple(remaining), taken | {material})
-               for material in first if material not in taken)
-
-
-def _parse_distinct(raw: object, parts: tuple[TaskPart, ...]) -> tuple[tuple[str, ...], ...]:
-    """`distinct_materials`: groups (lists of 2+ part ids) whose parts are always made of different
-    materials; each needs a material list with room for that."""
-    names = {p.name: p for p in parts}
-    if not isinstance(raw, list):
-        raise ValueError("distinct_materials must list groups of part ids")
-    groups = []
-    for group in raw:
-        if (not isinstance(group, list) or len(group) < 2 or len(set(group)) != len(group)
-                or any(n not in names for n in group)):
-            raise ValueError(f"distinct_materials group {group!r} must name 2+ different parts")
-        if not _can_assign_distinct(tuple(names[n].choices for n in group), set()):
-            raise ValueError(f"distinct_materials group {group!r}: no distinct assignment is possible")
-        groups.append(tuple(group))
-    seen = [n for g in groups for n in g]
-    if len(set(seen)) != len(seen):
-        raise ValueError("a part can be in one distinct_materials group only")
-    return tuple(groups)
-
-
-def _check_material_fallback(entry: object, parts: tuple[TaskPart, ...], distinct: tuple[tuple[str, ...], ...],
-                             clutter: tuple[TaskPart, ...]) -> None:
-    """The fallback phrasing has no conditions, so a material it names ({material:<part>}) must be unique
-    among the parts of that shape in every episode: every other task part of the shape is in the part's
-    distinct_materials group and no clutter has the shape."""
-    text = entry if isinstance(entry, str) else entry["text"]  # type: ignore[index]
-    by_name = {p.name: p for p in parts}
-    for name in variation.material_slots(text):
-        part = by_name[name].part
-        group = next((g for g in distinct if name in g), ())
-        rivals = [p.name for p in parts if p.name != name and p.part.shape == part.shape and p.name not in group]
-        if rivals or any(c.part.shape == part.shape for c in clutter):
-            raise ValueError(f"instructions[0] names {name}'s material, which another {part.shape} may share")
+                          tuple((p, float(w)) for p, w in weights.items())))
 
 
 def _parse_goal(raw: object, parts: tuple[TaskPart, ...], seats: dict[str, Seat]) -> Goal:
@@ -717,13 +655,12 @@ def _check_stacks(goals: list[Goal], parts: tuple[TaskPart, ...]) -> None:
 CLUTTER_MAX = 4
 # Unused clutter waits on a hidden shelf under the tabletop, out of every camera's view.
 _SHELF_TOP = -0.30
-_SHELF = ((0.30, 1.05), (-0.36, 0.36))
+_SHELF = ((0.30 + LAYOUT_SHIFT[0], 1.05 + LAYOUT_SHIFT[0]), (-0.36 + LAYOUT_SHIFT[1], 0.36 + LAYOUT_SHIFT[1]))
 
 
 def parse_clutter(raw: object, kit: dict[str, Part], start: int = 0) -> tuple[TaskPart, ...]:
     """`clutter`: up to 4 objects {part}: nuts or washers from the kit (bolts would confuse the
-    instructions' 'the bolt' and 'the smaller bolt'). Bodies `clutter<i>`; each episode draws their
-    materials (mass and look) from KIT_MATERIALS."""
+    instructions' 'the bolt' and 'the smaller bolt'). Bodies `clutter<i>`."""
     if not isinstance(raw, list) or len(raw) > CLUTTER_MAX:
         raise ValueError(f"clutter must list at most {CLUTTER_MAX} parts")
     out = []
@@ -735,8 +672,7 @@ def parse_clutter(raw: object, kit: dict[str, Part], start: int = 0) -> tuple[Ta
             raise ValueError(f"clutter[{i}]: bolts are not clutter")
         k = start + i
         parked = (_SHELF[0][0] + 0.05 + 0.12 * (k % 6), _SHELF[1][0] + 0.12 + 0.25 * (k // 6))
-        out.append(TaskPart(f"clutter{k}", part, KIT_MATERIALS[1], Spawn(parked, (0.0, 0.0), 0.0, 0.0),
-                            KIT_MATERIALS))
+        out.append(TaskPart(f"clutter{k}", part, Spawn(parked, (0.0, 0.0), 0.0, 0.0)))
     return tuple(out)
 
 
@@ -837,67 +773,75 @@ def _material(spec: mujoco.MjSpec, name: str, texture: str, *, specular: float, 
     mat.textures[mujoco.mjtTextureRole.mjTEXROLE_RGB] = texture
 
 
-WORK_FOCUS = (0.74, 0.0, 0.04)  # between the fixture and the spawn pads
-GOAL_CAMERA_POS = (0.42, -0.52, 0.52)
-GOAL_CAMERA_TARGET = (0.74, -0.03, 0.03)
-GOAL_CAMERA_FOVY = 50.0
-# The goal picture parks the arm out of the way, swung toward +y and raised.
-GOAL_ARM_Q = (1.30, -1.75, 1.20, -1.02, -1.5708, 1.5708)
+WORK_FOCUS = _shifted((0.74, 0.0, 0.04))  # between the fixture and the spawn pads
+ORBIT_EYE = _shifted((1.55, -0.55, 0.72))
+ORBIT_TARGET = _shifted((0.76, 0.02, 0.08))
+# Simulator-only capture pose. The mounted wrist looks down on the fixture from about 0.61 m.
+GOAL_ARM_Q = (-0.5729, -1.8367, 1.9775, -1.9350, -1.1251, 1.8863)
+
+
+def _quat_z(deg: float) -> list[float]:
+    a = math.radians(deg)
+    return [math.cos(a / 2), 0.0, 0.0, math.sin(a / 2)]
 
 
 def _room(spec: mujoco.MjSpec) -> None:
-    """Industrial workbench, photographic workshop surroundings, and the cameras."""
+    """The real cell (cell.py): the robot on its pedestal beside the measured table, the cameras."""
     image = mujoco.mjtTexture.mjTEXTURE_2D
     spec.add_texture(name="sky", type=mujoco.mjtTexture.mjTEXTURE_SKYBOX,
                      file=str(_ROOM / "workshop_sky.png"), gridsize=[2, 3], gridlayout="RLUDFB......")
-    spec.add_texture(name="tex_table", type=image, file=str(_ROOM / "workbench_metal.png"))
-    _material(spec, "table_mat", "tex_table", specular=0.12, repeat=(0.4, 0.4), uniform=True)
+    tab = cell.TABLE
+    spec.add_texture(name="tex_table", type=image, file=str(cell.CELL_DIR / tab["texture"]))
+    _material(spec, "table_mat", "tex_table", specular=float(tab["specular"]), repeat=(1 / tab["tile_m"],) * 2,
+              uniform=True)
+    mat = spec.material("table_mat")
+    mat.shininess, mat.reflectance = float(tab["shininess"]), float(tab["reflectance"])
     spec.visual.quality.shadowsize = 4096
     spec.visual.headlight.ambient = [0.40, 0.40, 0.42]
     spec.visual.headlight.diffuse = [0.30, 0.30, 0.30]
     wb = spec.worldbody
-    # The workshop backdrop depicts a floor at the level of the bench feet.
+    spec.body("base_link").pos = [0.0, 0.0, cell.BASE_Z]
     wb.add_geom(name="floor", type=mujoco.mjtGeom.mjGEOM_PLANE,
-                pos=[0, 0, -0.75], size=[2, 2, 0.05], group=3,
+                pos=[0, 0, cell.FLOOR_Z], size=[3, 3, 0.05], group=3,
                 rgba=[0, 0, 0, 0], friction=[1.1, 0.005, 0.0001])
-    cx, cy, hx, hy, hz = 0.48, 0.0, 0.72, 0.52, 0.025
+    (cx, cy), (length, width), hz = tab["centre_xy"], tab["size"], 0.5 * tab["thickness"]
+    yaw = math.radians(tab["yaw_deg"])
     wb.add_geom(
-        name="table", type=mujoco.mjtGeom.mjGEOM_BOX, pos=[cx, cy, -hz],
-        size=[hx, hy, hz], material="table_mat", friction=[1.1, 0.005, 0.0001])
-    leg_z, leg_half = -0.40, 0.35
+        name="table", type=mujoco.mjtGeom.mjGEOM_BOX, pos=[cx, cy, -hz], quat=_quat_z(tab["yaw_deg"]),
+        size=[0.5 * length, 0.5 * width, hz], material="table_mat", friction=[1.1, 0.005, 0.0001])
+    leg_half = 0.5 * (-2 * hz - cell.FLOOR_Z)
     for i, (sx, sy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
+        lx, ly = sx * (0.5 * length - 0.08), sy * (0.5 * width - 0.08)
         wb.add_geom(
-            name=f"table_leg{i}", type=mujoco.mjtGeom.mjGEOM_CYLINDER,
-            pos=[cx + sx * (hx - 0.08), cy + sy * (hy - 0.08), leg_z],
-            size=[0.025, leg_half, 0.0], rgba=[0.35, 0.35, 0.38, 1.0], contype=0, conaffinity=0)
-    # A flush tabletop is the mounting surface; the fixed base frame is at z=0.
-    # The backing plate and its four uprights are a conceptual welded steel
-    # support, not a calculated stand or a model of the concealed M8 bolts.
-    wb.add_geom(name="mount_backing_plate", type=mujoco.mjtGeom.mjGEOM_BOX,
-                pos=[0, 0, -0.06], size=[0.20, 0.24, 0.01],
-                rgba=[0.24, 0.25, 0.27, 1])
-    for i, (sx, sy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
-        wb.add_geom(name=f"mount_support{i}", type=mujoco.mjtGeom.mjGEOM_BOX,
-                    pos=[sx * 0.16, sy * 0.20, -0.41], size=[0.025, 0.025, 0.34],
-                    rgba=[0.24, 0.25, 0.27, 1])
+            name=f"table_leg{i}", type=mujoco.mjtGeom.mjGEOM_BOX, quat=_quat_z(tab["yaw_deg"]),
+            pos=[cx + lx * math.cos(yaw) - ly * math.sin(yaw), cy + lx * math.sin(yaw) + ly * math.cos(yaw),
+                 cell.FLOOR_Z + leg_half],
+            size=[0.035, 0.035, leg_half], rgba=[0.13, 0.10, 0.08, 1.0], contype=0, conaffinity=0)
+    # The pedestal: a square column from the floor to the base plane, its faces along the table's, on a
+    # grey floor disc.
+    ped = cell.PEDESTAL
+    disc_half = 0.5 * ped["disc_height"]
+    wb.add_geom(name="pedestal_disc", type=mujoco.mjtGeom.mjGEOM_CYLINDER,
+                pos=[*ped["disc_xy"], cell.FLOOR_Z + disc_half], size=[ped["disc_radius"], disc_half, 0.0],
+                rgba=ped["rgba"]["disc"])
+    column_half = 0.5 * (cell.BASE_Z - cell.FLOOR_Z)
+    wb.add_geom(name="pedestal_column", type=mujoco.mjtGeom.mjGEOM_BOX, pos=[0.0, 0.0, cell.BASE_Z - column_half],
+                quat=_quat_z(tab["yaw_deg"]), size=[0.5 * ped["column_width"]] * 2 + [column_half],
+                rgba=ped["rgba"]["column"])
     wb.add_light(
         pos=[1.2, -0.4, 1.8], dir=[-0.35, 0.15, -1.0], type=mujoco.mjtLightType.mjLIGHT_DIRECTIONAL,
         castshadow=True, specular=[0.25, 0.25, 0.25], diffuse=[0.75, 0.75, 0.72])
-    # Goal picture only, from the robot's right-front; the arm is parked out of view (GOAL_ARM_Q).
-    wb.add_camera(name="goal", pos=list(GOAL_CAMERA_POS), xyaxes=_look(GOAL_CAMERA_POS, GOAL_CAMERA_TARGET),
-                  fovy=GOAL_CAMERA_FOVY)
     # Check cameras only. Each sits past the work area and looks back at 45°.
     span = 0.70
     side = (WORK_FOCUS[0] + span * 0.72, WORK_FOCUS[1] + span * 0.70, WORK_FOCUS[2] + span)
     booth = (WORK_FOCUS[0] + span * 0.72, WORK_FOCUS[1] - span * 0.70, WORK_FOCUS[2] + span)
     wb.add_camera(name="side", pos=list(side), xyaxes=_look(side, WORK_FOCUS), fovy=54)
     wb.add_camera(name="booth", pos=list(booth), xyaxes=_look(booth, WORK_FOCUS), fovy=54)
-    # Policy side cameras: Gemini 336s on tripods off the left (+y) and right (-y) table edges.
-    for name, (eye, target) in SIDE_CAMERA_POSES.items():
-        wb.add_camera(name=name, pos=list(eye), xyaxes=_look(eye, target), fovy=SIDE_CAMERA_FOVY)
+    # Policy side cameras: the real cell's Gemini 336s on their tripods across the table (cell.json).
+    for name, (eye, axes, fovy) in cell.side_cameras().items():
+        wb.add_camera(name=name, pos=eye, xyaxes=axes, fovy=fovy)
     # Organizer orbit. The watch page moves this. It is not a policy camera.
-    orbit_eye = (1.55, -0.55, 0.72)
-    wb.add_camera(name="orbit", pos=list(orbit_eye), xyaxes=_look(orbit_eye, (0.76, 0.02, 0.08)), fovy=48)
+    wb.add_camera(name="orbit", pos=list(ORBIT_EYE), xyaxes=_look(ORBIT_EYE, ORBIT_TARGET), fovy=48)
     # The policy wrist camera is hardware: robot_spec() puts the Gemini 336 on tool0.
     # JSON map of name -> {pos, xyaxes, fovy}. Wrist coordinates are in the UR
     # tool0 frame (+z is the tool axis); fixed cameras use world coordinates.
@@ -961,17 +905,15 @@ def _add_part(spec: mujoco.MjSpec, tp: TaskPart, z: float = 0.05) -> None:
     mesh_path = part.mesh_path or _FASTENERS / f"{part.part_id}.obj"
     if not mesh_path.is_file():
         raise FileNotFoundError(f"fastener mesh not found: {mesh_path}")
-    mat_info = MATERIALS[tp.material]
     mesh_name = f"mesh_{tp.name}"
     spec.add_mesh(name=mesh_name, file=str(mesh_path), scale=[1.0, 1.0, 1.0])
     mat = spec.add_material(name=f"mat_{tp.name}")
-    mat.rgba = list(mat_info["rgba"])  # type: ignore[arg-type]
-    mat.specular = float(mat_info["specular"])  # type: ignore[arg-type]
-    mat.shininess = float(mat_info.get("shininess", 0.5))  # type: ignore[arg-type]
+    mat.rgba = list(PART_LOOK["rgba"])
+    mat.specular = PART_LOOK["specular"]
+    mat.shininess = PART_LOOK["shininess"]
     body = spec.worldbody.add_body(name=tp.body, pos=[tp.spawn.xy[0], tp.spawn.xy[1], z])
-    # The part's own volume and inertia (dataset sidecars), so collision proxies do not fill holes in the
-    # mass. Built with the nominal material; an episode rescales it to the material it draws.
-    mass, com, inertia = part.mass_properties(float(mat_info["density"]))  # type: ignore[arg-type]
+    # The part's own volume and inertia (dataset sidecars), so collision proxies do not fill holes in the mass.
+    mass, com, inertia = part.mass_properties(PART_DENSITY)
     body.explicitinertial = 1
     body.mass = mass
     body.ipos = com
@@ -1002,7 +944,7 @@ def _add_part(spec: mujoco.MjSpec, tp: TaskPart, z: float = 0.05) -> None:
         elif part.shape == "bolt" and col.along == "x" and abs(col.pos[0] - part.head_local_x) < 1e-6:
             # A hex prism, not the kit's cylinder proxy: a lying bolt rests on a head flat. On a
             # round head the bolt is a cone on the table and rolls in circles about its tip
-            # (an M30x60 brass bolt drifted 20-40 mm in 10 s after reset).
+            # (an 0.57 kg M30x60 bolt drifted 20-40 mm in 10 s after reset).
             hex_name = f"hexhead_{tp.name}"
             spec.add_mesh(name=hex_name, uservert=_hex_prism(part.across_flats, col.pos[0], col.half))
             kwargs.update(type=mujoco.mjtGeom.mjGEOM_MESH, meshname=hex_name, pos=[0.0, 0.0, 0.0])
@@ -1031,7 +973,6 @@ def _build(task: TableTask, clutter: tuple[TaskPart, ...] = (), with_rooms: bool
     spec = robot_spec()
     spec.option.timestep = PHYSICS_DT
     _room(spec)
-    rooms.add_toolbox(spec)
     if with_rooms:  # visual only, all hidden; the episode shows one (rooms.RoomSwitch)
         rooms.add_rooms(spec)
     add_fixture(spec, task.fixture_spec or FIXTURE_SPEC, task.fixture_mesh or BODY_MESH)
@@ -1119,40 +1060,26 @@ def home_keepout(model: mujoco.MjModel, below: float) -> np.ndarray:
     return np.vstack(out) if out else np.zeros((0, 2))
 
 
-def draw_materials(task: TableTask, seed: int) -> dict[str, str]:
-    """Each task part's material for `seed`: one of its `choices`, by a low-discrepancy sequence (seed x
-    an irrational stride, one per part, as `_draw_pose`). Each draw in a distinct group leaves a valid
-    assignment for the remaining parts."""
-    out: dict[str, str] = {}
-    for i, tp in enumerate(task.parts):
-        group = next((g for g in task.distinct if tp.name in g), ())
-        taken = {out[n] for n in group if n in out}
-        remaining = tuple(part.choices for part in task.parts[i + 1:] if part.name in group)
-        free = [m for m in tp.choices if m not in taken and _can_assign_distinct(remaining, taken | {m})]
-        u = (seed * _MATERIAL_STRIDE[i % len(_MATERIAL_STRIDE)] + 0.5 + 0.25 * i) % 1.0
-        out[tp.name] = free[min(int(u * len(free)), len(free) - 1)]
-    return out
-
-
 @functools.lru_cache(maxsize=None)
 def tip_over_angle(part: Part) -> float:
     """A bolt standing on its head and tilted about a head flat edge falls back upright below this angle
-    (its centre of mass is still inside the edge; the same for every material)."""
+    (its centre of mass is still inside the edge)."""
     _mass, com, _inertia = part.mass_properties(1000.0)
     return math.atan2(0.5 * part.across_flats, 0.5 * (part.length + part.head_height) - float(com[0]))
 
 
 def lean_pose(part: Part, fixture: FixturePose, spec: dict, u: float, theta: float) -> tuple[np.ndarray, np.ndarray]:
-    """Body pose of a bolt on its head leaning `theta` from vertical against the block's -y face at
-    fixture-local x `u`: a head flat edge (parallel to the face) on the table, the shank tip's rim on the
-    face, both `_LEAN_GAP` off so the bolt settles onto them."""
-    n = np.array([-math.sin(fixture.yaw), math.cos(fixture.yaw), 0.0])  # horizontal, into the face
+    """Body pose of a bolt on its head leaning `theta` from vertical against the block's lean face
+    (fixture.lean_face) at `u` along it: a head flat edge (parallel to the face) on the table, the shank
+    tip's rim on the face, both `_LEAN_GAP` off so the bolt settles onto them."""
+    point, inward, _span = lean_face(spec, fixture, u)
+    n = np.append(inward, 0.0)  # horizontal, into the face
     up = np.array([0.0, 0.0, 1.0])
     c, s = math.cos(theta), math.sin(theta)
     x = -c * up - s * n  # body +x, toward the head: down and away from the face
     z = (n + s * x) / c  # the head flat normal toward the face: that flat's bottom edge is the lowest
     full = part.length + part.head_height
-    face = np.append(fixture.to_world((u, spec["block"]["y"][0] * MM)), 0.0)
+    face = np.append(point, 0.0)
     out = s * full - c * 0.5 * (part.across_flats - part.diameter) + _LEAN_GAP
     edge = face - out * n + _LEAN_GAP * up
     quat = np.empty(4)
@@ -1214,8 +1141,10 @@ class TabletopEnv:
             task = TASKS[task]
         # A task with per-seed variants gets one scene (model, data, renderers) per variant, all built
         # here; reset(seed) swaps in the seed's scene. `self.task` is always the current scene's task.
+        self.nominal_goal, self.episode_goal = GoalSet(), GoalSet()
         self.task_def = task
         self.variant = 0
+        self.nominal_goal.stage(self._lazy_nominal_goals, self._goal_metadata(None), eager=False)
         self.profile = "public"
         self._scenes: dict[int, dict] = {}
         self._episode_config: tuple | None = None
@@ -1249,7 +1178,7 @@ class TabletopEnv:
         self._scenes[self.variant] = self._scene_state()
         self.__dict__.update(self._scenes.pop(index))
         self.variant = index
-        # The goal key is shared by every variant, so it now holds another scene's picture: draw it again.
+        # Variants share the current episode goal set. Re-stage it when switching models.
         self._goal_episode = None
         if self._episode_config is not None:
             self.configure_episode(*self._episode_config)
@@ -1284,21 +1213,15 @@ class TabletopEnv:
         self._speed = SpeedScaler(m, CONTROL_DT)
         self._safety = SafetyMeter(m, self.part_body)
         self.safety_peaks = dict.fromkeys(SAFETY_LIMITS, 0.0)
-        # As built (the nominal material): an episode rescales mass and inertia to its own materials.
-        self._mass_base = {tp.name: (float(m.body_mass[self.part_body[tp.name]]),
-                                     m.body_inertia[self.part_body[tp.name]].copy(),
-                                     float(MATERIALS[tp.material]["density"]))  # type: ignore[arg-type]
-                           for tp in every}
-        self._const_data = mujoco.MjData(m)  # scratch for mj_setConst
+        # Opt-in protective stop on the same measurement (arm_limits.safety_stop_mode; raises on a bad value).
+        self.enforce_safety_stop = safety_stop_mode() == "enforce"
+        self.protective_stop: dict | None = None
         self._home_points: np.ndarray | None = None  # home_keepout, on first use
-        self.materials: dict[str, str] = {tp.name: tp.material for tp in every}
         self.seats: dict[str, Seat] = task.seats
         self.fixture_pose: FixturePose = NOMINAL_POSE
         self.episode: Episode | None = None
         self.active_clutter: tuple[str, ...] = ()
         self._clutter_decoys: tuple[Decoy, ...] = ()
-        self._nudge_pending = False
-        self.nudged: dict | None = None
         self._goal_episode: tuple | None = None
         # First part: the single-part attributes older tools read.
         first = task.parts[0].name
@@ -1310,7 +1233,7 @@ class TabletopEnv:
         self._geom_part = {int(g): name for name, b in self.part_body.items()
                            for g in range(m.ngeom) if m.geom_bodyid[g] == b}
         self.state = np.empty(mujoco.mj_stateSize(m, mujoco.mjtState.mjSTATE_INTEGRATION))
-        # 640x480: goal and audience views. Other frame sizes (the
+        # 640x480 audience views. Other frame sizes (the
         # 640x360 Gemini 336 views) get their own renderer in _sized_renderers.
         self.renderer: mujoco.Renderer | None = None
         self._sized_renderers: dict[tuple[int, int], mujoco.Renderer] = {}
@@ -1336,15 +1259,14 @@ class TabletopEnv:
         self._start_dist: list[float] = [0.0] * len(task.goals)
         self._first_met: list[int] = [-1] * len(task.goals)
         self.last_eval: Evaluation | None = None
-        budget = int(round(task.episode_seconds * CONTROL_HZ))
-        # The instruction is per episode (reset draws it from the pool); the goal key names the
-        # episode's own goal picture. The task list shows the first phrasing, every variant's pool, and
-        # the canonical goal.
+        budget = min(MAX_STEPS, int(round(task.episode_seconds * CONTROL_HZ)))
+        # The task list shows the first phrasing, every variant's pool, and the nominal goal set.
         pool = dict.fromkeys(_text(e) for scene in self.task_def.scenes for e in scene.pool)
         self.spec = TaskSpec(
             task.task_id, task.description or task.instruction, budget, CONTROL_HZ, CAMERAS,
             family="tabletop", visibility=task.visibility, instruction=task.instruction,
-            wire_id=task.wire_id, instructions=tuple(pool))
+            wire_id=task.wire_id, instructions=tuple(pool),
+            nominal_goal=self.nominal_goal, episode_goal=self.episode_goal)
         self._start_xy: dict[str, np.ndarray] = {}
         self._show_room(rooms.NOMINAL_ROOM)
 
@@ -1352,6 +1274,8 @@ class TabletopEnv:
 
     def configure_episode(self, camera_configuration: str, max_steps: int | None,
                           camera_poses: dict | None = None) -> None:
+        if max_steps is not None and (type(max_steps) is not int or max_steps < 0):
+            raise ValueError("max_steps must be null or a nonnegative integer")
         if camera_configuration not in CAMERA_CONFIGURATIONS:
             raise ValueError(f"unknown camera configuration {camera_configuration!r}; expected three_view")
         m = self.model
@@ -1392,7 +1316,8 @@ class TabletopEnv:
         if self.episode is not None:
             self._apply_cameras(self.episode)
         self.spec = replace(self.spec, cameras=CAMERA_CONFIGURATIONS[camera_configuration])
-        self.max_steps = max_steps
+        self.max_steps = min(MAX_STEPS, max_steps or MAX_STEPS) if max_steps is not None else None
+        self._goal_episode = None
         self._episode_config = (camera_configuration, max_steps, camera_poses)
 
     def render_pose(self) -> dict | None:
@@ -1400,7 +1325,7 @@ class TabletopEnv:
         if not self.episode or not self._room_switch.shown or self.spec.visibility != "public":
             return None
         visible_parts = {p.name for p in self.task.parts} | {g.part for g in self.task.goals} | set(self.active_clutter)
-        parts = {self.model.body(self.part_body[name]).name: [self._parts[name].part.part_id, self.materials[name]]
+        parts = {self.model.body(self.part_body[name]).name: [self._parts[name].part.part_id, PART_MATERIAL]
                  for name in sorted(visible_parts)}
         inactive = {body for name, body in self.part_body.items() if name not in visible_parts}
         return {
@@ -1419,7 +1344,8 @@ class TabletopEnv:
                 "hold": self.hold, "work": 0.0, "reference_work": 0.0,  # energy no longer scored; kept for readers
                 "start_dist": list(self._start_dist), "goal_first_met": list(self._first_met),
                 "parts": [tp.name for tp in self.task.parts], "variant": self.variant,
-                "episode": None if ep is None else {"seed": ep.seed, "profile": ep.profile, "nudge": ep.nudge},
+                "episode": None if ep is None else {"seed": ep.seed, "profile": ep.profile,
+                                                    **({"room": ep.room_option} if ep.room_option else {})},
                 "clutter": list(self.active_clutter),
                 # The room is re-derived from the episode's seed; recorded to check the replay engine agrees.
                 "room": None if ep is None else ep.room, "room_shown": self._room_switch.shown,
@@ -1443,20 +1369,21 @@ class TabletopEnv:
         if state.shape != self.state.shape:
             raise ValueError(f"snapshot has {state.size} state values; this model needs {self.state.size}")
         info = snapshot.get("episode")
-        if info is not None:
-            if not isinstance(info, dict) or isinstance(info.get("seed"), bool) or not isinstance(info.get("seed"), int):
-                raise ValueError("snapshot episode must be {seed, profile, nudge}")
-            profile, nudge = variation.parse_options({"profile": info.get("profile"), "nudge": info.get("nudge")},
-                                                     internal=True)
-            ep, layout = self._draw_episode(info["seed"], profile, nudge)
-            recorded = snapshot.get("room")
-            if recorded is not None and recorded != ep.room:
-                raise ValueError(f"snapshot room {recorded!r}, but this engine draws {ep.room!r} for that episode")
-            self._apply_episode(ep)
-            for field, actual in (("room_shown", self._room_switch.shown), ("backdrop", self._backdrop)):
-                if field in snapshot and snapshot[field] != actual:
-                    raise ValueError(f"snapshot {field} {snapshot[field]!r}, but this engine renders {actual!r}")
-            self._capture_episode_goal(ep, layout)
+        if not isinstance(info, dict) or isinstance(info.get("seed"), bool) or not isinstance(info.get("seed"), int):
+            raise ValueError("snapshot requires episode seed and variation to render its goal")
+        if self.task_def.variant_index(info["seed"]) != variant:
+            raise ValueError("snapshot variant does not match its seed")
+        options = {"profile": info.get("profile"), **({"room": info["room"]} if "room" in info else {})}
+        profile = variation.parse_options(options, internal=True)
+        ep, layout = self._draw_episode(info["seed"], profile, options.get("room"))
+        recorded = snapshot.get("room")
+        if recorded is not None and recorded != ep.room:
+            raise ValueError(f"snapshot room {recorded!r}, but this engine draws {ep.room!r} for that episode")
+        self._apply_episode(ep)
+        for field, actual in (("room_shown", self._room_switch.shown), ("backdrop", self._backdrop)):
+            if field in snapshot and snapshot[field] != actual:
+                raise ValueError(f"snapshot {field} {snapshot[field]!r}, but this engine renders {actual!r}")
+        self._capture_episode_goal(ep, layout)
         mujoco.mj_resetData(m, d)
         mujoco.mj_setState(m, d, state, mujoco.mjtState.mjSTATE_INTEGRATION)
         self._refresh_scene_kinematics()
@@ -1808,7 +1735,7 @@ class TabletopEnv:
             pos = np.array([xy[0], xy[1], 0.5 * part.across_flats])
             quat = _quat_mul(_yaw_quat(yaw - math.pi / 2), _quat_mul(_ROLL_OFF_TABLE, _yaw_quat(math.pi / 6)))
         elif pose == "leaning":
-            x0, x1 = (v * 0.001 for v in (self.task.fixture_spec or FIXTURE_SPEC)["block"]["x"])
+            x0, x1 = lean_face(self.task.fixture_spec or FIXTURE_SPEC, fixture)[2]
             margin = part.across_flats / math.sqrt(3.0) + 0.01
             lo, hi = LEAN_OVER_DEG
             u = float(rng.uniform(x0 + margin, x1 - margin)) if rng is not None else 0.5 * (x0 + x1)
@@ -1842,9 +1769,12 @@ class TabletopEnv:
             if live:
                 samples += self._safety.measure(data)
         if live:
-            for key, value in zip(SAFETY_LIMITS, samples / SUBSTEPS):
+            means = dict(zip(SAFETY_LIMITS, (float(v) for v in samples / SUBSTEPS)))
+            for key, value in means.items():
                 if value > self.safety_peaks[key]:
-                    self.safety_peaks[key] = float(value)
+                    self.safety_peaks[key] = value
+            if self.enforce_safety_stop and self.protective_stop is None and (over := over_limit(means)):
+                self.protective_stop = {"limit": over[0], "value": round(over[1], 1), "step": self.step_count + 1}
         return q_cmd
 
     def _home(self) -> None:
@@ -1890,9 +1820,9 @@ class TabletopEnv:
         if self.episode is not None:  # first captured after episodes ran unrendered: back to the nominal scene
             self.seats, self.fixture_pose = self.task.seats, NOMINAL_POSE
             self._default_visuals()
-            self._apply_materials({})
             m.cam_pos[:], m.cam_quat[:], m.cam_fovy[:] = self._camera_base
             self._set_sky(0)
+        m.cam_pos[:], m.cam_quat[:], m.cam_fovy[:] = self._camera_defaults
         mujoco.mj_resetData(m, d)
         self._home()
         self.goal_scene(d)
@@ -1900,7 +1830,7 @@ class TabletopEnv:
         d.ctrl[:NUM_JOINTS] = GOAL_ARM_Q
         mujoco.mj_forward(m, d)
         self._settle(80)
-        register_goal_image(self.task.task_id, self._grab(d, "goal"))
+        self._stage_goals(self.nominal_goal, d, None, eager=True)
 
     def _ready_goals(self, variant: int) -> None:
         """Capture the task list's goal picture once (the first variant's nominal scene), then swap in
@@ -1915,8 +1845,9 @@ class TabletopEnv:
 
     # -------------------------------------------------------------- episode variation
 
-    def _draw_episode(self, seed: int, profile_name: str, nudge: bool) -> tuple[Episode, dict]:
-        """The seed's layout {part: Start} and its variation (variation.py). Writes nothing."""
+    def _draw_episode(self, seed: int, profile_name: str, room: str | None = None) -> tuple[Episode, dict]:
+        """The seed's layout {part: Start} and its variation (variation.py), in `room` if given (reset
+        option) instead of the drawn one. Writes nothing."""
         task = self.task
         profile = variation.profile_named(profile_name)
         rng = np.random.Generator(np.random.PCG64(seed))
@@ -1929,8 +1860,7 @@ class TabletopEnv:
         index = {tp.name: i for i, tp in enumerate(task.parts)}
         poses = {tp.name: _draw_pose(tp.spawn.poses, seed, index[tp.name]) for tp, _xy, _yaw in draws}
         pose_rng = variation.stream(seed, "pose")  # where a leaning part leans, and how far
-        ep = Episode(int(seed), profile_name, bool(nudge))
-        ep.materials = draw_materials(task, seed)
+        ep = Episode(int(seed), profile_name, room_option=room)
         # A leaning part goes against the posed fixture; the fixture keeps clear of its lying spawn too.
         layout = {tp.name: self._start(tp, "lying" if poses[tp.name] == "leaning" else poses[tp.name], xy, yaw,
                                        NOMINAL_POSE) for tp, xy, yaw in draws}
@@ -1942,19 +1872,16 @@ class TabletopEnv:
                 layout[tp.name] = self._lean_start(tp, xy, yaw, ep.fixture, layout, pose_rng)
                 shapes[tp.name] = layout[tp.name].shape(tp.part)
         self._draw_clutter(ep, profile, layout, shapes)
-        scene = {n: (self._parts[n].part, ep.materials[n], s.xy) for n, s in layout.items()}
-        scene.update({n: (self._parts[n].part, ep.clutter_material[n], xy) for n, (xy, _y) in ep.clutter_pose.items()})
+        scene = {n: (self._parts[n].part, s.xy) for n, s in layout.items()}
+        scene.update({n: (self._parts[n].part, xy) for n, (xy, _y) in ep.clutter_pose.items()})
         pool = task.pool
         key = next((k for k in (f"{task.task_id}#{self.variant}", task.task_id) if k in profile.instructions), None)
         if key is not None:
             pool = variation.validate_pool(list(profile.instructions[key]), set(layout),
                                            f"{profile.name} instructions for {key}")
         tray_xy = seats_for(task.fixture_spec or FIXTURE_SPEC, ep.fixture)["tray"].xy
-        ep.instruction = variation.choose_instruction(ep, pool, scene, np.array(tray_xy), MATERIAL_WORDS)
-        variation.draw_visuals(ep, profile, [*layout, *ep.clutter_pose], ("left", "right"))
-        if nudge:
-            lying = [g.part for g in task.goals if layout[g.part].pose == "lying"]
-            variation.draw_nudge(ep, profile, lying, CONTROL_HZ)
+        ep.instruction = variation.choose_instruction(ep, pool, scene, np.array(tray_xy))
+        variation.draw_visuals(ep, profile, ("left", "right"))
         return ep, layout
 
     def _lean_start(self, tp: TaskPart, xy: np.ndarray, yaw: float, fixture: FixturePose, layout: dict,
@@ -2025,7 +1952,6 @@ class TabletopEnv:
         (x0, x1), (y0, y1) = CLUTTER_REGION
         for index in chosen:
             tp = pool[index]
-            material = KIT_MATERIALS[int(rng.integers(0, len(KIT_MATERIALS)))]
             for _attempt in range(100):
                 yaw = float(rng.uniform(-math.pi, math.pi))
                 anchor = None
@@ -2052,7 +1978,6 @@ class TabletopEnv:
                     continue
                 placed.append(s)
                 ep.clutter_pose[tp.name] = (xy, yaw)
-                ep.clutter_material[tp.name] = material
                 break
 
     def _apply_episode(self, ep: Episode) -> None:
@@ -2066,25 +1991,8 @@ class TabletopEnv:
         if any(g.seat == "tray" for g in task.goals):
             seats.add("tray")
         self._clutter_decoys = tuple(Decoy(name, tuple(sorted(seats))) for name in self.active_clutter)
-        self._apply_materials({**ep.materials, **ep.clutter_material})
         self._apply_visuals(ep)
-        self.spec = replace(self.spec, instruction=ep.instruction, goal_key=f"{task.task_id}#episode")
-
-    def _apply_materials(self, chosen: dict[str, str]) -> None:
-        """Make every part (task parts and clutter; a part not in `chosen` its nominal material) weigh
-        what its material makes it: mass and inertia scale with the density (the shape, centre of mass and
-        principal axes do not change), then mj_setConst updates the constants that depend on them (the
-        constraint impedance's inverse weights, the solver's mean inertia). History-free: the same
-        materials give the same model whatever ran before."""
-        m = self.model
-        self.materials = {name: chosen.get(name, tp.material) for name, tp in self._parts.items()}
-        for name, material in self.materials.items():
-            mass, inertia, density = self._mass_base[name]
-            k = float(MATERIALS[material]["density"]) / density  # type: ignore[arg-type]
-            b = self.part_body[name]
-            m.body_mass[b] = mass * k
-            m.body_inertia[b] = inertia * k
-        mujoco.mj_setConst(m, self._const_data)
+        self.spec = replace(self.spec, instruction=ep.instruction)
 
     def mass(self, name: str) -> float:
         """The part's mass this episode (kg)."""
@@ -2107,12 +2015,6 @@ class TabletopEnv:
         m = self.model
         _light_dir, diffuse, specular, ambient, _head, _rgba, _mat_spec, _mat_shine = self._visual_defaults
         self._default_visuals()
-        for name, material in {**ep.materials, **ep.clutter_material}.items():
-            idx = m.material(f"mat_{name}").id
-            info = MATERIALS[material]
-            m.mat_rgba[idx] = info["rgba"]
-            m.mat_specular[idx] = float(info["specular"])  # type: ignore[arg-type]
-            m.mat_shininess[idx] = float(info.get("shininess", 0.5))  # type: ignore[arg-type]
         if ep.light_dir is not None:
             m.light_dir[0] = ep.light_dir
             m.light_diffuse[0] = np.clip(diffuse[0] * ep.light_scale, 0.0, 1.0)
@@ -2125,8 +2027,8 @@ class TabletopEnv:
 
             tint("table_mat", ep.table_rgb)
             tint("mat_fixture_body", ep.fixture_rgb)
-            for name, rgb in ep.part_rgb.items():
-                tint(f"mat_{name}", rgb)
+            for name in self._parts:
+                tint(f"mat_{name}", ep.part_rgb)
         self._apply_cameras(ep)
         self._set_sky(ep.sky_turns)
         self._show_room(ep.room, ep)
@@ -2210,24 +2112,18 @@ class TabletopEnv:
         mujoco.mj_forward(m, g)
         for _ in range(80):
             mujoco.mj_step(m, g)
-        mujoco.mj_kinematics(m, g)
-        mujoco.mj_camlight(m, g)
-        if self.render:
-            register_goal_image(self.spec.goal_id(), self._grab(g, "goal"))
-        else:  # no GL until someone reads the picture
-            register_goal_source(self.spec.goal_id(), lambda: self._grab_goal(m, g))
+        self._stage_goals(self.episode_goal, g, ep.seed, eager=self.render)
         self._goal_episode = key
 
     def reset(self, seed: int, options: dict | None = None) -> RawObs:
-        """Start the seed's episode. `options` {profile: public|eval, nudge: bool} (variation.py);
-        without options the env's `profile` (public) and no nudge."""
-        profile, nudge = variation.parse_options(options if options is not None else {"profile": self.profile},
-                                                 internal=True)
+        """Start the seed's episode with its selected variation profile."""
+        profile = variation.parse_options(options if options is not None else {"profile": self.profile},
+                                          internal=True)
         # The goal frame needs a GL context. Capture it on the first reset,
         # which is the thread that keeps rendering. Building it earlier, on the
         # loader thread, makes EGL refuse the warm-up.
         self._ready_goals(self.task_def.variant_index(seed))
-        ep, layout = self._draw_episode(seed, profile, nudge)
+        ep, layout = self._draw_episode(seed, profile, (options or {}).get("room"))
         self._apply_episode(ep)
         self._home()
         self._initial_state(self.data, ep, layout)
@@ -2236,9 +2132,8 @@ class TabletopEnv:
         self.hold = 0
         self.hold_quality, self.hold_quality_limit = 1.0, None
         self.safety_peaks = dict.fromkeys(SAFETY_LIMITS, 0.0)
+        self.protective_stop = None
         self._first_met = [-1] * len(self.task.goals)
-        self._nudge_pending = nudge and bool(ep.nudge_part)
-        self.nudged = None
         self._start_xy = {tp.name: self.part_pose(tp.name)[0][:2] for tp in self.task.parts}
         slots = self._tray_slots()
         self._start_dist = [self._goal_distance(g, *slots.get(g.part, (0, 1))) for g in self.task.goals]
@@ -2246,63 +2141,14 @@ class TabletopEnv:
         self._capture_episode_goal(ep, layout)
         return self._obs()
 
-    NUDGE_NEAR = 0.05  # no nudge while the gripper (TCP) is this close to the part: it is about to grasp it
-    NUDGE_LAND = 0.10  # the part lands this far (in plan) from the TCP, clear of the open fingers, unless
-    PAD_REACH = 0.0425  # the pad bottoms (this far below the TCP) are 1 cm above the part anyway
-
-    def _try_nudge(self) -> bool:
-        """Move the episode's nudge part to free table space (variation.py, nudge). False while it is
-        touched by the robot, the gripper is near it, it is not lying still and flat on the table (a
-        standing, leaning or on-edge part is never nudged) or it is in a seat."""
-        ep = self.episode
-        assert ep is not None
-        name = ep.nudge_part
-        part = self._parts[name].part
-        d = self.data
-        pos, rot = self.part_pose(name)
-        # Between the finger pads, ~10 cm ahead of the palm site along the approach.
-        tcp = d.site_xpos[self.tip] + 0.10 * d.site_xmat[self.tip].reshape(3, 3)[:, 2]
-        speed = float(np.linalg.norm(d.cvel[self.part_body[name]][3:]))
-        if (name in self._contact_parts() or float(np.linalg.norm(tcp - pos)) < self.NUDGE_NEAR
-                or not self._lying(name) or speed > 0.06
-                or any(self._occupies(name, seat) for seat in self.seats.values())):
-            return False
-        yaw0 = math.atan2(rot[1, 0], rot[0, 0])
-        others = []
-        for other in (*[tp.name for tp in self.task.parts], *self.active_clutter):
-            if other != name:
-                opos, orot = self.part_pose(other)
-                others.append((other, shape_at(self._parts[other].part, opos, orot)))
-        for dist, angle, dyaw in ep.nudge_moves:
-            xy = pos[:2] + dist * np.array([math.cos(angle), math.sin(angle)])
-            s = shape_of(part, xy, yaw0 + dyaw)
-            above = float(tcp[2]) - self.PAD_REACH > float(pos[2]) + part.lying_radius
-            if not self._free(s, self.fixture_pose) or (float(np.linalg.norm(tcp[:2] - xy)) < self.NUDGE_LAND and not above):
-                continue
-            if any(gap(s, o) < 0.01 for _n, o in others):
-                continue
-            zone = grasp_zone(part, xy, yaw0 + dyaw)
-            if any(gap(o, zone) < 0.0 for n, o in others if n in self.active_clutter):
-                continue
-            adr, dof = self.part_qpos[name], self.part_dof[name]
-            d.qpos[adr:adr + 2] = xy
-            d.qpos[adr + 3:adr + 7] = _quat_mul(_yaw_quat(dyaw), d.qpos[adr + 3:adr + 7])
-            d.qvel[dof:dof + 6] = 0.0
-            mujoco.mj_forward(self.model, d)
-            self.nudged = {"part": name, "step": self.step_count, "from": pos[:2].tolist(), "to": xy.tolist(),
-                           "turn_deg": math.degrees(dyaw)}
-            return True
-        return False
-
     def step(self, action: JointDelta) -> StepResult:
         d = self.data
-        if self._nudge_pending and self.episode is not None and self.step_count >= self.episode.nudge_steps[0]:
-            if self.step_count > self.episode.nudge_steps[1] or self._try_nudge():
-                self._nudge_pending = False
         start = self.target
+        values = np.clip(action.values, -JOINT_STEP_CLAMP, JOINT_STEP_CLAMP)
+        clamped = bool((values != np.asarray(action.values)).any())
         self.target = np.clip(
-            self.target + action.values, self.ctrl_range[:NUM_JOINTS, 0], self.ctrl_range[:NUM_JOINTS, 1])
-        qd_des = np.asarray(action.values, dtype=float) / CONTROL_DT
+            self.target + values, self.ctrl_range[:NUM_JOINTS, 0], self.ctrl_range[:NUM_JOINTS, 1])
+        qd_des = values / CONTROL_DT
         scale, tcp_over, elbow_over = self._speed.scale_step(start, self.target - start)
         if scale < 1.0:
             self.target = start + scale * (self.target - start)
@@ -2322,10 +2168,14 @@ class TabletopEnv:
             self.hold_quality, self.hold_quality_limit = 1.0, None
         if self.hold and ev.quality < self.hold_quality:
             self.hold_quality, self.hold_quality_limit = ev.quality, ev.quality_limit
-        success = self.hold >= HOLD_STEPS
+        success = self.hold >= HOLD_STEPS and self.protective_stop is None
         result = self._result(obs, success, ev)
-        result.limits = {"speed_scaled": {"tcp_speed": int(tcp_over), "elbow_speed": int(elbow_over)},
+        result.limits = {"speed_scaled": {"tcp_speed": int(tcp_over), "elbow_speed": int(elbow_over),
+                                          "joint_clamp": int(clamped)},
                          "safety_peaks": dict(self.safety_peaks)}
+        if self.protective_stop is not None:  # enforced safety stop: the episode ends here, unsuccessful
+            result.done = True
+            result.limits["protective_stop"] = dict(self.protective_stop)
         return result
 
     def _result(self, obs: RawObs, success: bool, ev: Evaluation) -> StepResult:
@@ -2365,15 +2215,30 @@ class TabletopEnv:
         self._free_cam.azimuth = float(azimuth) % 360.0
         self._free_cam.elevation = -float(np.clip(elevation, 8.0, 80.0))
 
-    def _grab_goal(self, m: mujoco.MjModel, g: mujoco.MjData) -> np.ndarray:
-        """A goal picture rendered late (render off). The env may since have swapped in another variant's
-        scene: then `m` gets a renderer of its own for this one frame."""
-        if m is self.model:
-            return self._grab(g, "goal")
-        with mujoco.Renderer(m, GOAL_HEIGHT, GOAL_WIDTH) as renderer:
-            renderer.update_scene(g, camera="goal")
-            renderer.scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = True
-            return renderer.render().copy()
+    def _goal_metadata(self, seed: int | None) -> dict:
+        pose = list(GOAL_ARM_Q)
+        # Clear the projected fingertip from the stacked parts in the wrist image.
+        if any(goal.on for goal in self.task_def.scenes[self.variant].goals):
+            pose[5] -= 0.4
+        return {"seed": seed, "variant": self.variant, "wrist_joint_pos": pose}
+
+    def _stage_goals(self, goal_set: GoalSet, data: mujoco.MjData, seed: int | None, *, eager: bool) -> None:
+        # Put the wrist at its exact recorded capture pose after settling the parts.
+        capture = self._goal_metadata(seed)
+        data.qpos[:NUM_JOINTS] = capture["wrist_joint_pos"]
+        mujoco.mj_forward(self.model, data)
+        goal_set.stage(lambda: {cam.name: self._grab(data, cam.name, (cam.width, cam.height))
+                                for cam in CAMERAS}, capture, eager=eager)
+
+    def _lazy_nominal_goals(self) -> dict[str, np.ndarray]:
+        # A headless episode may be active. Its model has per-seed materials and camera jitter.
+        # Render the nominal scene independently so reading /tasks cannot alter the active episode.
+        nominal = TabletopEnv(self.task_def.scenes[0])
+        try:
+            nominal._capture_goal()
+            return nominal.nominal_goal.frames()
+        finally:
+            nominal.close()
 
     def close(self) -> None:
         """Free every scene's renderers (their GL contexts). Idempotent; a later render makes new ones."""
@@ -2384,10 +2249,10 @@ class TabletopEnv:
             scene["renderer"] = None
             scene["_sized_renderers"] = {}
 
-    def _renderer(self, width: int = GOAL_WIDTH, height: int = GOAL_HEIGHT) -> mujoco.Renderer:
-        if self.renderer is None:
-            self.renderer = mujoco.Renderer(self.model, GOAL_HEIGHT, GOAL_WIDTH)
-        if (width, height) == (GOAL_WIDTH, GOAL_HEIGHT):
+    def _renderer(self, width: int = 640, height: int = 480) -> mujoco.Renderer:
+        if (width, height) == (640, 480):
+            if self.renderer is None:
+                self.renderer = mujoco.Renderer(self.model, 480, 640)
             return self.renderer
         sized = self._sized_renderers.get((width, height))
         if sized is None:
@@ -2395,7 +2260,7 @@ class TabletopEnv:
         return sized
 
     def _grab(self, data: mujoco.MjData, camera: str,
-              size: tuple[int, int] = (GOAL_WIDTH, GOAL_HEIGHT)) -> np.ndarray:
+              size: tuple[int, int] = (640, 480)) -> np.ndarray:
         renderer = self._renderer(*size)
         if camera == "orbit" and self._free_cam is not None:
             renderer.update_scene(data, camera=self._free_cam)
@@ -2416,7 +2281,7 @@ class TabletopEnv:
                 if orbit_id >= 0:
                     names.append("orbit")
                 self.audience_images = {name: self._grab(d, name) for name in names}
-        quat = np.zeros(4)
+        quat = np.zeros(4)  # the TCP in the robot base frame (UR base_link), as the real arm reports it
         mujoco.mju_mat2Quat(quat, d.site_xmat[self.tip])
         return RawObs(
             images=images,
@@ -2424,6 +2289,6 @@ class TabletopEnv:
             joint_vel=d.qvel[:NUM_JOINTS].copy(),
             gripper=float(np.clip(
                 (d.qpos[self.grip_qadr] - self.grip_closed_q) / (self.grip_open_q - self.grip_closed_q), 0.0, 1.0)),
-            ee_pos=d.site_xpos[self.tip].copy(),
+            ee_pos=d.site_xpos[self.tip] - [0.0, 0.0, cell.BASE_Z],
             ee_quat=quat,
         )

@@ -9,7 +9,7 @@ mounted at /weights. To try it locally without your own weights, set RC_ALLOW_BA
         --manifest manifest.json --policy policy.smolvla:ExamplePolicy
 
 The adapter maps the camera views to SmolVLA's image slots, passes the instruction and joint
-positions, and ignores the goal image. Its clamping and gripper conversion are specific to this
+positions, and ignores the three goal views. Its clamping and gripper conversion are specific to this
 example.
 
 SmolVLA's own action is not a joint_delta. ``act`` runs ``select_action`` and
@@ -18,7 +18,7 @@ The vector comes from ``select_action`` (SmolVLA may serve later steps from
 the action chunk that call already sampled).
 
 Action contract:
-    {"type": "joint_delta", "values": [6 floats, |v[i]| <= MAX_JOINT_DELTA[i]], "gripper": float in [0, 1]}
+    {"type": "joint_delta", "values": [6 floats, |v[i]| <= MAX_JOINT_DELTA], "gripper": float in [0, 1]}
 
 ``lerobot/smolvla_base`` emits a length-6 action. The first 6 numbers become
 ``values`` (clipped). There is no 7th number, so ``gripper`` is 0.
@@ -36,6 +36,7 @@ import numpy as np
 import torch
 from PIL import Image
 
+from rc_sdk.contract import CAMERA_VIEWS, MAX_JOINT_DELTA
 from rc_sdk.policy import Policy
 
 WEIGHTS_DIR = Path("/weights")
@@ -46,15 +47,6 @@ CAMERA_KEYS = (
     "observation.images.camera2",
     "observation.images.camera3",
 )
-# Match the public camera order.
-IMAGE_KEY_ORDER = ("wrist", "left", "right")
-# Decoded frame size (height, width). The wrist, left and right Gemini 336 views are
-# 640x360 (16:9).
-FRAME_HW = {"wrist": (360, 640), "left": (360, 640), "right": (360, 640)}
-STATE_DIM = 6
-MAX_JOINT_DELTA = (0.10472, 0.10472, 0.15708, 0.15708, 0.15708, 0.15708)
-# TokenizerProcessorStep rejects an empty task. Used only when instruction is absent.
-_FALLBACK_INSTRUCTION = "move the arm"
 
 
 def _weights_source() -> str:
@@ -67,68 +59,19 @@ def _weights_source() -> str:
     raise RuntimeError("pinned weights are missing from /weights")
 
 
-def _jpeg_chw(payload: str, camera: str = "wrist") -> torch.Tensor:
-    """Base64 JPEG -> float CHW in [0, 1], no batch dimension.
-
-    A frame that will not decode becomes a black image of that camera's size so
-    SmolVLA still runs.
-    """
-    try:
-        image = Image.open(io.BytesIO(base64.b64decode(payload))).convert("RGB")
+def _jpeg_chw(payload: str, view: str) -> torch.Tensor:
+    """Decode one live camera JPEG into a float CHW tensor in [0, 1]."""
+    with Image.open(io.BytesIO(base64.b64decode(payload, validate=True))) as image:
+        if image.format != "JPEG" or image.size != (640, 360):
+            raise ValueError(f"images.{view} must be a 640x360 JPEG")
+        image = image.convert("RGB")
         array = np.asarray(image, dtype=np.float32) / 255.0
         return torch.from_numpy(np.ascontiguousarray(array.transpose(2, 0, 1)))
-    except Exception:
-        return torch.zeros(3, *FRAME_HW[camera], dtype=torch.float32)
-
-
-def _image_payloads(obs: dict[str, Any]) -> list[tuple[str, str]]:
-    """(camera, base64 JPEG) in IMAGE_KEY_ORDER for the cameras present."""
-    images = obs.get("images") or {}
-    if not isinstance(images, dict):
-        return []
-    payloads: list[tuple[str, str]] = []
-    for key in IMAGE_KEY_ORDER:
-        value = images.get(key)
-        if isinstance(value, str) and value:
-            payloads.append((key, value))
-    return payloads
 
 
 def _observation_images(obs: dict[str, Any]) -> dict[str, torch.Tensor]:
-    """Map policy frames onto SmolVLA's camera slots. At least camera1 is present."""
-    payloads = _image_payloads(obs)
-    tensors: dict[str, torch.Tensor] = {}
-    for key, (camera, payload) in zip(CAMERA_KEYS, payloads):
-        tensors[key] = _jpeg_chw(payload, camera)
-    if CAMERA_KEYS[0] not in tensors:
-        tensors[CAMERA_KEYS[0]] = torch.zeros(3, *FRAME_HW["wrist"], dtype=torch.float32)
-    return tensors
-
-
-def _state(obs: dict[str, Any]) -> torch.Tensor:
-    """6-D state the checkpoint normalizer expects. UR12e joint_pos, padded."""
-    proprio = obs.get("proprio") if isinstance(obs.get("proprio"), dict) else {}
-    joint_pos = proprio.get("joint_pos") if isinstance(proprio, dict) else None
-    values: list[float] = []
-    if isinstance(joint_pos, (list, tuple)):
-        for item in list(joint_pos)[:STATE_DIM]:
-            try:
-                number = float(item)
-            except (TypeError, ValueError):
-                number = 0.0
-            if number != number or number in (float("inf"), float("-inf")):
-                number = 0.0
-            values.append(number)
-    if len(values) < STATE_DIM:
-        values.extend([0.0] * (STATE_DIM - len(values)))
-    return torch.tensor(values, dtype=torch.float32)
-
-
-def _instruction(obs: dict[str, Any]) -> str:
-    text = obs.get("instruction")
-    if isinstance(text, str) and text.strip():
-        return text
-    return _FALLBACK_INSTRUCTION
+    """Map the named live views to the checkpoint's camera slots."""
+    return {key: _jpeg_chw(obs["images"][view], view) for key, view in zip(CAMERA_KEYS, CAMERA_VIEWS)}
 
 
 def _first_action_row(action: Any) -> torch.Tensor:
@@ -140,30 +83,18 @@ def _first_action_row(action: Any) -> torch.Tensor:
     vector = action.detach().to(dtype=torch.float32, device="cpu")
     while vector.ndim > 1:
         vector = vector[0]
-    return torch.nan_to_num(vector.reshape(-1), nan=0.0, posinf=0.0, neginf=0.0)
+    return vector.reshape(-1)
 
 
 def _joint_delta(vector: torch.Tensor) -> dict[str, Any]:
     """First 6 numbers -> joint deltas within MAX_JOINT_DELTA (per joint). The next number -> gripper.
 
-    A shorter vector is padded with zeros. No 7th number means gripper 0.
+    The base model returns six values. That adapter uses a closed gripper target.
     """
-    if vector.numel() < 6:
-        vector = torch.nn.functional.pad(vector, (0, 6 - vector.numel()))
-    # Clip in Python floats against the float64 per-joint bounds the engine checks.
-    clipped = []
-    for value, limit in zip(vector[:6].tolist(), MAX_JOINT_DELTA):
-        number = float(value)
-        if number > limit:
-            number = limit
-        elif number < -limit:
-            number = -limit
-        clipped.append(number)
-    gripper = float(vector[6].clamp(0.0, 1.0).item()) if vector.numel() > 6 else 0.0
-    if gripper > 1.0:
-        gripper = 1.0
-    elif gripper < 0.0:
-        gripper = 0.0
+    if vector.numel() not in (6, 7) or not torch.isfinite(vector).all():
+        raise ValueError("SmolVLA checkpoint must return six or seven finite values")
+    clipped = [max(-MAX_JOINT_DELTA, min(MAX_JOINT_DELTA, v)) for v in vector[:6].tolist()]
+    gripper = float(vector[6].clamp(0.0, 1.0).item()) if vector.numel() == 7 else 0.0
     return {
         "type": "joint_delta",
         "values": clipped,
@@ -206,12 +137,12 @@ class ExamplePolicy(Policy):
             self._episode = episode_id
             self.policy.reset()
 
-        # `goal` is a picture of the finished scene. SmolVLA's cameras are live
+        # `goal` contains three pictures of the finished scene. SmolVLA's cameras are live
         # views, so the goal is not fed in. The instruction is passed under
         # SmolVLA's `task` key.
         frame: dict[str, Any] = {
-            "observation.state": _state(obs),
-            "task": _instruction(obs),
+            "observation.state": torch.tensor(obs["proprio"]["joint_pos"], dtype=torch.float32),
+            "task": obs["instruction"],
         }
         frame.update(_observation_images(obs))
         batch = self.preprocess(frame)

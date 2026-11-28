@@ -1,8 +1,8 @@
 """Printed fixture v3: a low tray, three vertical holes and three hex pockets.
 
 `assets/fixture/fixture_v3.json` is the source of truth (millimetres, fixture
-frame: origin at the footprint centre on the table, +x away from the robot,
-z up). This module places that frame in the world, names its seats, and builds
+frame: origin at the footprint centre on the table, z up; designed with +x away from
+the robot). This module places that frame in the world, names its seats, and builds
 the colliders. The printed STL is visual only.
 
 Colliders are convex pieces, so the holes, pockets and tray are real:
@@ -37,6 +37,8 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from ..cell import FIXTURE_NOMINAL, FIXTURE_RGBA
+
 FIXTURE_DIR = Path(__file__).resolve().parent.parent / "assets" / "fixture"
 SPEC_PATH = FIXTURE_DIR / "fixture_v3.json"
 BODY_MESH = FIXTURE_DIR / "fixture_body.stl"
@@ -44,15 +46,14 @@ TEXT_MESH = FIXTURE_DIR / "fixture_text.stl"
 
 FIXTURE_SPEC: dict = json.loads(SPEC_PATH.read_text())
 MM = 0.001
-# World position of the fixture origin. The fixture frame is not rotated: its
-# +x (away from the robot) is world +x, so the tray faces the robot base.
-# (0.66, 0.15) since the v5 print (Nov 2026; was (0.70, 0.10)): the 115 mm block
-# stands taller than the open pads hang at HOME, so it moved 4 cm toward the robot
-# and 5 cm to +y, 27 mm clear of the home gripper in plan (tabletop.home_keepout).
-FIXTURE_ORIGIN = (0.66, 0.15, 0.0)
+# The nominal pose: the real fixture where it stands in the real cell (cell.json `fixture.nominal`,
+# measured in the scans), on the table top. Its yaw turns the tray toward +y and the block's -y face
+# (lettering) toward the robot base.
+FIXTURE_ORIGIN = (float(FIXTURE_NOMINAL["xy"][0]), float(FIXTURE_NOMINAL["xy"][1]), 0.0)
+NOMINAL_YAW = math.radians(float(FIXTURE_NOMINAL["yaw_deg"]))
 HALF_FOOTPRINT = (0.5 * FIXTURE_SPEC["footprint"][0] * MM, 0.5 * FIXTURE_SPEC["footprint"][1] * MM)
 
-BODY_RGBA = (0.50, 0.52, 0.56, 1.0)  # grey PLA
+BODY_RGBA = FIXTURE_RGBA  # the real print's cyan PLA (photos)
 TEXT_RGBA = (0.93, 0.93, 0.90, 1.0)  # REALITY CHECK inlay
 # Printed PLA against the printed PLA parts (or metal, nylon): sliding 0.3-0.5 (0.4 here). The parts
 # carry 1.2 for the table and the finger pads; without the priority MuJoCo would take the larger
@@ -72,7 +73,7 @@ class FixturePose:
 
     x: float = FIXTURE_ORIGIN[0]
     y: float = FIXTURE_ORIGIN[1]
-    yaw: float = 0.0
+    yaw: float = NOMINAL_YAW
 
     def to_world(self, local) -> np.ndarray:
         """Fixture-frame xy (metres, origin at the fixture origin) -> world xy."""
@@ -191,10 +192,24 @@ def seats_for(spec: dict, pose: FixturePose = NOMINAL_POSE) -> dict[str, Seat]:
 
 SEATS: dict[str, Seat] = seats_for(FIXTURE_SPEC)
 BLOCK_TOP_Z = FIXTURE_ORIGIN[2] + FIXTURE_SPEC["block"]["top_z"] * MM
-FOOTPRINT_X = (FIXTURE_ORIGIN[0] - 0.5 * FIXTURE_SPEC["footprint"][0] * MM,
-               FIXTURE_ORIGIN[0] + 0.5 * FIXTURE_SPEC["footprint"][0] * MM)
-FOOTPRINT_Y = (FIXTURE_ORIGIN[1] - 0.5 * FIXTURE_SPEC["footprint"][1] * MM,
-               FIXTURE_ORIGIN[1] + 0.5 * FIXTURE_SPEC["footprint"][1] * MM)
+# World bounds of the nominal footprint.
+FOOTPRINT_X = tuple(float(f(NOMINAL_POSE.corners()[:, 0])) for f in (np.min, np.max))
+FOOTPRINT_Y = tuple(float(f(NOMINAL_POSE.corners()[:, 1])) for f in (np.min, np.max))
+# The block face a part can lean on: the one facing world -y, the parts' side, at the nominal yaw
+# (quarter turns of its outward normal from fixture +x; the -y face at yaw 0, the +x face at -90 deg).
+LEAN_FACE = round((-math.pi / 2 - NOMINAL_YAW) / (math.pi / 2)) % 4
+
+
+def lean_face(spec: dict, pose: FixturePose, u: float = 0.0) -> tuple[np.ndarray, np.ndarray, tuple[float, float]]:
+    """World xy of the lean face's point `u` along it, the horizontal normal into the face, and the
+    face's extent in `u` (fixture metres)."""
+    out = np.array([(1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0)][LEAN_FACE])
+    (x0, x1), (y0, y1) = ((v * MM for v in spec["block"][k]) for k in ("x", "y"))
+    depth = (x1, y1, -x0, -y0)[LEAN_FACE]
+    span = (y0, y1) if LEAN_FACE % 2 == 0 else (x0, x1)
+    local = depth * out + u * np.abs(out[::-1])
+    inward = -pose.to_world(out) + pose.to_world((0.0, 0.0))
+    return pose.to_world(local), inward, span
 
 
 # --------------------------------------------------------------------- geometry
@@ -352,7 +367,8 @@ def add_fixture(spec: mujoco.MjSpec, fixture_spec: dict = FIXTURE_SPEC, body_mes
     A mocap body is static for the physics (contacts never move it and it does not collide with
     the table) but its pose is per episode: `data.mocap_pos` / `mocap_quat` (see `FixturePose`).
     """
-    wb = spec.worldbody.add_body(name=FIXTURE_BODY, mocap=True, pos=list(FIXTURE_ORIGIN))
+    wb = spec.worldbody.add_body(name=FIXTURE_BODY, mocap=True, pos=list(FIXTURE_ORIGIN),
+                                 quat=NOMINAL_POSE.quat().tolist())
     ox, oy, oz = 0.0, 0.0, 0.0
     for name, path, rgba, specular in (("fixture_body", body_mesh, BODY_RGBA, 0.18),
                                        ("fixture_text", TEXT_MESH, TEXT_RGBA, 0.10)):

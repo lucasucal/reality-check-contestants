@@ -4,7 +4,7 @@
   "visibility": "public",
   "wire_id": "1",
   "clutter": [{"part": "nut_m12"}, {"part": "nut_m16"}, {"part": "nut_m20"}, {"part": "nut_m24"}],
-  "description": "P1 (seen). Even seeds: an ISO 4017 M30x100 bolt (nylon 108 g, aluminium 256 g, stainless steel 750 g or brass 807 g) off the fixture's -y side, lying on its side (half of them), leaning on its head against the fixture's -y face (a quarter) or standing on its head (a quarter). Odd seeds: a DIN 125-A M33 washer (60 mm OD, 11-82 g) lying flat. Leave the part in the fixture tray, released and at rest (a bolt with its head and tip inside the tray, in any pose).",
+  "description": "P1 (seen). Even seeds: an ISO 4017 M30x100 bolt (printed grey PLA, about 65 g) off the fixture's -y side, lying on its side (half of them), leaning on its head against the fixture's -y face (a quarter) or standing on its head (a quarter). Odd seeds: a DIN 125-A M33 washer (60 mm OD, about 7 g) lying flat. Leave the part in the fixture tray, released and at rest (a bolt with its head and tip inside the tray, in any pose).",
   "variants": [
     {
       "instructions": [
@@ -14,13 +14,11 @@
         "Move the bolt to the tray.",
         "Place the bolt in the tray.",
         "Pick up the bolt and put it in the tray.",
-        {"text": "Move the gold bolt to the tray.", "when": ["colour:bolt:gold"]},
-        {"text": "Put the gold bolt in the tray.", "when": ["colour:bolt:gold"]},
-        "Put the {material:bolt} bolt in the tray.",
-        "Pick up the {material:bolt} bolt and place it in the tray."
+        "Set the bolt down in the tray.",
+        "Carry the bolt over to the tray."
       ],
       "parts": [
-        {"id": "bolt", "part": "bolt_m30x100", "material": "any",
+        {"id": "bolt", "part": "bolt_m30x100",
          "spawn": {"xy": [0.72, -0.22], "jitter": [0.06, 0.06], "yaw_deg": 0, "yaw_jitter_deg": 180,
                    "pose": {"lying": 2, "leaning": 1, "standing": 1}}}
       ],
@@ -33,17 +31,17 @@
         "Move the washer to the tray.",
         "Place the washer in the tray.",
         "Pick up the washer and put it in the tray.",
-        {"text": "Put the white washer in the tray.", "when": ["colour:washer:white"]},
-        "Put the {material:washer} washer in the tray.",
-        "Move the {material:washer} washer to the tray."
+        "Drop the washer into the tray.",
+        "Set the washer down in the tray.",
+        "Carry the washer over to the tray."
       ],
       "parts": [
-        {"id": "washer", "part": "washer_m33", "material": "any",
+        {"id": "washer", "part": "washer_m33",
          "spawn": {"xy": [0.72, -0.22], "jitter": [0.06, 0.06], "yaw_deg": 0, "yaw_jitter_deg": 30}}
       ],
       "goals": [{"part": "washer", "seat": "tray"}]
     }
   ],
   "ordered": false,
-  "notes": "Variants: seed % 2 (even: the bolt, odd: the washer), each with its own phrasings and goal picture. The part's material is drawn per seed from nylon, stainless steel, brass and aluminium (a 7x mass range); a phrasing that names it ('the brass bolt') is used only when no other part of that shape on the table shares it (the clutter here is nuts, so always). The bolt's start pose is drawn per seed (spawn pose weights 2:1:1); the leaning one stands 3-8 degrees past its tip-over angle against the block face. Spawn: a 12x12 cm square off the fixture's -y side, the bolt's head in any direction. A blind replay of one seed's actions misses the part on most others. Expert: train/experts/bolt_to_tray.py."
+  "notes": "Variants: seed % 2 (even: the bolt, odd: the washer), each with its own phrasings and goal picture. Every part is grey PLA, so no phrasing names a material or colour. The bolt's start pose is drawn per seed (spawn pose weights 2:1:1); the leaning one stands 3-8 degrees past its tip-over angle against the block face. Spawn: a 12x12 cm square off the fixture's -y side, the bolt's head in any direction. A blind replay of one seed's actions misses the part on most others. Expert: train/experts/bolt_to_tray.py."
 }

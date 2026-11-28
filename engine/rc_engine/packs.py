@@ -43,7 +43,6 @@ def load_packs(directory: str | Path, catalog: Catalog) -> list[str]:
     except (ValueError, KeyError, TypeError, OSError) as exc:
         raise PackError(f"profiles/eval.json: {exc}") from exc
     added: list[str] = []
-    tabletop_wire_ids: set[str] = set()
     for path in sorted(root.glob("*.json")):
         try:
             doc = json.loads(path.read_text())
@@ -69,14 +68,12 @@ def load_packs(directory: str | Path, catalog: Catalog) -> list[str]:
                         wire_id=wire_id,
                         visibility=visibility,
                     )
-                    catalog.add(task_id, lambda s=spec: PlaceholderEnv(s))
+                    catalog.add(task_id, lambda s=spec: PlaceholderEnv(s),
+                                wire_id=wire_id if visibility == "hidden" else "")
                 elif kind == "tabletop":
                     table_task = TableTask.from_pack(t, path.parent)
-                    if table_task.visibility == "hidden":
-                        if table_task.wire_id in tabletop_wire_ids:
-                            raise ValueError(f"duplicate tabletop wire_id {table_task.wire_id!r}")
-                        tabletop_wire_ids.add(table_task.wire_id)
-                    catalog.add(task_id, lambda s=table_task: TabletopEnv(s))
+                    catalog.add(task_id, lambda s=table_task: TabletopEnv(s),
+                                wire_id=table_task.wire_id if table_task.visibility == "hidden" else "")
                 else:
                     params = CupParams.from_json(kind, {"description": t.get("description", ""), **t.get("params", {})})
                     check_layouts(params)

@@ -6,7 +6,7 @@
     "license": "CC-BY-4.0",
     "converter": "engine/scripts/convert_simready.py"
   },
-  "note": "Meshes are visual only (cosmetic threads, decimated). Colliders are the primitives below. Mass = volume_m3 x the material density; inertia = inertia_per_density x density (body frame, about the centre of mass `com`).",
+  "note": "Meshes are visual only (cosmetic threads, decimated). Colliders are the primitives below. Mass = volume_m3 x density; inertia = inertia_per_density x density (body frame, about the centre of mass `com`). `materials` and `mass_kg` are the dataset's; the simulator prints every part in grey PLA (rc_engine/tasks/tabletop.py PART_DENSITY).",
   "materials": {
     "nylon": {
       "density": 1140.0,

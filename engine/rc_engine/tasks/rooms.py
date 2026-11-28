@@ -1,9 +1,12 @@
-"""The furnished rooms around the robot cell, and the toolbox on the bench.
+"""The rooms around the robot cell.
 
-Three rooms (`ROOM_NAMES`, from the SimReady Hardware dataset; assets/rooms/VENDORED.md) surround the
-bench. They are visual only: every room geom has contype = conaffinity = 0 and no mass, so physics,
+Four rooms (`ROOM_NAMES`) surround the cell: three from the SimReady Hardware dataset
+(assets/rooms/VENDORED.md), standing on the real cell's floor (cell.FLOOR_Z; their placements keep the
+bench feet at -0.75 m, so they are lowered), and `real_cell`, the team's scans of the venue around the
+real-arm cell, placed by cell.json `scan_to_robot` (its frame is the scans'). They are visual only: every
+room geom has contype = conaffinity = 0 and no mass, so physics,
 state and the experts are the same in every room; the fallen-part floor plane and the bench stay
-tabletop.py's own. All three rooms are compiled into every scene and one is shown at a time by moving
+tabletop.py's own. All four rooms are compiled into every scene and one is shown at a time by moving
 the others' geoms to a hidden geom group (`HIDDEN_GROUP`), so a reset never recompiles and a hidden
 room costs nothing to render. Each room also brings
 
@@ -21,9 +24,6 @@ The episode's room is `Episode.room`, drawn uniformly from the profile's `rooms`
 (variation.draw_room). If a room's files are missing or broken it is left out of the build (a
 warning); an episode drawn into it shows the bench against the old workshop cube map instead (the
 fallback), as does every episode if the room build fails to compile.
-
-The toolbox (`add_toolbox`) is a static prop on the bench in every room: visual meshes plus two box
-colliders (case, open lid), placed where the experts' arm never comes within 15 cm.
 """
 from __future__ import annotations
 
@@ -37,10 +37,13 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from .. import cell
+
 ROOM_DIR = Path(__file__).resolve().parent.parent / "assets" / "rooms"
-ROOM_NAMES: tuple[str, ...] = ("workshop", "office", "industrial_bay")
+ROOM_NAMES: tuple[str, ...] = ("workshop", "office", "industrial_bay", "real_cell")
 NOMINAL_ROOM = "workshop"  # the documented scene (profile "nominal") and the task list's goal pictures
 SHOWN_GROUP, HIDDEN_GROUP = 0, 5  # renderers show geom groups 0-2 only
+DATASET_FLOOR_Z = -0.75  # the dataset rooms' floor in their placement (convert_rooms.py: the old bench feet)
 PREFIX = "room_"
 SKY_FILE = "exterior_sky.png"
 # The cell's statistic without the rooms (tabletop scene, measured): MuJoCo sizes the directional
@@ -56,7 +59,7 @@ FILL_DOWN = 0.5  # daylight through a window comes down: this much -z added to t
 DOME_REF = 2400.0
 # Room surfaces' albedo scale. MuJoCo adds its lights without exposure control, so pale floors and walls
 # (the bay's polished concrete, mean sRGB 164) under the main light, the headlight and the fill clip to
-# white; this keeps their texture. The bench, the robot, the parts and the toolbox are not scaled.
+# white; this keeps their texture. The bench, the robot and the parts are not scaled.
 ROOM_ALBEDO = 0.75
 
 
@@ -80,11 +83,26 @@ class Room:
         return d / np.linalg.norm(d)
 
     @property
+    def placement(self) -> tuple[np.ndarray, np.ndarray]:
+        """(rotation, position) of the room's frame in the world: the scans' frame for real_cell, else the
+        dataset rooms' engine frame lowered from their bench feet (-0.75 m) to the real cell's floor."""
+        if self.manifest.get("placement", {}).get("frame") == "scan":
+            return cell.scan_to_world()
+        floor = float(self.manifest.get("placement", {}).get("floor_z", DATASET_FLOOR_Z))
+        return np.eye(3), np.array([0.0, 0.0, cell.FLOOR_Z - floor])
+
+    @property
     def ambient_factor(self) -> float:
         light = self.manifest.get("lighting", {})
         dome = math.sqrt(max(float(light.get("dome", DOME_REF)), 0.0) / DOME_REF)
         ceiling = 1.0 + 0.3 * min(float(light.get("ceiling", 0.0)) / FILL_REF, 1.0)
         return float(np.clip(dome * ceiling, 0.85, 1.15))
+
+
+def _quat(rot: np.ndarray) -> list[float]:
+    q = np.empty(4)
+    mujoco.mju_mat2Quat(q, np.ascontiguousarray(rot).ravel())
+    return q.tolist()
 
 
 def load_room(name: str, root: Path | None = None) -> Room:
@@ -101,7 +119,10 @@ def load_room(name: str, root: Path | None = None) -> Room:
 
 
 def _add_visuals(spec: mujoco.MjSpec, prefix: str, folder: Path, materials: list, group: int,
-                 albedo: float = 1.0) -> None:
+                 albedo: float = 1.0, placement: tuple[np.ndarray, np.ndarray] | None = None) -> None:
+    """One mesh geom per material, `placement` (rotation, position) in the world; no bodies, so the state
+    (and a replay snapshot) does not depend on which rooms loaded."""
+    rot, pos = placement if placement is not None else (np.eye(3), np.zeros(3))
     textures: dict[str, str] = {}
     for mat in materials:
         name = f"{prefix}{mat['name']}"
@@ -121,7 +142,7 @@ def _add_visuals(spec: mujoco.MjSpec, prefix: str, folder: Path, materials: list
         mesh = spec.add_mesh(name=name, file=str(folder / mat["mesh"]))
         mesh.inertia = mujoco.mjtMeshInertia.mjMESH_INERTIA_SHELL  # open surfaces (floors, panels)
         spec.worldbody.add_geom(name=name, type=mujoco.mjtGeom.mjGEOM_MESH, meshname=name, material=name,
-                                contype=0, conaffinity=0, density=0, group=group)
+                                pos=pos.tolist(), quat=_quat(rot), contype=0, conaffinity=0, density=0, group=group)
 
 
 def add_rooms(spec: mujoco.MjSpec, names: tuple[str, ...] = ROOM_NAMES, root: Path | None = None) -> tuple[str, ...]:
@@ -135,9 +156,10 @@ def add_rooms(spec: mujoco.MjSpec, names: tuple[str, ...] = ROOM_NAMES, root: Pa
             warnings.warn(f"room {name!r} not loaded ({exc}); its episodes use the cube-map backdrop", stacklevel=2)
             continue
         prefix = f"{PREFIX}{name}_"
-        _add_visuals(spec, prefix, room.root, room.manifest["materials"], HIDDEN_GROUP, ROOM_ALBEDO)
+        rot, pos = room.placement
+        _add_visuals(spec, prefix, room.root, room.manifest["materials"], HIDDEN_GROUP, ROOM_ALBEDO, (rot, pos))
         light = spec.worldbody.add_light(name=f"{prefix}fill", type=mujoco.mjtLightType.mjLIGHT_DIRECTIONAL,
-                                         pos=[0.6, 0.0, 2.0], dir=list(room.fill_dir), castshadow=False,
+                                         pos=[0.6, 0.0, 2.0], dir=list(rot @ room.fill_dir), castshadow=False,
                                          diffuse=list(room.fill_diffuse), specular=[0.0, 0.0, 0.0],
                                          ambient=[0.0, 0.0, 0.0])
         light.active = False
@@ -146,28 +168,6 @@ def add_rooms(spec: mujoco.MjSpec, names: tuple[str, ...] = ROOM_NAMES, root: Pa
         spec.stat.extent = CELL_EXTENT
         spec.stat.center = list(CELL_CENTER)
     return tuple(added)
-
-
-def add_toolbox(spec: mujoco.MjSpec, root: Path | None = None) -> bool:
-    """The yellow toolbox on the bench: visual meshes (group 0) and box colliders. False if it does not load."""
-    folder = (root or ROOM_DIR) / "toolbox"
-    try:
-        manifest = json.loads((folder / "toolbox.json").read_text())
-        for mat in manifest["materials"]:
-            for key in ("mesh", "texture"):
-                if key in mat and not (folder / mat[key]).is_file():
-                    raise ValueError(f"missing {mat[key]}")
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        warnings.warn(f"toolbox not loaded ({exc})", stacklevel=2)
-        return False
-    _add_visuals(spec, "toolbox_", folder, manifest["materials"], SHOWN_GROUP)
-    for box in manifest["colliders"]:
-        yaw = math.radians(float(box["yaw_deg"]))
-        spec.worldbody.add_geom(name=f"toolbox_{box['name']}", type=mujoco.mjtGeom.mjGEOM_BOX,
-                                pos=list(box["pos"]), size=list(box["size"]),
-                                quat=[math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)],
-                                group=3, rgba=[0, 0, 0, 0], friction=[1.1, 0.005, 0.0001])
-    return True
 
 
 @functools.lru_cache(maxsize=4)

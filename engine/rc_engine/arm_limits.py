@@ -2,8 +2,7 @@
 
 The numbers are the UR12e's published joint speeds and its default (Normal) safety-mode limits:
 
-- Per-joint step limit (schema.MAX_JOINT_DELTA): 120 °/s base and shoulder, 180 °/s elbow and wrists, i.e.
-  0.10472 / 0.15708 rad per 50 ms control step. The runner clamps to it; the engine rejects anything beyond.
+- Each policy increment is clamped to ±0.05 rad per 50 ms control step (schema.MAX_JOINT_DELTA).
 - TCP and elbow speed, 1.5 m/s each (`scale_step`): the commanded speed of a step is |J_pos(q_target) · Δq| / dt,
   with J_pos the MuJoCo position Jacobian of the TCP (site `gripperframe`) or the elbow (origin of body
   `forearm_link`) at the commanded joint target, Δq the step's joint-target change after the per-joint clamp and
@@ -15,8 +14,16 @@ The numbers are the UR12e's published joint speeds and its default (Normal) safe
   control-step means. The UR estimates TCP force from filtered joint torques, so a single-substep contact impulse
   (a part landing in a seat) is not what its safety system sees. A repetition whose peak goes over one of them
   would trigger a safety stop on the real arm; the runner shows a notice on public tasks. Not part of the score.
+- Protective stop (`safety_stop_mode`, opt-in): with RC_SAFETY_STOP=enforce the engine also acts on that same
+  measurement. The first control step whose mean goes over one of the three limits ends the episode,
+  unsuccessful, with `/step` `info.protective_stop` {limit, value, step}; the step is simulated in full (the mean
+  needs all of it). Same samples, same averaging, same thresholds: no second force check. Off by default
+  (RC_SAFETY_STOP unset or "measure"), so default and judged runs measure only. `/readyz` `build.safety_stop`
+  records the mode.
 """
 from __future__ import annotations
+
+import os
 
 import mujoco
 import numpy as np
@@ -24,10 +31,32 @@ import numpy as np
 from .embodiment import ARM_JOINTS, GRIPPER_PREFIX, GRIPPERFRAME
 from .schema import ELBOW_SPEED_LIMIT, TCP_SPEED_LIMIT
 ELBOW_BODY = "forearm_link"  # its origin is the elbow joint
+JOINT_STEP_CLAMP = 0.05  # rad per control step, every joint (the real arm's driver)
 TCP_FORCE_LIMIT = 150.0  # N
 MOMENTUM_LIMIT = 25.0  # kg m/s
 POWER_LIMIT = 300.0  # W
 SAFETY_LIMITS = {"tcp_force_n": TCP_FORCE_LIMIT, "momentum_kg_m_s": MOMENTUM_LIMIT, "power_w": POWER_LIMIT}
+SAFETY_STOP_ENV = "RC_SAFETY_STOP"
+SAFETY_STOP_MODES = ("measure", "enforce")
+
+
+def safety_stop_mode() -> str:
+    """"measure" (default: RC_SAFETY_STOP unset, empty or "measure") or "enforce". Anything else is a
+    configuration error, raised rather than guessed, so a typo never silently changes how an episode can end."""
+    raw = os.environ.get(SAFETY_STOP_ENV, "").strip()
+    mode = raw.lower() or "measure"
+    if mode not in SAFETY_STOP_MODES:
+        raise ValueError(f"{SAFETY_STOP_ENV} must be one of {', '.join(SAFETY_STOP_MODES)} (or unset), got {raw!r}")
+    return mode
+
+
+def over_limit(means: dict[str, float]) -> tuple[str, float] | None:
+    """(key, value) of the first SAFETY_LIMITS key whose control-step mean is over its limit, else None."""
+    for key, limit in SAFETY_LIMITS.items():
+        value = float(means.get(key, 0.0))
+        if value > limit:
+            return key, value
+    return None
 
 
 class SpeedScaler:

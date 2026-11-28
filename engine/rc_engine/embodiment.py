@@ -13,6 +13,7 @@ from pathlib import Path
 
 import mujoco
 
+from .cell import WRIST_FOVY
 from .schema import NUM_JOINTS
 
 DEFAULT = "ur12e_robotiq_2f140"
@@ -64,16 +65,15 @@ WRIST_MOUNT_STL = ASSETS / "wrist_mount" / "Bracket_G336_M3.stl"
 BRACKET_FLANGE_Z_MM = 6.4
 GRIPPER_SPACER_M = 0.0244
 
-# Orbbec Gemini 336 RGB on the bracket arm, in tool0. It looks along
-# (0, -0.38268, 0.92388): the approach tilted 22.5° in toward the fingers, with
-# image-up away from the tool axis, so the fingers sit at the bottom of the frame.
-# 640x360 (16:9) stream; datasheet FOV 86° x 55° (H x V), pinhole, no distortion.
-# TODO: replace fovy with the factory intrinsics (fx, fy, cx, cy) read from the
-# Orbbec SDK for the installed unit; this is the datasheet value, not a calibration.
+# The wrist camera on the bracket arm, in tool0. It looks along (0, -0.38268, 0.92388): the
+# approach tilted 22.5° in toward the fingers, with image-up away from the tool axis, so the
+# fingers sit at the bottom of the frame. The installed unit is an Orbbec Gemini 335Lg (the
+# housing below is still the 336's): 640x360 (16:9) stream, factory fy 305.2 px, so 61.1°
+# vertical (cell.json; pinhole, no distortion).
 WRIST_CAMERA = "wrist"
 WRIST_CAMERA_POS = (0.0140, 0.1103, 0.0649)
 WRIST_CAMERA_XYAXES = (-1.0, 0.0, 0.0, 0.0, 0.92388, 0.38268)
-WRIST_CAMERA_FOVY = 55.0
+WRIST_CAMERA_FOVY = WRIST_FOVY
 WRIST_CAMERA_WIDTH = 640
 WRIST_CAMERA_HEIGHT = 360
 # Gemini 336 housing (89.5 x 25 x 30.7 mm), back face on the bracket camera plate.
@@ -83,14 +83,8 @@ CAMERA_HOUSING_HALF = (0.04475, 0.0125, 0.01535)
 CAMERA_HOUSING_POS = tuple(c + n * CAMERA_HOUSING_HALF[2] for c, n in zip(_PLATE_CENTRE, _PLATE_NORMAL))
 CAMERA_HOUSING_QUAT = (0.9807853, 0.1950903, 0.0, 0.0)  # Rx(22.5°): axes x, (0, .924, .383), n
 
-# Hover ~20 cm over the workspace, jaws pointing down. Solved by damped least squares
-# so the palm keeps the world pose (position, approach and yaw) of the earlier
-# flange-mounted model at (-0.2055, -0.60, 1.15, -3.60, 1.5708, 0.0): palm at
-# (0.891, -0.008, 0.202) m, within 0.02 mm and 0.001°. Elbow up, wrist down
-# (wrist_2 = -90°), the conventional UR branch. The branch nearest the old joints,
-# (-0.2055, -0.7150, 0.9713, -4.8771, 1.5708, -1.5708), parks wrist_1 at -279° and
-# puts the forearm over the cups-task overhead view, so it is not used.
-HOME_Q = (-0.2055, -1.1091, 1.6007, -1.9708, -1.5708, 1.5708)
+# Match the 2026-11-28 START_POSE in the hackathon policy runner.
+HOME_Q = (-2.932028, -1.278959, -2.076159, -1.365526, 1.570474, 0.615173307)
 assert len(HOME_Q) == NUM_JOINTS
 
 # Polar sampling around the base, in the reachable patch under HOME_Q.

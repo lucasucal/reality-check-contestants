@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any, Callable, TextIO
 
 from .engine_client import EngineClient
-from .episode import ACT_BUDGET_EXCEEDED, STEP_LIMIT, EpisodeResult, EpisodeSettings, build_envelope, run_episode
+from .episode import ACT_BUDGET_EXCEEDED, PROTECTIVE_STOP, STEP_LIMIT, EpisodeResult, EpisodeSettings, build_envelope, run_episode
 from . import launch
 from .errors import EngineInfraError
 from .journal import JournalWriter, episode_filename
@@ -111,6 +111,9 @@ def repetition_line(result: EpisodeResult, *, label: str, width: int, act_budget
         notes.append(f"the {act_budget:g} s /act budget ran out")
     elif result.end_reason == STEP_LIMIT:
         status = "step limit"
+    elif result.end_reason == PROTECTIVE_STOP:
+        status = "protective stop"
+        notes.append("the engine enforced a UR12e safety limit (RC_SAFETY_STOP=enforce)")
     else:
         status = "no success"
     scored = result.score is not None and math.isfinite(result.score)
@@ -137,7 +140,9 @@ def repetition_details(result: EpisodeResult) -> list[str]:
         lines.append(f"actions clamped: {'; '.join(clamp_lines(result.clamps, result.steps))}")
     stops = safety_stop_lines(result.safety_peaks)
     if stops:
-        lines.append(f"would trigger a safety stop on the real arm: {'; '.join(stops)}")
+        head = ("protective stop (enforced) ended it" if result.end_reason == PROTECTIVE_STOP
+                else "would trigger a safety stop on the real arm")
+        lines.append(f"{head}: {'; '.join(stops)}")
     if result.ignored_fields:
         lines.append(f"ignored fields: {', '.join(result.ignored_fields)}")
     return lines
@@ -218,10 +223,11 @@ def wait_for_engine(engine: EngineClient, timeout: float, url: str) -> None:
 
 
 def practice(engine: EngineClient, policy: PolicyClient, *, tasks_filter: list[str] | None, seeds: list[int],
-             journal_dir: Path | None, settings: EpisodeSettings,
-             out: TextIO | None = None) -> tuple[dict[str, Any], list[EpisodeResult], str | None]:
+             journal_dir: Path | None, settings: EpisodeSettings, out: TextIO | None = None,
+             episode_options: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[EpisodeResult], str | None]:
     """Run every (task, seed); returns (score dict, results, failure message or None).
-    Same aggregation as the real runner, minus hidden aliasing."""
+    Same aggregation as the real runner, minus hidden aliasing. `episode_options`: the engine /reset `options`
+    of every episode (practice: {"room": ...})."""
     out = out or sys.stderr
     require_engine_scorer(engine.readyz())
     schema_version, engine_tasks = engine.tasks()
@@ -248,7 +254,7 @@ def practice(engine: EngineClient, policy: PolicyClient, *, tasks_filter: list[s
             try:
                 result = run_episode(engine=engine, policy=policy, task=task, label=label, seed=seed, ordinal=ordinal,
                                      settings=settings, journal=journal, journal_file=filename if journal else None,
-                                     schema_version=schema_version)
+                                     schema_version=schema_version, episode_options=episode_options)
             finally:
                 if journal:
                     journal.close()
@@ -256,7 +262,8 @@ def practice(engine: EngineClient, policy: PolicyClient, *, tasks_filter: list[s
             if not header_printed:
                 print(repetition_header(width), file=out, flush=True)
                 header_printed = True
-            print(repetition_line(result, label=label, width=width, act_budget=settings.episode_timeout),
+            print(repetition_line(result, label=label, width=width,
+                                  act_budget=min(settings.episode_timeout, JUDGED_ACT_BUDGET_SECONDS)),
                   file=out, flush=True)
             for detail in repetition_details(result):
                 print(f"{DETAIL_INDENT}{detail}", file=out, flush=True)
@@ -282,7 +289,7 @@ def _policy_ready(policy: PolicyClient) -> Callable[[], bool]:
             raise SystemExit(f"policy /readyz reported a load error: {payload['error']}")
         if state == "contract_mismatch":
             raise SystemExit(
-                f"policy /readyz contract/schema mismatch: expected contract='v0' schema_version=2, "
+                f"policy /readyz contract/schema mismatch: expected contract='v0' schema_version=3, "
                 f"got contract={payload.get('contract')!r} schema_version={payload.get('schema_version')!r}"
             )
         return state == "ready"
@@ -372,6 +379,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="optional step cap in --judged mode (default: None, matching judged evaluation)")
     parser.add_argument("--camera-configuration", choices=("three_view",), default="three_view",
                         help="camera configuration passed to /reset in --judged mode")
+    parser.add_argument("--room", default=None,
+                        help="play every repetition in this room (e.g. real_cell, the venue); default: the seed's")
     args = parser.parse_args(argv)
     try:
         seeds = parse_seeds(args.seeds)
@@ -411,7 +420,7 @@ def main(argv: list[str] | None = None) -> int:
         score, results, failure = practice(
             engine, policy, tasks_filter=tasks_filter, seeds=seeds,
             journal_dir=Path(args.journal_dir) if args.journal_dir else None,
-            settings=settings)
+            settings=settings, episode_options={"room": args.room} if args.room else None)
     except EngineInfraError as exc:
         print(f"engine error (not your policy's fault): {exc}", file=sys.stderr)
         print("Next step: " + ENGINE_NEXT_STEP.format(url=args.engine.rstrip("/")), file=sys.stderr)

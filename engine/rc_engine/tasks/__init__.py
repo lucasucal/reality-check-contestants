@@ -16,11 +16,16 @@ DUMMY = "dummy_v0"
 class Catalog:
     def __init__(self) -> None:
         self.factories: dict[str, Callable[[], Env]] = {}
+        self.wire_ids: set[str] = set()  # organizer pack mappings in this catalog
         self.defaults: list[str] = []  # served when --tasks is not given (dummy is opt-in)
 
-    def add(self, task_id: str, factory: Callable[[], Env], *, default: bool = True) -> None:
+    def add(self, task_id: str, factory: Callable[[], Env], *, default: bool = True, wire_id: str = "") -> None:
         if task_id in self.factories:
             raise ValueError(f"duplicate task_id {task_id!r}")
+        if wire_id:
+            if wire_id in self.wire_ids:
+                raise ValueError(f"duplicate tabletop wire_id {wire_id!r}")
+            self.wire_ids.add(wire_id)
         self.factories[task_id] = factory
         if default:
             self.defaults.append(task_id)

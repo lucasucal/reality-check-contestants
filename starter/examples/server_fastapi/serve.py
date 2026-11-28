@@ -20,7 +20,6 @@ policy would use safetensors.torch.load_file and torch.
 from __future__ import annotations
 
 import json
-import math
 import os
 import struct
 import threading
@@ -31,10 +30,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-CONTRACT = "v0"
-SCHEMA_VERSION = 2
-CAPABILITIES = {"chunking": True, "caching": False}
-MAX_JOINT_DELTA = (0.10472, 0.10472, 0.15708, 0.15708, 0.15708, 0.15708)
+from rc_sdk.contract import CAPABILITIES, CONTRACT, MAX_JOINT_DELTA, SCHEMA_VERSION, observation_error
 
 
 def weights_dir() -> Path:
@@ -75,18 +71,9 @@ class ExampleModel:
         print(f"[example] loaded {path}", flush=True)
 
     def act(self, obs: dict[str, Any]) -> dict[str, Any]:
-        proprio = obs.get("proprio") if isinstance(obs.get("proprio"), dict) else {}
-        raw = proprio.get("joint_pos")
-        pos = []
-        for item in (raw if isinstance(raw, (list, tuple)) else [])[:6]:
-            try:
-                x = float(item)
-            except (TypeError, ValueError):
-                x = 0.0
-            pos.append(x if math.isfinite(x) else 0.0)
-        pos += [0.0] * (6 - len(pos))
+        pos = obs["proprio"]["joint_pos"]
         out = [sum(w * p for w, p in zip(row, pos)) + b for row, b in zip(self.weight, self.bias)]
-        values = [max(-m, min(m, v)) for v, m in zip(out[:6], MAX_JOINT_DELTA)]
+        values = [max(-MAX_JOINT_DELTA, min(MAX_JOINT_DELTA, v)) for v in out[:6]]
         return {"type": "joint_delta", "values": values, "gripper": max(0.0, min(1.0, out[6]))}
 
 
@@ -126,11 +113,9 @@ async def act(request: Request) -> JSONResponse:
         envelope = json.loads(await request.body() or b"{}")
     except ValueError as exc:
         return JSONResponse({"error": f"invalid JSON body: {exc}"}, status_code=400)
-    if not isinstance(envelope, dict):
-        return JSONResponse({"error": "request body must be a JSON object"}, status_code=400)
-    for field in ("episode_id", "step"):
-        if field not in envelope:
-            return JSONResponse({"error": f"missing required field: {field}"}, status_code=400)
+    error = observation_error(envelope)
+    if error:
+        return JSONResponse({"error": error}, status_code=400)
     try:
         action = state["model"].act(envelope)
     except Exception as exc:

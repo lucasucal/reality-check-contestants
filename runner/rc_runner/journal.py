@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TextIO
 
-JOURNAL_FORMAT = 2  # 2: no image bodies by default; per-step simulator state + image digests (docs: runner/README.md)
+JOURNAL_FORMAT = 3  # Per-role goal digests alongside current-image digests.
 
 
 def now_iso() -> str:
@@ -97,7 +97,9 @@ def evidence_response(response: dict[str, Any]) -> dict[str, Any]:
     if isinstance(observation, dict):
         obs = {k: v for k, v in observation.items() if k not in ("images", "goal")}
         obs["image_digests"] = image_digests(observation.get("images"))
-        if isinstance(observation.get("goal"), str):
+        if isinstance(observation.get("goal"), dict):
+            obs["goal_digests"] = image_digests(observation["goal"])
+        elif isinstance(observation.get("goal"), str):
             obs["goal_digest"] = image_digest(observation["goal"])
         out["observation"] = obs
     if isinstance(response.get("simulator_state"), dict):

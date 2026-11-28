@@ -16,6 +16,14 @@ import httpx
 from .errors import ActionRejected, EngineInfraError
 
 
+POLICY_SCHEMA_VERSION = 3
+
+
+def require_engine_schema(value: Any, source: str) -> None:
+    if type(value) is not int or value != POLICY_SCHEMA_VERSION:
+        raise EngineInfraError(f"engine {source} requires schema_version {POLICY_SCHEMA_VERSION}, got {value!r}")
+
+
 class EngineClient:
     def __init__(self, base_url: str, *, timeout: float = 60.0, transport: httpx.BaseTransport | None = None) -> None:
         self._http = httpx.Client(base_url=base_url, timeout=httpx.Timeout(timeout, connect=5.0), transport=transport)
@@ -57,12 +65,13 @@ class EngineClient:
             return {"ready": False, "_unreachable": f"HTTP {response.status_code}"}
         return data
 
-    def tasks(self) -> tuple[int | None, list[dict[str, Any]]]:
+    def tasks(self) -> tuple[int, list[dict[str, Any]]]:
         data = self._request("GET", "/tasks")
         tasks = data.get("tasks")
         if not isinstance(tasks, list) or not all(isinstance(t, dict) and isinstance(t.get("task_id"), str) for t in tasks):
             raise EngineInfraError("engine /tasks returned an unexpected shape")
-        return data.get("schema_version"), tasks
+        require_engine_schema(data.get("schema_version"), "/tasks")
+        return data["schema_version"], tasks
 
     def reset(self, task_id: str, seed: int, **options: Any) -> dict[str, Any]:
         data = self._request("POST", "/reset", {"task_id": task_id, "seed": seed, **options})
@@ -78,7 +87,7 @@ class EngineClient:
         if render_pose:
             body["render_pose"] = True
         data = self._request("POST", "/step", body, timeout=timeout)
-        if "observation" not in data or "done" not in data or not isinstance(data.get("info"), dict):
+        if not isinstance(data.get("observation"), dict) or "done" not in data or not isinstance(data.get("info"), dict):
             raise EngineInfraError("engine /step returned an unexpected shape")
         return data
 
